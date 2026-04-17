@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>수학 문제은행</title>
+
+<!-- PWA 설정 -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f59e3b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="수학 문제은행">
+<link rel="apple-touch-icon" href="icon-192.svg">
+<link rel="icon" type="image/svg+xml" href="icon-192.svg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+
+<style>
+  :root{
+    --bg: #fdf8f3;
+    --panel: #ffffff;
+    --sidebar: #fff6ec;
+    --ink: #2d2a26;
+    --ink-soft: #6b6660;
+    --ink-faint: #9a948c;
+    --line: #ece4d7;
+    --line-soft: #f3ecdf;
+
+    --primary: #f59e3b;
+    --primary-soft: #ffd9a8;
+    --primary-bg: #fff3e0;
+    --blue: #4a90c9;
+    --blue-bg: #e8f1f9;
+    --green: #6ab04c;
+    --green-bg: #eaf6e3;
+    --red: #e07a5f;
+    --red-bg: #fbecea;
+    --purple: #a78bca;
+    --purple-bg: #f1ebf7;
+
+    --radius: 14px;
+    --radius-lg: 20px;
+    --shadow-sm: 0 1px 2px rgba(60, 50, 40, 0.04);
+    --shadow: 0 2px 8px rgba(60, 50, 40, 0.06), 0 1px 2px rgba(60,50,40,0.04);
+    --shadow-lg: 0 8px 24px rgba(60, 50, 40, 0.08);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    /* 모바일 안전영역 대응 */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  .app{
+    display:grid;
+    grid-template-columns: 260px 1fr;
+    min-height:100vh;
+  }
+
+  /* ========== 사이드바 ========== */
+  aside{
+    background: var(--sidebar);
+    border-right: 1px solid var(--line);
+    padding: 28px 20px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .brand{
+    display:flex; align-items:center; gap: 10px;
+    padding: 4px 8px 24px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 20px;
+  }
+  .brand .logo{
+    width: 38px; height: 38px;
+    background: var(--primary);
+    border-radius: 12px;
+    display:flex; align-items:center; justify-content:center;
+    color: #fff; font-weight: 800; font-size: 18px;
+    box-shadow: 0 3px 0 #d97706, 0 4px 8px rgba(245, 158, 59, 0.3);
+    transform: rotate(-3deg);
+  }
+  .brand h1{ font-size: 17px; font-weight: 800; color: var(--ink); letter-spacing: -0.5px;}
+  .brand .sub{ font-size: 11px; color: var(--ink-faint); font-weight: 500; margin-top: 2px;}
+
+  .nav-section{ margin-bottom: 24px;}
+  .nav-label{
+    font-size: 11px; font-weight: 700; color: var(--ink-faint);
+    letter-spacing: 1px; margin: 0 10px 8px;
+    display:flex; align-items:center; gap: 6px;
+  }
+  .nav-label::before{
+    content:""; width: 4px; height: 4px;
+    background: var(--primary); border-radius: 50%;
+  }
+
+  .nav-list{ list-style: none;}
+  .nav-list li{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 9px 12px; margin-bottom: 2px;
+    border-radius: 10px; cursor: pointer;
+    font-size: 14px; font-weight: 500; color: var(--ink-soft);
+    transition: all .15s ease;
+  }
+  .nav-list li:hover{ background: rgba(245, 158, 59, 0.08); color: var(--ink);}
+  .nav-list li.active{
+    background: var(--primary); color: #fff; font-weight: 700;
+    box-shadow: 0 2px 8px rgba(245, 158, 59, 0.35);
+  }
+  .nav-list .count{
+    font-size: 12px; background: rgba(0,0,0,0.05);
+    padding: 2px 8px; border-radius: 10px; font-weight: 600;
+  }
+  .nav-list li.active .count{ background: rgba(255,255,255,0.25); color: #fff;}
+
+  .side-card{
+    background: #fff; border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 14px;
+    margin-top: 12px; text-align:center;
+    font-size: 12px; color: var(--ink-soft);
+    box-shadow: var(--shadow-sm);
+  }
+  .side-card strong{
+    display:block; font-size: 22px; color: var(--primary);
+    font-weight: 800; margin-bottom: 2px;
+  }
+
+  /* PWA 설치 버튼 (앱 미설치 상태에서만 보임) */
+  .install-btn{
+    width: 100%;
+    margin-top: 12px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 11px;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #d97706;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all .15s ease;
+  }
+  .install-btn.show{ display: flex; }
+  .install-btn:hover{ transform: translateY(-1px); box-shadow: 0 4px 0 #d97706; }
+  .install-btn:active{ transform: translateY(2px); box-shadow: 0 1px 0 #d97706; }
+
+  /* 설치 완료/iOS 안내 토스트 */
+  .toast{
+    position: fixed;
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--ink);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    transition: transform .3s ease;
+    z-index: 1000;
+    max-width: 90vw;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .toast.show{ transform: translateX(-50%) translateY(0); }
+
+  /* ========== 메인 ========== */
+  main{ padding: 36px 48px 80px; max-width: 920px;}
+
+  .page-head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom: 28px; padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .page-head h2{
+    font-size: 28px; font-weight: 800; color: var(--ink);
+    letter-spacing: -0.8px;
+    display:flex; align-items:center; gap: 10px;
+  }
+  .page-head h2 .emoji{ font-size: 26px;}
+  .page-head .desc{ font-size: 13px; color: var(--ink-soft); margin-top: 4px;}
+
+  .toolbar{ display:flex; gap: 8px;}
+  .tool-btn{
+    background: #fff; border: 1px solid var(--line);
+    color: var(--ink-soft); font-family: inherit;
+    font-size: 13px; font-weight: 600;
+    padding: 8px 14px; border-radius: 10px;
+    cursor: pointer; transition: all .15s ease;
+    display:inline-flex; align-items:center; gap: 6px;
+  }
+  .tool-btn:hover{ border-color: var(--primary); color: var(--primary); transform: translateY(-1px);}
+  .tool-btn.primary{
+    background: var(--primary); border-color: var(--primary); color: #fff;
+    box-shadow: 0 2px 6px rgba(245,158,59,0.3);
+  }
+  .tool-btn.primary:hover{ background: #e88a2a; border-color: #e88a2a; color: #fff;}
+
+  /* ========== 문제 카드 ========== */
+  .problem{
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 28px 32px; margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    transition: box-shadow .2s ease;
+  }
+  .problem:hover{ box-shadow: var(--shadow-lg);}
+
+  .problem-head{
+    display:flex; align-items:center; justify-content:space-between;
+    gap: 16px; margin-bottom: 18px; flex-wrap: wrap;
+  }
+  .problem-num{
+    display:inline-flex; align-items:center; gap: 8px;
+    font-size: 14px; font-weight: 700; color: var(--ink);
+  }
+  .problem-num .badge{
+    width: 30px; height: 30px;
+    background: var(--primary-bg); color: var(--primary);
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size: 14px; font-weight: 800;
+    border: 2px solid var(--primary-soft);
+  }
+
+  .labels{ display:flex; gap: 6px; flex-wrap: wrap;}
+  .label{
+    display:inline-flex; align-items:center; gap: 5px;
+    font-size: 12px; font-weight: 600;
+    padding: 4px 10px; border-radius: 20px; line-height: 1.3;
+  }
+  .label.tag-source{ background: var(--primary-bg); color: #c97014;}
+  .label.tag-score{ background: var(--blue-bg); color: #2c6a99;}
+  .label.tag-type{ background: var(--purple-bg); color: #6f4ea0;}
+  .label::before{ content:"#"; opacity: 0.6; font-weight: 700;}
+
+  .stem{
+    font-size: 15.5px; line-height: 1.85;
+    color: var(--ink); margin-bottom: 18px;
+  }
+  .stem p{ margin-bottom: 6px;}
+
+  /* 수식 */
+  .math{
+    font-family: 'KaTeX_Main', 'Noto Sans KR', serif;
+    font-style: italic; font-size: 1.05em;
+    padding: 0 1px; color: var(--ink);
+  }
+  .math .num{ font-style: normal;}
+  .math sup{ font-size: 0.72em; vertical-align: super; font-style: italic; margin-left: 1px;}
+  .math sub{ font-size: 0.72em; vertical-align: sub; font-style: italic;}
+  .math-display{
+    display:block; text-align:center;
+    font-family: 'KaTeX_Main', 'Noto Sans KR', serif;
+    font-size: 1.18em;
+    margin: 14px 0; padding: 16px 14px;
+    background: #fdfaf5; border: 1px solid var(--line-soft);
+    border-radius: 12px; color: var(--ink);
+  }
+  .frac{
+    display:inline-flex; flex-direction:column;
+    vertical-align: middle; text-align:center;
+    font-size: 0.88em; margin: 0 3px; line-height: 1.1;
+  }
+  .frac .top{ border-bottom: 1.2px solid currentColor; padding: 0 4px 1px;}
+  .frac .bot{ padding: 1px 4px 0;}
+
+  /* 보기 */
+  .choices{
+    list-style:none; margin: 6px 0 18px;
+    display:grid; gap: 8px;
+  }
+  .choices li{
+    display:flex; align-items:center; gap: 12px;
+    padding: 12px 16px; background: #fff;
+    border: 1.5px solid var(--line);
+    border-radius: 12px; cursor: pointer;
+    transition: all .15s ease; font-size: 15px;
+  }
+  .choices li:hover{
+    border-color: var(--primary); background: #fffaf3;
+    transform: translateX(2px);
+  }
+  .choices li .marker{
+    width: 26px; height: 26px; border-radius: 50%;
+    background: #f5efe3; color: var(--ink-soft);
+    display:flex; align-items:center; justify-content:center;
+    font-weight: 700; font-size: 13px; flex-shrink: 0;
+    transition: all .15s ease;
+  }
+  .choices li:hover .marker{ background: var(--primary); color: #fff;}
+  .choices li.selected{ border-color: var(--primary); background: var(--primary-bg);}
+  .choices li.selected .marker{ background: var(--primary); color: #fff;}
+  .choices li.correct{ border-color: var(--green); background: var(--green-bg);}
+  .choices li.correct .marker{ background: var(--green); color: #fff;}
+  .choices li.correct::after{
+    content: "✓"; margin-left: auto; color: var(--green);
+    font-weight: 800; font-size: 18px;
+  }
+  .choices li.wrong{ border-color: var(--red); background: var(--red-bg); opacity: 0.85;}
+  .choices li.wrong .marker{ background: var(--red); color: #fff;}
+  .choices li.wrong::after{
+    content: "✗"; margin-left: auto; color: var(--red);
+    font-weight: 800; font-size: 18px;
+  }
+
+  .actions{
+    display:flex; align-items:center; justify-content:space-between;
+    gap: 14px; padding-top: 14px; border-top: 1px dashed var(--line);
+  }
+  .check-btn{
+    font-family: inherit; font-size: 14px; font-weight: 700;
+    padding: 11px 24px; background: var(--primary); color: #fff;
+    border: none; border-radius: 10px; cursor: pointer;
+    transition: all .15s ease;
+    box-shadow: 0 3px 0 #d97706;
+    display:inline-flex; align-items:center; gap: 6px;
+  }
+  .check-btn:hover{ transform: translateY(-1px); box-shadow: 0 4px 0 #d97706;}
+  .check-btn:active{ transform: translateY(2px); box-shadow: 0 1px 0 #d97706;}
+  .check-btn:disabled{
+    background: #c9c2b6; box-shadow: 0 3px 0 #a39c91;
+    cursor: not-allowed; transform: none;
+  }
+
+  .verdict{
+    font-size: 14px; font-weight: 700;
+    opacity: 0; transition: opacity .25s ease;
+    display:flex; align-items:center; gap: 8px;
+  }
+  .verdict.show{ opacity: 1;}
+  .verdict.ok{ color: var(--green);}
+  .verdict.no{ color: var(--red);}
+  .verdict .icon{
+    width: 22px; height: 22px; border-radius: 50%;
+    background: currentColor; color: #fff;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size: 13px;
+  }
+  .verdict.ok .icon::before{ content:"✓"; color: #fff;}
+  .verdict.no .icon::before{ content:"✗"; color: #fff;}
+  .verdict .ans{ color: var(--ink-soft); font-weight: 500; margin-left: 4px;}
+
+  aside::-webkit-scrollbar{ width: 6px;}
+  aside::-webkit-scrollbar-thumb{ background: var(--line); border-radius: 3px;}
+  aside::-webkit-scrollbar-thumb:hover{ background: var(--primary-soft);}
+
+  /* 모바일 햄버거 메뉴 */
+  .menu-toggle{
+    display:none;
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top));
+    left: 12px;
+    z-index: 100;
+    width: 44px; height: 44px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--ink);
+  }
+
+  @media (max-width: 860px){
+    .app{ grid-template-columns: 1fr;}
+    aside{
+      position: fixed;
+      top:0; left:0;
+      width: 280px; height: 100vh;
+      transform: translateX(-100%);
+      transition: transform .25s ease;
+      z-index: 50;
+      box-shadow: 8px 0 24px rgba(0,0,0,0.12);
+    }
+    aside.open{ transform: translateX(0); }
+    .menu-toggle{ display: flex; }
+    main{ padding: 70px 16px 60px; }
+    .page-head{ flex-direction: column; align-items: flex-start; gap: 14px;}
+    .toolbar{ flex-wrap: wrap; }
+    .problem{ padding: 22px 18px; }
+    .backdrop{
+      display:none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 40;
+    }
+    .backdrop.show{ display:block; }
+  }
+</style>
+</head>
+<body>
+
+<button class="menu-toggle" id="menuToggle" aria-label="메뉴 열기">☰</button>
+<div class="backdrop" id="backdrop"></div>
+
+<div class="app">
+
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="logo">∑</div>
+      <div>
+        <h1>수학 문제은행</h1>
+        <div class="sub">Math Problem Bank</div>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">단원</div>
+      <ul class="nav-list" id="chapterNav">
+        <li class="active" data-chapter="수학Ⅰ" data-emoji="📘">📘 수학Ⅰ <span class="count">24</span></li>
+        <li data-chapter="수학Ⅱ" data-emoji="📗">📗 수학Ⅱ <span class="count">18</span></li>
+        <li data-chapter="미적분" data-emoji="📕">📕 미적분 <span class="count">31</span></li>
+        <li data-chapter="확률과 통계" data-emoji="📙">📙 확률과 통계 <span class="count">15</span></li>
+        <li data-chapter="기하" data-emoji="📓">📓 기하 <span class="count">9</span></li>
+        <li data-chapter="공통수학Ⅰ" data-emoji="📔">📔 공통수학Ⅰ <span class="count">12</span></li>
+        <li data-chapter="공통수학Ⅱ" data-emoji="📒">📒 공통수학Ⅱ <span class="count">7</span></li>
+      </ul>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">출제 분류</div>
+      <ul class="nav-list">
+        <li>전체 보기 <span class="count">116</span></li>
+        <li>서천고 기출 변형 <span class="count">42</span></li>
+        <li>모의고사 변형 <span class="count">28</span></li>
+        <li>창작 문제 <span class="count">46</span></li>
+      </ul>
+    </div>
+
+    <div class="side-card">
+      <strong>116</strong>
+      등록된 문제
+    </div>
+
+    <button class="install-btn" id="installBtn">
+      📲 앱으로 설치하기
+    </button>
+  </aside>
+
+  <main>
+    <div class="page-head">
+      <div>
+        <h2><span class="emoji" id="chapterEmoji">📘</span><span id="chapterTitle">수학Ⅰ</span></h2>
+        <div class="desc">지수와 로그 · 등차수열 · 등비수열</div>
+      </div>
+      <div class="toolbar">
+        <button class="tool-btn">🔍 검색</button>
+        <button class="tool-btn">⚙ 정렬</button>
+        <button class="tool-btn primary">+ 문제 추가</button>
+      </div>
+    </div>
+
+    <article class="problem">
+      <header class="problem-head">
+        <div class="problem-num">
+          <span class="badge">1</span>
+          <span>지수와 로그</span>
+        </div>
+        <div class="labels">
+          <span class="label tag-source">서천고 기출 변형</span>
+          <span class="label tag-score">3점</span>
+          <span class="label tag-type">객관식</span>
+        </div>
+      </header>
+
+      <div class="stem">
+        <p>다음 식의 값을 구하시오.</p>
+        <span class="math-display">
+          log<sub>2</sub>&thinsp;12 &nbsp;+&nbsp; log<sub>2</sub>&thinsp;
+          <span class="frac"><span class="top">8</span><span class="bot">3</span></span>
+        </span>
+      </div>
+
+      <ul class="choices" data-answer="2">
+        <li><span class="marker">①</span><span class="math">3</span></li>
+        <li><span class="marker">②</span><span class="math">5</span></li>
+        <li><span class="marker">③</span><span class="math">log<sub>2</sub>&thinsp;15</span></li>
+        <li><span class="marker">④</span><span class="math">log<sub>2</sub>&thinsp;32</span></li>
+        <li><span class="marker">⑤</span><span class="math">8</span></li>
+      </ul>
+
+      <div class="actions">
+        <button class="check-btn">정답 확인</button>
+        <div class="verdict"></div>
+      </div>
+    </article>
+
+    <article class="problem">
+      <header class="problem-head">
+        <div class="problem-num">
+          <span class="badge">2</span>
+          <span>등차수열</span>
+        </div>
+        <div class="labels">
+          <span class="label tag-source">서천고 기출 변형</span>
+          <span class="label tag-score">4점</span>
+          <span class="label tag-type">객관식</span>
+        </div>
+      </header>
+
+      <div class="stem">
+        <p>등차수열 <span class="math">{a<sub>n</sub>}</span>에 대하여
+          <span class="math">a<sub>3</sub> = 7</span>,
+          <span class="math">a<sub>7</sub> = 19</span>일 때,
+          첫째항부터 제 <span class="math">10</span> 항까지의 합
+          <span class="math">S<sub>10</sub></span>의 값은?</p>
+        <span class="math-display">
+          S<sub>10</sub> = <span class="frac"><span class="top">10</span><span class="bot">2</span></span>
+          (2a<sub>1</sub> + 9d)
+        </span>
+      </div>
+
+      <ul class="choices" data-answer="3">
+        <li><span class="marker">①</span><span class="math">120</span></li>
+        <li><span class="marker">②</span><span class="math">135</span></li>
+        <li><span class="marker">③</span><span class="math">145</span></li>
+        <li><span class="marker">④</span><span class="math">160</span></li>
+        <li><span class="marker">⑤</span><span class="math">175</span></li>
+      </ul>
+
+      <div class="actions">
+        <button class="check-btn">정답 확인</button>
+        <div class="verdict"></div>
+      </div>
+    </article>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ===== 사이드바 단원 클릭 ===== */
+  const chapterTitle = document.getElementById('chapterTitle');
+  const chapterEmoji = document.getElementById('chapterEmoji');
+  document.querySelectorAll('#chapterNav li').forEach(li => {
+    li.addEventListener('click', () => {
+      document.querySelectorAll('#chapterNav li').forEach(x => x.classList.remove('active'));
+      li.classList.add('active');
+      chapterTitle.textContent = li.dataset.chapter;
+      chapterEmoji.textContent = li.dataset.emoji;
+      // 모바일에서 메뉴 닫기
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('backdrop').classList.remove('show');
+    });
+  });
+
+  /* ===== 모바일 햄버거 메뉴 ===== */
+  const menuToggle = document.getElementById('menuToggle');
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('backdrop');
+  menuToggle.addEventListener('click', () => {
+    sidebar.classList.add('open');
+    backdrop.classList.add('show');
+  });
+  backdrop.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('show');
+  });
+
+  /* ===== 문제 정답 확인 ===== */
+  document.querySelectorAll('.problem').forEach(prob => {
+    const choices = prob.querySelectorAll('.choices li');
+    const choicesUl = prob.querySelector('.choices');
+    const btn = prob.querySelector('.check-btn');
+    const verdict = prob.querySelector('.verdict');
+    const answer = parseInt(choicesUl.dataset.answer, 10);
+    const marks = ['①','②','③','④','⑤'];
+
+    let selected = null;
+    choices.forEach((li, idx) => {
+      li.addEventListener('click', () => {
+        if (btn.disabled) return;
+        choices.forEach(x => x.classList.remove('selected'));
+        li.classList.add('selected');
+        selected = idx + 1;
+      });
+    });
+
+    btn.addEventListener('click', () => {
+      if (!selected) {
+        verdict.innerHTML = '<span class="icon"></span> 보기를 먼저 선택하세요';
+        verdict.className = 'verdict show no';
+        return;
+      }
+      if (selected === answer) {
+        verdict.innerHTML = '<span class="icon"></span> 정답입니다! <span class="ans">잘했어요 🎉</span>';
+        verdict.className = 'verdict show ok';
+        choices[answer-1].classList.add('correct');
+      } else {
+        verdict.innerHTML = '<span class="icon"></span> 다시 풀어볼까요? <span class="ans">정답: ' + marks[answer-1] + '</span>';
+        verdict.className = 'verdict show no';
+        choices[selected-1].classList.add('wrong');
+        choices[answer-1].classList.add('correct');
+      }
+      btn.disabled = true;
+      btn.textContent = '확인 완료';
+    });
+  });
+
+  /* ===== 토스트 메시지 ===== */
+  function showToast(msg, duration = 4000){
+    const toast = document.getElementById('toast');
+    toast.innerHTML = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), duration);
+  }
+
+  /* ===== PWA: 서비스 워커 등록 ===== */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(reg => console.log('✅ Service Worker 등록됨:', reg.scope))
+        .catch(err => console.log('❌ Service Worker 등록 실패:', err));
+    });
+  }
+
+  /* ===== PWA: 설치 버튼 (안드로이드/윈도우 크롬·엣지) ===== */
+  let deferredPrompt = null;
+  const installBtn = document.getElementById('installBtn');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.classList.add('show');
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      showToast('🎉 앱이 설치되었습니다!');
+    }
+    deferredPrompt = null;
+    installBtn.classList.remove('show');
+  });
+
+  window.addEventListener('appinstalled', () => {
+    installBtn.classList.remove('show');
+    showToast('🎉 앱 설치 완료! 홈 화면을 확인해보세요.');
+  });
+
+  /* ===== PWA: iOS Safari 사용자에게는 안내 표시 (자동 설치 미지원) ===== */
+  function isIOS(){
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  }
+  function isStandalone(){
+    return window.matchMedia('(display-mode: standalone)').matches
+        || window.navigator.standalone === true;
+  }
+  window.addEventListener('load', () => {
+    if (isIOS() && !isStandalone()) {
+      setTimeout(() => {
+        showToast('💡 iPhone/iPad 사용자는 Safari의<br>「공유」 → 「홈 화면에 추가」로 설치하세요.', 6000);
+      }, 1500);
+    }
+  });
+</script>
+
+</body>
+</html>
