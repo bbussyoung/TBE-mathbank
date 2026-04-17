@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>수학 문제은행</title>
 
-<!-- PWA 설정 -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#f59e3b">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,7 +14,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 
 <style>
@@ -59,21 +58,15 @@
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
 
-  .app{
-    display:grid;
-    grid-template-columns: 260px 1fr;
-    min-height:100vh;
-  }
+  .app{ display:grid; grid-template-columns: 260px 1fr; min-height:100vh;}
 
-  /* ========== 사이드바 ========== */
+  /* 사이드바 */
   aside{
     background: var(--sidebar);
     border-right: 1px solid var(--line);
     padding: 28px 20px;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto;
+    position: sticky; top: 0;
+    height: 100vh; overflow-y: auto;
   }
   .brand{
     display:flex; align-items:center; gap: 10px;
@@ -83,8 +76,7 @@
   }
   .brand .logo{
     width: 38px; height: 38px;
-    background: var(--primary);
-    border-radius: 12px;
+    background: var(--primary); border-radius: 12px;
     display:flex; align-items:center; justify-content:center;
     color: #fff; font-weight: 800; font-size: 18px;
     box-shadow: 0 3px 0 #d97706, 0 4px 8px rgba(245, 158, 59, 0.3);
@@ -123,6 +115,32 @@
   }
   .nav-list li.active .count{ background: rgba(255,255,255,0.25); color: #fff;}
 
+  /* 모드 전환 버튼 */
+  .mode-switch{
+    margin-bottom: 20px;
+    display: flex;
+    gap: 4px;
+    background: #fff;
+    padding: 3px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .mode-switch button{
+    flex: 1;
+    padding: 8px 6px;
+    background: none; border: none;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 12px; font-weight: 700;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .mode-switch button.active{
+    background: var(--primary-bg);
+    color: #c97014;
+  }
+
   .side-card{
     background: #fff; border: 1px solid var(--line);
     border-radius: var(--radius); padding: 14px;
@@ -135,16 +153,11 @@
     font-weight: 800; margin-bottom: 2px;
   }
 
-  /* Firebase 연결 상태 */
   .fb-status{
-    margin-top: 12px;
-    padding: 10px 12px;
+    margin-top: 12px; padding: 10px 12px;
     border-radius: 10px;
-    font-size: 11px;
-    font-weight: 600;
-    display:flex;
-    align-items:center;
-    gap: 6px;
+    font-size: 11px; font-weight: 600;
+    display:flex; align-items:center; gap: 6px;
   }
   .fb-status.connected{ background: var(--green-bg); color: #3a7343;}
   .fb-status.connecting{ background: #fff3cd; color: #8a6815;}
@@ -154,20 +167,16 @@
     background: currentColor;
     animation: pulse 2s ease-in-out infinite;
   }
-  @keyframes pulse{
-    0%, 100%{ opacity: 1;}
-    50%{ opacity: 0.4;}
-  }
+  @keyframes pulse{ 0%, 100%{ opacity: 1;} 50%{ opacity: 0.4;} }
 
-  /* ========== 메인 ========== */
+  /* 메인 */
   main{ padding: 36px 48px 80px; max-width: 980px;}
 
   .page-head{
     display:flex; align-items:center; justify-content:space-between;
     margin-bottom: 28px; padding-bottom: 20px;
     border-bottom: 1px solid var(--line);
-    flex-wrap: wrap;
-    gap: 14px;
+    flex-wrap: wrap; gap: 14px;
   }
   .page-head h2{
     font-size: 28px; font-weight: 800;
@@ -197,22 +206,85 @@
   }
   .tool-btn.ghost-accent:hover{ background: var(--purple); color: #fff;}
 
-  /* ========== 문제 카드 ========== */
-  .loading-state, .empty-state{
+  /* 필터 패널 (학습지 모드) */
+  .filter-panel{
     background: #fff;
-    border: 2px dashed var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    align-items: end;
+  }
+  .filter-group label{
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-faint);
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+  }
+  .filter-group select,
+  .filter-group input{
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    background: #fff;
+  }
+  .filter-group select:focus,
+  .filter-group input:focus{
+    outline: none; border-color: var(--primary);
+  }
+
+  /* 선택 현황 배너 */
+  .selection-bar{
+    background: var(--primary-bg);
+    border: 1px solid var(--primary-soft);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    backdrop-filter: blur(10px);
+  }
+  .selection-info{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #8a5614;
+  }
+  .selection-info strong{
+    font-size: 18px;
+    color: var(--primary);
+    font-weight: 800;
+  }
+  .selection-actions{ display: flex; gap: 6px; flex-wrap: wrap;}
+
+  /* 문제 카드 */
+  .loading-state, .empty-state{
+    background: #fff; border: 2px dashed var(--line);
     border-radius: var(--radius-lg);
-    padding: 48px 28px;
-    text-align: center;
-    color: var(--ink-soft);
+    padding: 48px 28px; text-align: center; color: var(--ink-soft);
   }
   .empty-state .big-emoji, .loading-state .big-emoji{ font-size: 48px; margin-bottom: 8px;}
   .empty-state h3, .loading-state h3{ font-size: 16px; font-weight: 700; margin-bottom: 4px; color: var(--ink);}
   .empty-state p, .loading-state p{ font-size: 13px;}
   .spinner{
     width: 36px; height: 36px;
-    border: 3px solid var(--line);
-    border-top-color: var(--primary);
+    border: 3px solid var(--line); border-top-color: var(--primary);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     margin: 0 auto 12px;
@@ -222,57 +294,89 @@
   .problem{
     background: var(--panel); border: 1px solid var(--line);
     border-radius: var(--radius-lg);
-    padding: 28px 32px; margin-bottom: 16px;
+    padding: 24px 28px 20px; margin-bottom: 14px;
     box-shadow: var(--shadow);
-    transition: box-shadow .2s ease;
+    transition: all .18s ease;
     position: relative;
   }
   .problem:hover{ box-shadow: var(--shadow-lg);}
 
-  .problem-actions{
+  /* 학습지 모드: 선택 가능 스타일 */
+  .worksheet-mode .problem{
+    cursor: pointer;
+    padding-left: 58px;
+  }
+  .worksheet-mode .problem::before{
+    content: "";
     position: absolute;
-    top: 16px; right: 16px;
-    display: flex;
-    gap: 4px;
-    opacity: 0;
-    transition: opacity .15s ease;
+    top: 28px;
+    left: 22px;
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    transition: all .15s ease;
+  }
+  .worksheet-mode .problem.selected{
+    border-color: var(--primary);
+    background: linear-gradient(to right, rgba(245,158,59,0.04), transparent);
+    box-shadow: 0 0 0 2px var(--primary-soft);
+  }
+  .worksheet-mode .problem.selected::before{
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+  .worksheet-mode .problem.selected::after{
+    content: "✓";
+    position: absolute;
+    top: 26px;
+    left: 25px;
+    color: #fff;
+    font-weight: 800;
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .problem-actions{
+    position: absolute; top: 16px; right: 16px;
+    display: flex; gap: 4px;
+    opacity: 0; transition: opacity .15s ease;
   }
   .problem:hover .problem-actions{ opacity: 1;}
+  .worksheet-mode .problem-actions{ display: none;}
   .icon-btn{
     width: 30px; height: 30px;
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    cursor: pointer;
+    background: #fff; border: 1px solid var(--line);
+    border-radius: 8px; cursor: pointer;
     display:flex; align-items:center; justify-content:center;
-    font-size: 13px;
-    color: var(--ink-soft);
+    font-size: 13px; color: var(--ink-soft);
     transition: all .15s ease;
   }
   .icon-btn:hover{ border-color: var(--red); color: var(--red);}
 
   .problem-head{
     display:flex; align-items:center; justify-content:space-between;
-    gap: 16px; margin-bottom: 18px; flex-wrap: wrap;
+    gap: 16px; margin-bottom: 14px; flex-wrap: wrap;
   }
   .problem-num{
     display:inline-flex; align-items:center; gap: 8px;
     font-size: 14px; font-weight: 700;
   }
   .problem-num .badge{
-    width: 30px; height: 30px;
+    width: 28px; height: 28px;
     background: var(--primary-bg); color: var(--primary);
     border-radius: 50%;
     display:flex; align-items:center; justify-content:center;
-    font-size: 14px; font-weight: 800;
+    font-size: 13px; font-weight: 800;
     border: 2px solid var(--primary-soft);
   }
 
-  .labels{ display:flex; gap: 6px; flex-wrap: wrap;}
+  .labels{ display:flex; gap: 5px; flex-wrap: wrap;}
   .label{
-    display:inline-flex; align-items:center; gap: 5px;
-    font-size: 12px; font-weight: 600;
-    padding: 4px 10px; border-radius: 20px; line-height: 1.3;
+    display:inline-flex; align-items:center; gap: 4px;
+    font-size: 11px; font-weight: 600;
+    padding: 3px 8px; border-radius: 20px; line-height: 1.3;
   }
   .label.tag-source{ background: var(--primary-bg); color: #c97014;}
   .label.tag-score{ background: var(--blue-bg); color: #2c6a99;}
@@ -283,10 +387,7 @@
   .label::before{ content:"#"; opacity: 0.6; font-weight: 700;}
   .label.tag-diff-상::before, .label.tag-diff-중::before, .label.tag-diff-하::before{ content: ""; }
 
-  .stem{
-    font-size: 15.5px; line-height: 1.85;
-    margin-bottom: 18px;
-  }
+  .stem{ font-size: 15px; line-height: 1.8; margin-bottom: 14px;}
   .stem p{ margin-bottom: 6px;}
 
   .math{
@@ -297,47 +398,38 @@
   .math sup{ font-size: 0.72em; vertical-align: super; font-style: italic; margin-left: 1px;}
   .math sub{ font-size: 0.72em; vertical-align: sub; font-style: italic;}
 
-  .choices{
-    list-style:none; margin: 6px 0 18px;
-    display:grid; gap: 8px;
-  }
+  .choices{ list-style:none; margin: 6px 0 14px; display:grid; gap: 6px;}
   .choices li{
-    display:flex; align-items:center; gap: 12px;
-    padding: 12px 16px; background: #fff;
+    display:flex; align-items:center; gap: 10px;
+    padding: 10px 14px; background: #fff;
     border: 1.5px solid var(--line);
-    border-radius: 12px; cursor: pointer;
-    transition: all .15s ease; font-size: 15px;
+    border-radius: 10px; cursor: pointer;
+    transition: all .15s ease; font-size: 14px;
   }
-  .choices li:hover{ border-color: var(--primary); background: #fffaf3; transform: translateX(2px);}
+  .choices li:hover{ border-color: var(--primary); background: #fffaf3;}
   .choices li .marker{
-    width: 26px; height: 26px; border-radius: 50%;
+    width: 24px; height: 24px; border-radius: 50%;
     background: #f5efe3; color: var(--ink-soft);
     display:flex; align-items:center; justify-content:center;
-    font-weight: 700; font-size: 13px; flex-shrink: 0;
-    transition: all .15s ease;
+    font-weight: 700; font-size: 12px; flex-shrink: 0;
   }
-  .choices li:hover .marker{ background: var(--primary); color: #fff;}
   .choices li.selected{ border-color: var(--primary); background: var(--primary-bg);}
   .choices li.selected .marker{ background: var(--primary); color: #fff;}
   .choices li.correct{ border-color: var(--green); background: var(--green-bg);}
   .choices li.correct .marker{ background: var(--green); color: #fff;}
-  .choices li.correct::after{ content: "✓"; margin-left: auto; color: var(--green); font-weight: 800; font-size: 18px;}
+  .choices li.correct::after{ content: "✓"; margin-left: auto; color: var(--green); font-weight: 800;}
   .choices li.wrong{ border-color: var(--red); background: var(--red-bg); opacity: 0.85;}
   .choices li.wrong .marker{ background: var(--red); color: #fff;}
-  .choices li.wrong::after{ content: "✗"; margin-left: auto; color: var(--red); font-weight: 800; font-size: 18px;}
+  .choices li.wrong::after{ content: "✗"; margin-left: auto; color: var(--red); font-weight: 800;}
 
   .short-answer-wrap{
-    display:flex; gap: 8px; margin-bottom: 18px;
-    align-items: center;
+    display:flex; gap: 8px; margin-bottom: 14px; align-items: center;
   }
   .short-answer-wrap input{
-    flex: 1;
-    padding: 12px 16px;
-    border: 1.5px solid var(--line);
-    border-radius: 10px;
+    flex: 1; padding: 10px 14px;
+    border: 1.5px solid var(--line); border-radius: 10px;
     font-family: 'KaTeX_Main', 'Noto Sans KR', serif;
-    font-size: 16px;
-    background: #fff;
+    font-size: 15px; background: #fff;
   }
   .short-answer-wrap input:focus{ outline: none; border-color: var(--primary);}
   .short-answer-wrap input.correct{ border-color: var(--green); background: var(--green-bg);}
@@ -345,55 +437,44 @@
 
   .actions{
     display:flex; align-items:center; justify-content:space-between;
-    gap: 14px; padding-top: 14px; border-top: 1px dashed var(--line);
+    gap: 12px; padding-top: 12px; border-top: 1px dashed var(--line);
   }
   .check-btn{
-    font-family: inherit; font-size: 14px; font-weight: 700;
-    padding: 11px 24px; background: var(--primary); color: #fff;
+    font-family: inherit; font-size: 13px; font-weight: 700;
+    padding: 9px 20px; background: var(--primary); color: #fff;
     border: none; border-radius: 10px; cursor: pointer;
     transition: all .15s ease;
     box-shadow: 0 3px 0 #d97706;
-    display:inline-flex; align-items:center; gap: 6px;
   }
   .check-btn:hover{ transform: translateY(-1px); box-shadow: 0 4px 0 #d97706;}
   .check-btn:active{ transform: translateY(2px); box-shadow: 0 1px 0 #d97706;}
   .check-btn:disabled{ background: #c9c2b6; box-shadow: 0 3px 0 #a39c91; cursor: not-allowed; transform: none;}
 
   .verdict{
-    font-size: 14px; font-weight: 700;
+    font-size: 13px; font-weight: 700;
     opacity: 0; transition: opacity .25s ease;
-    display:flex; align-items:center; gap: 8px;
+    display:flex; align-items:center; gap: 6px;
   }
   .verdict.show{ opacity: 1;}
   .verdict.ok{ color: var(--green);}
   .verdict.no{ color: var(--red);}
-  .verdict .icon{
-    width: 22px; height: 22px; border-radius: 50%;
-    background: currentColor; color: #fff;
-    display:inline-flex; align-items:center; justify-content:center;
-    font-size: 13px;
-  }
-  .verdict.ok .icon::before{ content:"✓"; color: #fff;}
-  .verdict.no .icon::before{ content:"✗"; color: #fff;}
   .verdict .ans{ color: var(--ink-soft); font-weight: 500; margin-left: 4px;}
 
   .explanation-toggle{
-    margin-top: 12px; color: var(--ink-faint);
+    margin-top: 10px; color: var(--ink-faint);
     font-size: 12px; cursor: pointer;
-    display:inline-flex; gap: 4px; align-items:center;
     background: none; border: none; font-family: inherit; padding: 4px 0;
   }
   .explanation-toggle:hover{ color: var(--primary);}
   .explanation{
-    display: none; margin-top: 10px;
-    padding: 14px 16px; background: #f8f9fa;
+    display: none; margin-top: 8px;
+    padding: 12px 14px; background: #f8f9fa;
     border-left: 3px solid var(--primary); border-radius: 6px;
-    font-size: 14px; line-height: 1.7; color: var(--ink-soft);
+    font-size: 13px; line-height: 1.7; color: var(--ink-soft);
   }
   .explanation.show{ display: block;}
-  .explanation strong{ color: var(--ink);}
 
-  /* ========== 모달 ========== */
+  /* 모달 공통 */
   .modal-backdrop{
     display: none;
     position: fixed; inset: 0;
@@ -405,18 +486,15 @@
   }
   .modal-backdrop.show{ display: flex;}
   .modal{
-    background: #fff;
-    border-radius: 16px;
-    width: 100%;
-    max-width: 680px;
-    max-height: 90vh;
+    background: #fff; border-radius: 16px;
+    width: 100%; max-width: 680px; max-height: 90vh;
     overflow: hidden;
     display: flex; flex-direction: column;
     box-shadow: 0 20px 60px rgba(0,0,0,0.25);
   }
+  .modal.wide{ max-width: 820px;}
   .modal-head{
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--line);
+    padding: 18px 24px; border-bottom: 1px solid var(--line);
     display:flex; align-items:center; justify-content:space-between;
   }
   .modal-head h3{ font-size: 17px; font-weight: 800;}
@@ -428,8 +506,7 @@
   .modal-close:hover{ background: #f5efe3; color: var(--ink);}
   .modal-body{ padding: 20px 24px; overflow-y: auto; flex: 1;}
   .modal-foot{
-    padding: 14px 24px;
-    border-top: 1px solid var(--line);
+    padding: 14px 24px; border-top: 1px solid var(--line);
     display: flex; justify-content: flex-end; gap: 8px;
     background: #fbf7f0;
   }
@@ -475,8 +552,7 @@
   }
   .choice-input-row .num{ text-align: center; font-weight: 700; color: var(--ink-soft);}
   .choice-input-row input[type="radio"]{
-    width: 20px; height: 20px;
-    accent-color: var(--primary); cursor: pointer;
+    width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer;
   }
 
   .import-textarea{
@@ -486,7 +562,6 @@
     font-size: 12.5px; line-height: 1.6;
     resize: vertical; background: #fbf9f4;
   }
-  .import-textarea:focus{ outline: none; border-color: var(--primary);}
   .import-hint{
     font-size: 12px; color: var(--ink-soft); line-height: 1.6;
     background: var(--blue-bg);
@@ -509,13 +584,11 @@
     border: 1px solid var(--line); border-radius: 6px;
     margin-bottom: 6px; font-size: 13px; line-height: 1.5;
   }
-  .preview-item .p-meta{ display:flex; gap: 6px; font-size: 11px; margin-bottom: 4px;}
 
   .toast{
     position: fixed;
     bottom: calc(24px + env(safe-area-inset-bottom));
-    left: 50%;
-    transform: translateX(-50%) translateY(100px);
+    left: 50%; transform: translateX(-50%) translateY(100px);
     background: var(--ink); color: #fff;
     padding: 12px 20px; border-radius: 12px;
     font-size: 13px; font-weight: 600;
@@ -560,6 +633,169 @@
     .backdrop{ display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 40;}
     .backdrop.show{ display:block;}
   }
+
+  /* ======================================================================== */
+  /* 인쇄 전용 스타일                                                           */
+  /* ======================================================================== */
+  .print-only{ display: none;}
+
+  @media print{
+    /* 모든 일반 요소 숨김 */
+    body * { visibility: hidden;}
+    .print-area, .print-area *{ visibility: visible;}
+    .print-area{
+      position: absolute;
+      left: 0; top: 0;
+      width: 100%;
+      padding: 0;
+      background: #fff;
+    }
+    aside, .toolbar, .page-head, .filter-panel, .selection-bar,
+    .problem-actions, .actions, .check-btn, .verdict,
+    .explanation-toggle, .modal-backdrop, .toast, .fb-status{
+      display: none !important;
+    }
+    @page{
+      size: A4;
+      margin: 16mm 14mm 16mm 14mm;
+    }
+    .print-only{ display: block;}
+  }
+
+  /* 학습지(출력용) 스타일 */
+  .worksheet-doc{
+    font-family: 'Noto Sans KR', sans-serif;
+    color: #000;
+    line-height: 1.6;
+    max-width: 100%;
+  }
+  .ws-header{
+    border-bottom: 2px solid #000;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+  }
+  .ws-header .ws-title{
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: 20pt;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 3px;
+  }
+  .ws-header .ws-subtitle{
+    font-size: 10pt;
+    color: #555;
+    margin-bottom: 8px;
+  }
+  .ws-header .ws-meta{
+    display: flex;
+    gap: 14px;
+    font-size: 10pt;
+  }
+  .ws-header .ws-meta span{
+    border-bottom: 1px solid #000;
+    padding: 2px 8px 2px 4px;
+    min-width: 70px;
+    display: inline-block;
+  }
+
+  .ws-questions{
+    column-count: 1;
+    column-gap: 24px;
+  }
+  .ws-questions.two-col{ column-count: 2;}
+
+  .ws-question{
+    break-inside: avoid;
+    margin-bottom: 14px;
+    padding: 6px 0;
+    font-size: 11pt;
+    line-height: 1.7;
+  }
+  .ws-q-head{
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+  .ws-q-num{
+    font-weight: 800;
+    font-size: 11pt;
+    flex-shrink: 0;
+  }
+  .ws-q-score{
+    font-size: 9pt;
+    color: #666;
+    margin-left: 4px;
+  }
+  .ws-q-stem{
+    margin-bottom: 6px;
+  }
+  .ws-choices{
+    list-style: none;
+    padding-left: 16px;
+    margin-top: 4px;
+  }
+  .ws-choices li{
+    margin-bottom: 2px;
+    font-size: 10.5pt;
+  }
+  .ws-short-space{
+    border-bottom: 1px solid #999;
+    margin: 6px 0 8px;
+    height: 22px;
+    width: 50%;
+  }
+
+  /* 답안 / 해설 페이지 */
+  .ws-answer-page{
+    page-break-before: always;
+    padding-top: 10px;
+  }
+  .ws-answer-page h3{
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: 14pt;
+    font-weight: 800;
+    border-bottom: 1px solid #000;
+    padding-bottom: 6px;
+    margin-bottom: 12px;
+  }
+  .ws-answer-grid{
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px 10px;
+    font-size: 11pt;
+  }
+  .ws-answer-grid .ans-item{
+    padding: 4px;
+  }
+  .ws-answer-grid .ans-item strong{ margin-right: 4px;}
+
+  .ws-solution{
+    break-inside: avoid;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #aaa;
+    font-size: 10.5pt;
+    line-height: 1.65;
+  }
+  .ws-solution h4{
+    font-size: 11pt;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .ws-solution .sol-body{
+    padding-left: 14px;
+    color: #333;
+  }
+
+  .ws-footer{
+    position: fixed;
+    bottom: 8mm;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 9pt;
+    color: #666;
+  }
 </style>
 </head>
 <body>
@@ -576,6 +812,11 @@
         <h1>수학 문제은행</h1>
         <div class="sub">Math Problem Bank</div>
       </div>
+    </div>
+
+    <div class="mode-switch" id="modeSwitch">
+      <button class="active" data-mode="browse">🔍 둘러보기</button>
+      <button data-mode="worksheet">📝 학습지 만들기</button>
     </div>
 
     <div class="nav-section">
@@ -603,8 +844,9 @@
     </div>
   </aside>
 
-  <main>
-    <div class="page-head">
+  <main id="mainArea">
+    <!-- 둘러보기 모드 헤더 -->
+    <div class="page-head" id="headBrowse">
       <div>
         <h2><span class="emoji" id="chapterEmoji">📚</span><span id="chapterTitle">전체</span></h2>
         <div class="desc" id="chapterDesc">등록된 모든 문제</div>
@@ -612,6 +854,62 @@
       <div class="toolbar">
         <button class="tool-btn ghost-accent" id="btnImport">📥 AI 변형 가져오기</button>
         <button class="tool-btn primary" id="btnAdd">+ 문제 추가</button>
+      </div>
+    </div>
+
+    <!-- 학습지 모드 헤더 -->
+    <div class="page-head" id="headWorksheet" style="display:none;">
+      <div>
+        <h2>📝 학습지 만들기</h2>
+        <div class="desc">필터로 문제를 좁히고, 체크박스로 선택한 뒤 학습지로 만드세요.</div>
+      </div>
+    </div>
+
+    <!-- 학습지 모드: 필터 -->
+    <div class="filter-panel" id="filterPanel" style="display:none;">
+      <div class="filter-group">
+        <label>단원</label>
+        <select id="fltChapter">
+          <option value="">전체</option>
+          <option>수학Ⅰ</option><option>수학Ⅱ</option><option>미적분</option>
+          <option>확률과 통계</option><option>기하</option>
+          <option>공통수학Ⅰ</option><option>공통수학Ⅱ</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>난이도</label>
+        <select id="fltDifficulty">
+          <option value="">전체</option>
+          <option>하</option><option>중</option><option>상</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>유형</label>
+        <select id="fltType">
+          <option value="">전체</option>
+          <option value="multiple">객관식</option>
+          <option value="short">주관식</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>출처 (일부 일치)</label>
+        <input type="text" id="fltSource" placeholder="예) 서천고"/>
+      </div>
+      <div class="filter-group">
+        <label>키워드 (지문)</label>
+        <input type="text" id="fltKeyword" placeholder="예) 로그"/>
+      </div>
+    </div>
+
+    <!-- 학습지 모드: 선택 현황 -->
+    <div class="selection-bar" id="selectionBar" style="display:none;">
+      <div class="selection-info">
+        선택된 문제 <strong id="selCount">0</strong>개
+      </div>
+      <div class="selection-actions">
+        <button class="tool-btn" id="btnSelectAll">👁 보이는 문제 모두 선택</button>
+        <button class="tool-btn" id="btnClearSel">✖ 선택 해제</button>
+        <button class="tool-btn primary" id="btnMakeWorksheet">📄 학습지 만들기</button>
       </div>
     </div>
 
@@ -650,7 +948,7 @@
       </div>
       <div class="form-group">
         <label>문제 지문 <span class="required">*</span></label>
-        <textarea id="fStem" rows="3" placeholder="예) log₂12 + log₂(8/3)의 값은?"></textarea>
+        <textarea id="fStem" rows="3"></textarea>
       </div>
       <div id="choiceFields">
         <div class="form-group">
@@ -665,7 +963,7 @@
       <div id="shortFields" style="display:none;">
         <div class="form-group">
           <label>정답 <span class="required">*</span></label>
-          <input id="fShortAnswer" type="text" placeholder="예) 5"/>
+          <input id="fShortAnswer" type="text"/>
         </div>
       </div>
       <div class="form-group">
@@ -703,23 +1001,9 @@
     </div>
     <div class="modal-body">
       <div class="import-hint">
-        💡 <strong>사용 방법:</strong> Claude에게 원본 문제를 보여주고 JSON 형식으로 변형 문제를 받은 뒤,
-        아래에 붙여넣고 <code>미리보기</code>를 누르세요.
+        💡 Claude에게 원본 문제를 주고 받은 JSON을 붙여넣은 뒤 <code>미리보기</code> → <code>가져오기</code>.
       </div>
-      <textarea class="import-textarea" id="importArea" placeholder='[
-  {
-    "chapter": "수학Ⅰ",
-    "topic": "지수와 로그",
-    "type": "multiple",
-    "stem": "문제 지문",
-    "choices": ["①","②","③","④","⑤"],
-    "answer": 2,
-    "explanation": "풀이",
-    "difficulty": "중",
-    "source": "서천고 기출 변형",
-    "score": "3점"
-  }
-]'></textarea>
+      <textarea class="import-textarea" id="importArea" placeholder='[{"chapter":"수학Ⅰ","topic":"...","type":"multiple","stem":"...","choices":["①","②","③","④","⑤"],"answer":2,"explanation":"...","difficulty":"중","source":"서천고 기출 변형","score":"3점"}]'></textarea>
       <div id="importPreview" style="margin-top: 14px; display: none;">
         <div style="font-size: 12px; font-weight: 700; color: var(--ink-soft); margin-bottom: 8px;" id="previewCount"></div>
         <div class="preview-list" id="previewList"></div>
@@ -733,25 +1017,95 @@
   </div>
 </div>
 
+<!-- 학습지 설정 모달 -->
+<div class="modal-backdrop" id="worksheetModal">
+  <div class="modal wide">
+    <div class="modal-head">
+      <h3>📄 학습지 설정</h3>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>학습지 제목 <span class="required">*</span></label>
+          <input id="wsTitle" type="text" value="수학 학습지" placeholder="예) 수학Ⅰ 단원평가"/>
+        </div>
+        <div class="form-group">
+          <label>부제 / 대상</label>
+          <input id="wsSubtitle" type="text" placeholder="예) 2학년 3반 · 지수와 로그"/>
+        </div>
+      </div>
+
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>조판</label>
+          <select id="wsLayout">
+            <option value="auto">자동 (문제에 따라)</option>
+            <option value="1">1단 (한 줄에 한 문제)</option>
+            <option value="2">2단 (종이 절약)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>문제 순서</label>
+          <select id="wsOrder">
+            <option value="keep">선택한 순서 그대로</option>
+            <option value="shuffle">랜덤 섞기</option>
+            <option value="chapter">단원 순</option>
+            <option value="difficulty">난이도 순(하→상)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>기재란 표시</label>
+          <select id="wsFields">
+            <option value="all">학번 · 이름 · 날짜</option>
+            <option value="name-only">이름만</option>
+            <option value="none">없음</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label style="margin-bottom: 8px;">포함할 내용</label>
+        <div style="display:flex; gap: 16px; flex-wrap: wrap;">
+          <label style="display:flex; align-items:center; gap:6px; font-weight:500; cursor:pointer;">
+            <input type="checkbox" id="wsIncludeAnswers" checked style="width:18px; height:18px; accent-color: var(--primary);"/>
+            📋 정답지 (별도 페이지)
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; font-weight:500; cursor:pointer;">
+            <input type="checkbox" id="wsIncludeExplanations" style="width:18px; height:18px; accent-color: var(--primary);"/>
+            💡 해설지 (별도 페이지)
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; font-weight:500; cursor:pointer;">
+            <input type="checkbox" id="wsIncludeScore" checked style="width:18px; height:18px; accent-color: var(--primary);"/>
+            🏆 배점 표시
+          </label>
+        </div>
+      </div>
+
+      <div id="wsSelectedSummary" style="font-size: 12px; color: var(--ink-soft); margin-top: 12px; padding: 10px; background: var(--primary-bg); border-radius: 8px;">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="tool-btn" data-close>취소</button>
+      <button class="tool-btn primary" id="btnGenerateWorksheet">🖨 미리보기 & 인쇄</button>
+    </div>
+  </div>
+</div>
+
+<!-- 출력(인쇄) 영역 -->
+<div class="print-area print-only" id="printArea"></div>
+
 <div class="toast" id="toast"></div>
 
 <!-- Firebase SDK (ESM) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import {
-    getFirestore,
-    collection,
-    onSnapshot,
-    addDoc,
-    deleteDoc,
-    doc,
-    writeBatch,
-    query,
-    orderBy,
-    serverTimestamp
+    getFirestore, collection, onSnapshot,
+    addDoc, deleteDoc, doc, writeBatch,
+    query, orderBy, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  /* ========== Firebase 설정 (선생님 프로젝트) ========== */
   const firebaseConfig = {
     apiKey: "AIzaSyCyaLEhtn5eF0q1uWoeiThn34SikrOjpl4",
     authDomain: "tnb-math-bank-126b1.firebaseapp.com",
@@ -765,48 +1119,38 @@
   const db = getFirestore(app);
   const problemsRef = collection(db, 'problems');
 
-  /* ========== 상태 ========== */
+  /* ======================= 상태 ======================= */
   let problems = [];
   let currentChapter = '전체';
+  let currentMode = 'browse';          // 'browse' | 'worksheet'
+  let selectedIds = new Set();         // 선택된 문제 ID 집합
+  let filters = { chapter:'', difficulty:'', type:'', source:'', keyword:'' };
 
-  /* ========== Firebase 연결 상태 ========== */
+  /* ======================= Firebase ======================= */
   const fbStatus = document.getElementById('fbStatus');
   const fbStatusText = document.getElementById('fbStatusText');
-
   function setStatus(state, text){
     fbStatus.className = 'fb-status ' + state;
     fbStatusText.textContent = text;
   }
 
-  /* ========== 실시간 구독 ========== */
-  // createdAt으로 내림차순 정렬 (최신순)
   const q = query(problemsRef, orderBy('createdAt', 'desc'));
-
   onSnapshot(q, (snapshot) => {
     problems = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     setStatus('connected', `✓ 연결됨 · ${problems.length}개 동기화`);
     renderAll();
   }, (error) => {
     console.error('Firestore 구독 오류:', error);
-    setStatus('error', '✗ 연결 실패 — 보안 규칙 확인');
+    setStatus('error', '✗ 연결 실패');
     showToast('Firebase 연결 오류: ' + error.message, 'error');
   });
 
-  /* ========== CRUD 함수 ========== */
   window.fbAddProblem = async (problem) => {
     try {
-      await addDoc(problemsRef, {
-        ...problem,
-        createdAt: serverTimestamp()
-      });
+      await addDoc(problemsRef, {...problem, createdAt: serverTimestamp()});
       return true;
-    } catch(e) {
-      console.error('추가 실패:', e);
-      showToast('저장 실패: ' + e.message, 'error');
-      return false;
-    }
+    } catch(e) { console.error(e); showToast('저장 실패: ' + e.message, 'error'); return false;}
   };
-
   window.fbAddBatch = async (list) => {
     try {
       const batch = writeBatch(db);
@@ -816,27 +1160,19 @@
       });
       await batch.commit();
       return true;
-    } catch(e) {
-      console.error('일괄 추가 실패:', e);
-      showToast('일괄 저장 실패: ' + e.message, 'error');
-      return false;
-    }
+    } catch(e) { console.error(e); showToast('일괄 저장 실패: ' + e.message, 'error'); return false;}
   };
-
   window.fbDeleteProblem = async (id) => {
-    try {
-      await deleteDoc(doc(db, 'problems', id));
-      return true;
-    } catch(e) {
-      console.error('삭제 실패:', e);
-      showToast('삭제 실패: ' + e.message, 'error');
-      return false;
-    }
+    try { await deleteDoc(doc(db, 'problems', id)); return true;}
+    catch(e) { console.error(e); showToast('삭제 실패: ' + e.message, 'error'); return false;}
   };
 
-  /* ========================================================================== */
-  /* UI 렌더링                                                                   */
-  /* ========================================================================== */
+  /* ======================= 유틸 ======================= */
+  function escapeHtml(s){
+    if (s == null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   const chapterDescs = {
     '전체': '등록된 모든 문제',
     '수학Ⅰ': '지수와 로그 · 수열 · 삼각함수',
@@ -848,12 +1184,35 @@
     '공통수학Ⅱ': '집합과 명제 · 함수 · 경우의 수'
   };
 
+  /* ======================= 필터 ======================= */
+  function applyFilters(list){
+    return list.filter(p => {
+      if (filters.chapter && p.chapter !== filters.chapter) return false;
+      if (filters.difficulty && p.difficulty !== filters.difficulty) return false;
+      if (filters.type && p.type !== filters.type) return false;
+      if (filters.source && !(p.source || '').includes(filters.source)) return false;
+      if (filters.keyword && !(p.stem || '').includes(filters.keyword)) return false;
+      return true;
+    });
+  }
+
+  function getVisibleProblems(){
+    if (currentMode === 'worksheet') {
+      // 학습지 모드: 필터만 적용 (사이드바 단원 선택 무시)
+      return applyFilters(problems);
+    }
+    // 둘러보기 모드: 사이드바 단원 필터
+    return currentChapter === '전체'
+      ? problems
+      : problems.filter(p => p.chapter === currentChapter);
+  }
+
+  /* ======================= 렌더링 ======================= */
   function renderSidebar(){
     const total = problems.length;
     document.getElementById('totalCount').textContent = total;
     document.getElementById('count-전체').textContent = total;
-    const chapters = ['수학Ⅰ','수학Ⅱ','미적분','확률과 통계','기하','공통수학Ⅰ','공통수학Ⅱ'];
-    chapters.forEach(c => {
+    ['수학Ⅰ','수학Ⅱ','미적분','확률과 통계','기하','공통수학Ⅰ','공통수학Ⅱ'].forEach(c => {
       const count = problems.filter(p => p.chapter === c).length;
       const el = document.getElementById('count-' + c);
       if (el) el.textContent = count;
@@ -862,16 +1221,17 @@
 
   function renderProblems(){
     const list = document.getElementById('problemList');
-    const filtered = currentChapter === '전체'
-      ? problems
-      : problems.filter(p => p.chapter === currentChapter);
+    const filtered = getVisibleProblems();
+
+    // 메인 영역 클래스 (학습지 모드일 때 체크박스 스타일 적용)
+    document.getElementById('mainArea').classList.toggle('worksheet-mode', currentMode === 'worksheet');
 
     if (filtered.length === 0) {
       list.innerHTML = `
         <div class="empty-state">
           <div class="big-emoji">📝</div>
-          <h3>${currentChapter === '전체' ? '아직 문제가 없어요' : '이 단원에 문제가 없어요'}</h3>
-          <p>오른쪽 위의 <strong>+ 문제 추가</strong> 또는 <strong>📥 AI 변형 가져오기</strong>를 눌러 시작하세요.</p>
+          <h3>${currentMode === 'worksheet' ? '조건에 맞는 문제가 없어요' : (currentChapter === '전체' ? '아직 문제가 없어요' : '이 단원에 문제가 없어요')}</h3>
+          <p>${currentMode === 'worksheet' ? '필터를 완화해보세요.' : '오른쪽 위의 + 문제 추가 또는 📥 AI 변형 가져오기를 눌러 시작하세요.'}</p>
         </div>`;
       return;
     }
@@ -884,39 +1244,65 @@
     const difficultyClass = 'tag-diff-' + (p.difficulty || '중');
     const diffIcon = {'상': '🔴', '중': '🟡', '하': '🟢'}[p.difficulty || '중'];
     const typeLabel = p.type === 'short' ? '주관식' : '객관식';
+    const isSelected = selectedIds.has(p.id);
 
     let answerBlock = '';
-    if (p.type === 'short') {
-      answerBlock = `
-        <div class="short-answer-wrap">
-          <input type="text" class="short-input" placeholder="정답을 입력하세요"/>
-        </div>`;
+    if (currentMode === 'browse') {
+      if (p.type === 'short') {
+        answerBlock = `
+          <div class="short-answer-wrap">
+            <input type="text" class="short-input" placeholder="정답을 입력하세요"/>
+          </div>`;
+      } else {
+        const marks = ['①','②','③','④','⑤'];
+        answerBlock = `
+          <ul class="choices">
+            ${(p.choices || []).map((c, i) => `
+              <li><span class="marker">${marks[i]}</span><span class="math">${escapeHtml(c)}</span></li>
+            `).join('')}
+          </ul>`;
+      }
     } else {
-      const marks = ['①','②','③','④','⑤'];
-      answerBlock = `
-        <ul class="choices">
-          ${(p.choices || []).map((c, i) => `
-            <li><span class="marker">${marks[i]}</span><span class="math">${escapeHtml(c)}</span></li>
-          `).join('')}
-        </ul>`;
+      // 학습지 모드: 보기만 간결 표시 (선택용)
+      if (p.type === 'short') {
+        answerBlock = `<div style="font-size:12px; color:var(--ink-faint); margin-bottom: 10px;">📌 주관식 · 정답: ${escapeHtml(String(p.answer))}</div>`;
+      } else {
+        const marks = ['①','②','③','④','⑤'];
+        answerBlock = `
+          <div style="font-size:13px; color:var(--ink-soft); margin-bottom: 10px;">
+            ${(p.choices || []).map((c, i) => `
+              <span style="margin-right: 10px;"><strong>${marks[i]}</strong> <span class="math">${escapeHtml(c)}</span></span>
+            `).join('')}
+          </div>`;
+      }
     }
 
-    const explanationBlock = p.explanation ? `
+    const explanationBlock = (currentMode === 'browse' && p.explanation) ? `
       <button class="explanation-toggle" data-toggle-explanation>💡 풀이 보기</button>
       <div class="explanation"><strong>풀이.</strong> ${escapeHtml(p.explanation)}</div>
     ` : '';
 
+    const actionsBlock = currentMode === 'browse' ? `
+      <div class="actions">
+        <button class="check-btn">정답 확인</button>
+        <div class="verdict"></div>
+      </div>
+      ${explanationBlock}
+    ` : '';
+
     return `
-      <article class="problem" data-id="${p.id}">
-        <div class="problem-actions">
-          <button class="icon-btn" data-delete="${p.id}" title="삭제">🗑</button>
-        </div>
+      <article class="problem ${isSelected ? 'selected' : ''}" data-id="${p.id}">
+        ${currentMode === 'browse' ? `
+          <div class="problem-actions">
+            <button class="icon-btn" data-delete="${p.id}" title="삭제">🗑</button>
+          </div>` : ''}
         <header class="problem-head">
           <div class="problem-num">
             <span class="badge">${displayNum}</span>
             <span>${escapeHtml(p.topic || p.chapter)}</span>
           </div>
           <div class="labels">
+            <span class="label tag-source">${escapeHtml(p.chapter)}</span>
             ${p.source ? `<span class="label tag-source">${escapeHtml(p.source)}</span>` : ''}
             ${p.score ? `<span class="label tag-score">${escapeHtml(p.score)}</span>` : ''}
             <span class="label tag-type">${typeLabel}</span>
@@ -925,11 +1311,7 @@
         </header>
         <div class="stem"><p>${escapeHtml(p.stem).replace(/\n/g, '<br>')}</p></div>
         ${answerBlock}
-        <div class="actions">
-          <button class="check-btn">정답 확인</button>
-          <div class="verdict"></div>
-        </div>
-        ${explanationBlock}
+        ${actionsBlock}
       </article>`;
   }
 
@@ -939,21 +1321,34 @@
       const problem = problems.find(p => p.id === id);
       if (!problem) return;
 
+      // 학습지 모드: 카드 클릭으로 선택 토글
+      if (currentMode === 'worksheet') {
+        prob.addEventListener('click', () => {
+          if (selectedIds.has(id)) selectedIds.delete(id);
+          else selectedIds.add(id);
+          updateSelectionBar();
+          renderProblems();
+        });
+        return; // 이하 이벤트는 둘러보기 모드에서만
+      }
+
+      // ---- 둘러보기 모드 ----
       const btn = prob.querySelector('.check-btn');
       const verdict = prob.querySelector('.verdict');
+      if (!btn) return;
 
       if (problem.type === 'short') {
         const input = prob.querySelector('.short-input');
         btn.addEventListener('click', () => {
           const val = (input.value || '').trim();
-          if (!val) { verdict.innerHTML = '<span class="icon"></span> 정답을 먼저 입력하세요'; verdict.className = 'verdict show no'; return; }
+          if (!val) { verdict.innerHTML = '보기를 먼저 입력하세요'; verdict.className = 'verdict show no'; return; }
           if (String(val) === String(problem.answer).trim()) {
             input.classList.add('correct');
-            verdict.innerHTML = '<span class="icon"></span> 정답입니다! <span class="ans">잘했어요 🎉</span>';
+            verdict.innerHTML = '✓ 정답입니다! <span class="ans">잘했어요 🎉</span>';
             verdict.className = 'verdict show ok';
           } else {
             input.classList.add('wrong');
-            verdict.innerHTML = `<span class="icon"></span> 다시 풀어볼까요? <span class="ans">정답: ${escapeHtml(String(problem.answer))}</span>`;
+            verdict.innerHTML = `✗ 다시 풀어볼까요? <span class="ans">정답: ${escapeHtml(String(problem.answer))}</span>`;
             verdict.className = 'verdict show no';
           }
           btn.disabled = true; btn.textContent = '확인 완료';
@@ -972,13 +1367,13 @@
           });
         });
         btn.addEventListener('click', () => {
-          if (!selected) { verdict.innerHTML = '<span class="icon"></span> 보기를 먼저 선택하세요'; verdict.className = 'verdict show no'; return; }
+          if (!selected) { verdict.innerHTML = '보기를 먼저 선택하세요'; verdict.className = 'verdict show no'; return; }
           if (selected === answer) {
-            verdict.innerHTML = '<span class="icon"></span> 정답입니다! <span class="ans">잘했어요 🎉</span>';
+            verdict.innerHTML = '✓ 정답입니다! <span class="ans">잘했어요 🎉</span>';
             verdict.className = 'verdict show ok';
             choices[answer-1].classList.add('correct');
           } else {
-            verdict.innerHTML = `<span class="icon"></span> 다시 풀어볼까요? <span class="ans">정답: ${marks[answer-1]}</span>`;
+            verdict.innerHTML = `✗ 다시 풀어볼까요? <span class="ans">정답: ${marks[answer-1]}</span>`;
             verdict.className = 'verdict show no';
             choices[selected-1].classList.add('wrong');
             choices[answer-1].classList.add('correct');
@@ -1002,24 +1397,42 @@
           e.stopPropagation();
           if (!confirm('이 문제를 삭제하시겠어요? (모든 기기에서 삭제됩니다)')) return;
           const ok = await window.fbDeleteProblem(id);
-          if (ok) showToast('문제가 삭제되었습니다', 'success');
+          if (ok) {
+            selectedIds.delete(id);
+            showToast('문제가 삭제되었습니다', 'success');
+          }
         });
       }
     });
   }
 
-  function escapeHtml(s){
-    if (s == null) return '';
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  function updateSelectionBar(){
+    document.getElementById('selCount').textContent = selectedIds.size;
   }
 
   function renderAll(){
     renderSidebar();
     renderProblems();
+    updateSelectionBar();
   }
 
-  /* ========== 이벤트 바인딩 ========== */
-  // 사이드바
+  /* ======================= 모드 전환 ======================= */
+  document.querySelectorAll('#modeSwitch button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#modeSwitch button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      currentMode = b.dataset.mode;
+
+      document.getElementById('headBrowse').style.display = currentMode === 'browse' ? '' : 'none';
+      document.getElementById('headWorksheet').style.display = currentMode === 'worksheet' ? '' : 'none';
+      document.getElementById('filterPanel').style.display = currentMode === 'worksheet' ? '' : 'none';
+      document.getElementById('selectionBar').style.display = currentMode === 'worksheet' ? '' : 'none';
+
+      renderProblems();
+    });
+  });
+
+  /* ======================= 사이드바 단원 ======================= */
   document.querySelectorAll('#chapterNav li').forEach(li => {
     li.addEventListener('click', () => {
       document.querySelectorAll('#chapterNav li').forEach(x => x.classList.remove('active'));
@@ -1029,13 +1442,38 @@
       document.getElementById('chapterEmoji').textContent = li.dataset.emoji;
       document.getElementById('chapterDesc').textContent = chapterDescs[currentChapter] || '';
       renderProblems();
-      // 모바일에서 메뉴 닫기
       document.getElementById('sidebar').classList.remove('open');
       document.getElementById('backdrop').classList.remove('show');
     });
   });
 
-  // 모바일 햄버거
+  /* ======================= 필터 핸들러 ======================= */
+  ['fltChapter','fltDifficulty','fltType','fltSource','fltKeyword'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', () => {
+      filters = {
+        chapter: document.getElementById('fltChapter').value,
+        difficulty: document.getElementById('fltDifficulty').value,
+        type: document.getElementById('fltType').value,
+        source: document.getElementById('fltSource').value.trim(),
+        keyword: document.getElementById('fltKeyword').value.trim()
+      };
+      renderProblems();
+    });
+  });
+
+  document.getElementById('btnSelectAll').addEventListener('click', () => {
+    getVisibleProblems().forEach(p => selectedIds.add(p.id));
+    updateSelectionBar();
+    renderProblems();
+  });
+  document.getElementById('btnClearSel').addEventListener('click', () => {
+    selectedIds.clear();
+    updateSelectionBar();
+    renderProblems();
+  });
+
+  /* ======================= 햄버거 메뉴 ======================= */
   document.getElementById('menuToggle').addEventListener('click', () => {
     document.getElementById('sidebar').classList.add('open');
     document.getElementById('backdrop').classList.add('show');
@@ -1045,25 +1483,26 @@
     document.getElementById('backdrop').classList.remove('show');
   });
 
-  // 모달
+  /* ======================= 모달 공통 ======================= */
   const addModal = document.getElementById('addModal');
   const importModal = document.getElementById('importModal');
+  const worksheetModal = document.getElementById('worksheetModal');
   let formType = 'multiple';
-
   function closeAllModals(){
     addModal.classList.remove('show');
     importModal.classList.remove('show');
+    worksheetModal.classList.remove('show');
   }
+  document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeAllModals));
+  [addModal, importModal, worksheetModal].forEach(m => {
+    m.addEventListener('click', (e) => { if (e.target === m) closeAllModals(); });
+  });
 
+  /* ======================= 문제 추가 ======================= */
   document.getElementById('btnAdd').addEventListener('click', () => {
     resetAddForm();
     addModal.classList.add('show');
   });
-  document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeAllModals));
-  [addModal, importModal].forEach(m => {
-    m.addEventListener('click', (e) => { if (e.target === m) closeAllModals(); });
-  });
-
   document.getElementById('typeToggle').querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => {
       document.getElementById('typeToggle').querySelectorAll('button').forEach(x => x.classList.remove('active'));
@@ -1073,7 +1512,6 @@
       document.getElementById('shortFields').style.display = formType === 'short' ? '' : 'none';
     });
   });
-
   function resetAddForm(){
     formType = 'multiple';
     document.getElementById('typeToggle').querySelectorAll('button').forEach((b, i) => b.classList.toggle('active', i === 0));
@@ -1090,7 +1528,6 @@
     document.getElementById('fScore').value = '3점';
     document.getElementById('fSource').value = '';
   }
-
   document.getElementById('btnSave').addEventListener('click', async () => {
     const chapter = document.getElementById('fChapter').value;
     const topic = document.getElementById('fTopic').value.trim();
@@ -1099,7 +1536,6 @@
     const difficulty = document.getElementById('fDifficulty').value;
     const score = document.getElementById('fScore').value;
     const source = document.getElementById('fSource').value.trim();
-
     if (!stem) { showToast('문제 지문을 입력하세요', 'error'); return; }
 
     const base = { chapter, topic, stem, explanation, difficulty, score, source, tags: [] };
@@ -1120,22 +1556,17 @@
     btn.disabled = true; btn.textContent = '저장 중...';
     const ok = await window.fbAddProblem(problem);
     btn.disabled = false; btn.textContent = '💾 저장';
-    if (ok) {
-      closeAllModals();
-      showToast('✓ 저장됨 · 모든 기기에 동기화', 'success');
-    }
+    if (ok) { closeAllModals(); showToast('✓ 저장됨 · 모든 기기에 동기화', 'success'); }
   });
 
-  // 가져오기
+  /* ======================= 가져오기 ======================= */
   document.getElementById('btnImport').addEventListener('click', () => {
     document.getElementById('importArea').value = '';
     document.getElementById('importPreview').style.display = 'none';
     document.getElementById('btnImportConfirm').style.display = 'none';
     importModal.classList.add('show');
   });
-
   let pendingImport = [];
-
   document.getElementById('btnPreview').addEventListener('click', () => {
     const text = document.getElementById('importArea').value.trim();
     if (!text) { showToast('JSON을 붙여넣으세요', 'error'); return; }
@@ -1144,59 +1575,201 @@
       if (!Array.isArray(parsed)) parsed = [parsed];
       const validated = [];
       for (const p of parsed) {
-        if (!p.stem) throw new Error('stem(문제 지문) 필드가 없는 항목이 있습니다');
+        if (!p.stem) throw new Error('stem 필드 없음');
         if (p.type === 'short') {
-          if (p.answer == null) throw new Error('주관식 문제는 answer 필드가 필요합니다');
+          if (p.answer == null) throw new Error('주관식은 answer 필요');
         } else {
-          if (!Array.isArray(p.choices) || p.choices.length !== 5) throw new Error('객관식은 choices 5개가 필요합니다');
-          if (!p.answer || p.answer < 1 || p.answer > 5) throw new Error('객관식 answer는 1~5 사이여야 합니다');
+          if (!Array.isArray(p.choices) || p.choices.length !== 5) throw new Error('객관식은 choices 5개 필요');
+          if (!p.answer || p.answer < 1 || p.answer > 5) throw new Error('answer는 1~5');
         }
         validated.push({
-          chapter: p.chapter || '수학Ⅰ',
-          topic: p.topic || '',
+          chapter: p.chapter || '수학Ⅰ', topic: p.topic || '',
           type: p.type === 'short' ? 'short' : 'multiple',
-          stem: p.stem,
-          choices: p.choices || null,
-          answer: p.answer,
-          explanation: p.explanation || '',
-          difficulty: p.difficulty || '중',
-          source: p.source || 'AI 변형',
-          score: p.score || '3점',
-          tags: p.tags || []
+          stem: p.stem, choices: p.choices || null, answer: p.answer,
+          explanation: p.explanation || '', difficulty: p.difficulty || '중',
+          source: p.source || 'AI 변형', score: p.score || '3점', tags: p.tags || []
         });
       }
       pendingImport = validated;
       document.getElementById('previewCount').textContent = `✓ ${validated.length}개 문제가 유효합니다.`;
       document.getElementById('previewList').innerHTML = validated.map((p, i) => `
         <div class="preview-item">
-          <div class="p-meta">
-            <span class="label tag-source">${escapeHtml(p.chapter)}</span>
-            <span class="label tag-type">${p.type === 'short' ? '주관식' : '객관식'}</span>
-            <span class="label tag-diff-${p.difficulty}">${p.difficulty}</span>
-          </div>
           <strong>변형 ${i+1}.</strong> ${escapeHtml(p.stem.slice(0, 80))}${p.stem.length > 80 ? '…' : ''}
         </div>`).join('');
       document.getElementById('importPreview').style.display = '';
       document.getElementById('btnImportConfirm').style.display = '';
-    } catch(e) {
-      showToast('JSON 파싱 실패: ' + e.message, 'error');
-    }
+    } catch(e) { showToast('JSON 오류: ' + e.message, 'error');}
   });
-
   document.getElementById('btnImportConfirm').addEventListener('click', async () => {
     if (pendingImport.length === 0) return;
     const btn = document.getElementById('btnImportConfirm');
     btn.disabled = true; btn.textContent = '저장 중...';
     const ok = await window.fbAddBatch(pendingImport);
     btn.disabled = false; btn.textContent = '📥 가져오기';
-    if (ok) {
-      closeAllModals();
-      showToast(`✓ ${pendingImport.length}개 문제를 가져왔습니다 · 모든 기기 동기화`, 'success');
-      pendingImport = [];
-    }
+    if (ok) { closeAllModals(); showToast(`✓ ${pendingImport.length}개 가져옴`, 'success'); pendingImport = [];}
   });
 
-  // 토스트
+  /* =========================================================================
+     학습지 생성
+     ========================================================================= */
+  document.getElementById('btnMakeWorksheet').addEventListener('click', () => {
+    if (selectedIds.size === 0) { showToast('문제를 먼저 선택하세요', 'error'); return; }
+
+    // 오늘 날짜 자동 입력을 위한 안내
+    const summary = document.getElementById('wsSelectedSummary');
+    const selected = problems.filter(p => selectedIds.has(p.id));
+    const chapters = [...new Set(selected.map(p => p.chapter))];
+    const typeCount = { multiple: 0, short: 0 };
+    selected.forEach(p => typeCount[p.type || 'multiple']++);
+    const totalScore = selected.reduce((sum, p) => sum + (parseInt(p.score) || 3), 0);
+
+    summary.innerHTML = `
+      <strong>📊 선택 요약</strong><br>
+      · 총 ${selected.length}문제 (객관식 ${typeCount.multiple} · 주관식 ${typeCount.short})<br>
+      · 총점: ${totalScore}점<br>
+      · 단원: ${chapters.join(', ')}
+    `;
+
+    worksheetModal.classList.add('show');
+  });
+
+  document.getElementById('btnGenerateWorksheet').addEventListener('click', () => {
+    const title = document.getElementById('wsTitle').value.trim() || '수학 학습지';
+    const subtitle = document.getElementById('wsSubtitle').value.trim();
+    const layout = document.getElementById('wsLayout').value;
+    const order = document.getElementById('wsOrder').value;
+    const fields = document.getElementById('wsFields').value;
+    const includeAnswers = document.getElementById('wsIncludeAnswers').checked;
+    const includeExplanations = document.getElementById('wsIncludeExplanations').checked;
+    const includeScore = document.getElementById('wsIncludeScore').checked;
+
+    // 선택 문제 가져오기
+    let selected = problems.filter(p => selectedIds.has(p.id));
+    if (selected.length === 0) { showToast('선택된 문제가 없습니다', 'error'); return; }
+
+    // 순서 정렬
+    if (order === 'shuffle') {
+      selected = [...selected].sort(() => Math.random() - 0.5);
+    } else if (order === 'chapter') {
+      const chapterOrder = ['공통수학Ⅰ','공통수학Ⅱ','수학Ⅰ','수학Ⅱ','미적분','확률과 통계','기하'];
+      selected = [...selected].sort((a,b) => {
+        return chapterOrder.indexOf(a.chapter) - chapterOrder.indexOf(b.chapter);
+      });
+    } else if (order === 'difficulty') {
+      const diffOrder = {'하':0, '중':1, '상':2};
+      selected = [...selected].sort((a,b) =>
+        (diffOrder[a.difficulty] ?? 1) - (diffOrder[b.difficulty] ?? 1)
+      );
+    }
+    // 'keep'인 경우 — selectedIds 순서 유지는 이미 problems에서 추출한 순서
+
+    // 조판 결정 (자동)
+    let useTwoCol = layout === '2';
+    if (layout === 'auto') {
+      // 평균 지문 길이로 결정
+      const avgLen = selected.reduce((sum, p) => sum + (p.stem || '').length, 0) / selected.length;
+      useTwoCol = avgLen < 80;
+    }
+
+    // HTML 생성
+    const printArea = document.getElementById('printArea');
+    printArea.innerHTML = generateWorksheetHTML({
+      selected, title, subtitle, useTwoCol, fields,
+      includeAnswers, includeExplanations, includeScore
+    });
+
+    // 인쇄 대화창 열기
+    setTimeout(() => {
+      closeAllModals();
+      window.print();
+    }, 100);
+  });
+
+  function generateWorksheetHTML(opts){
+    const { selected, title, subtitle, useTwoCol, fields, includeAnswers, includeExplanations, includeScore } = opts;
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}년 ${today.getMonth()+1}월 ${today.getDate()}일`;
+
+    // 헤더
+    let html = `<div class="worksheet-doc">`;
+    html += `<div class="ws-header">`;
+    html += `<div class="ws-title">${escapeHtml(title)}</div>`;
+    if (subtitle) html += `<div class="ws-subtitle">${escapeHtml(subtitle)}</div>`;
+    if (fields === 'all') {
+      html += `<div class="ws-meta">
+        <span>학년: </span>
+        <span>반: </span>
+        <span>번호: </span>
+        <span>이름: </span>
+        <span>날짜: ${dateStr}</span>
+      </div>`;
+    } else if (fields === 'name-only') {
+      html += `<div class="ws-meta">
+        <span>이름: </span>
+        <span>날짜: ${dateStr}</span>
+      </div>`;
+    }
+    html += `</div>`;
+
+    // 문제들
+    const marks = ['①','②','③','④','⑤'];
+    html += `<div class="ws-questions ${useTwoCol ? 'two-col' : ''}">`;
+    selected.forEach((p, idx) => {
+      html += `<div class="ws-question">`;
+      html += `<div class="ws-q-head">`;
+      html += `<span class="ws-q-num">${idx+1}.</span>`;
+      if (includeScore && p.score) html += `<span class="ws-q-score">[${escapeHtml(p.score)}]</span>`;
+      html += `</div>`;
+      html += `<div class="ws-q-stem">${escapeHtml(p.stem).replace(/\n/g, '<br>')}</div>`;
+
+      if (p.type === 'multiple' && p.choices) {
+        html += `<ol class="ws-choices">`;
+        p.choices.forEach((c, i) => {
+          html += `<li>${marks[i]} ${escapeHtml(c)}</li>`;
+        });
+        html += `</ol>`;
+      } else if (p.type === 'short') {
+        html += `<div class="ws-short-space"></div>`;
+      }
+      html += `</div>`;
+    });
+    html += `</div>`;
+
+    // 정답지
+    if (includeAnswers) {
+      html += `<div class="ws-answer-page">`;
+      html += `<h3>📋 정답</h3>`;
+      html += `<div class="ws-answer-grid">`;
+      selected.forEach((p, idx) => {
+        const ans = p.type === 'multiple' ? marks[p.answer - 1] : p.answer;
+        html += `<div class="ans-item"><strong>${idx+1}.</strong> ${escapeHtml(String(ans))}</div>`;
+      });
+      html += `</div></div>`;
+    }
+
+    // 해설지
+    if (includeExplanations) {
+      html += `<div class="ws-answer-page">`;
+      html += `<h3>💡 해설</h3>`;
+      selected.forEach((p, idx) => {
+        const ans = p.type === 'multiple' ? marks[p.answer - 1] : p.answer;
+        html += `<div class="ws-solution">`;
+        html += `<h4>${idx+1}. 정답 ${escapeHtml(String(ans))}</h4>`;
+        if (p.explanation) {
+          html += `<div class="sol-body">${escapeHtml(p.explanation).replace(/\n/g, '<br>')}</div>`;
+        } else {
+          html += `<div class="sol-body" style="color:#999;">(해설 미등록)</div>`;
+        }
+        html += `</div>`;
+      });
+      html += `</div>`;
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
+  /* ======================= 토스트 ======================= */
   function showToast(msg, type = ''){
     const t = document.getElementById('toast');
     t.textContent = msg;
@@ -1205,14 +1778,12 @@
   }
   window.showToast = showToast;
 
-  // 초기 로딩 화면
   document.getElementById('problemList').innerHTML = `
     <div class="loading-state">
       <div class="spinner"></div>
       <h3>Firebase에서 문제를 불러오는 중...</h3>
       <p>잠시만 기다려주세요</p>
-    </div>
-  `;
+    </div>`;
 </script>
 
 </body>
