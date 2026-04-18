@@ -14,7 +14,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Gowun+Dodum&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 
 <style>
@@ -585,6 +585,207 @@
     margin-bottom: 6px; font-size: 13px; line-height: 1.5;
   }
 
+  /* ======================================================================
+     학습지 모달: 템플릿 선택 카드
+     ====================================================================== */
+  .template-chooser{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .tpl-card{
+    background: #fff;
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all .15s ease;
+    font-family: inherit;
+    text-align: center;
+  }
+  .tpl-card:hover{
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(245,158,59,0.15);
+  }
+  .tpl-card.active{
+    border-color: var(--primary);
+    background: var(--primary-bg);
+    box-shadow: 0 0 0 2px var(--primary-soft);
+  }
+  .tpl-preview{
+    height: 80px;
+    background: #fff;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    padding: 6px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .tpl-name{
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  /* 미리보기: 따뜻한 교과서 */
+  .tpl-preview-warm{ background: #fffaf1;}
+  .tpl-preview-warm .tp-title{
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: 10px;
+    color: #b8741f;
+    font-weight: 800;
+    text-align: center;
+    border-top: 1.5px solid #d4a574;
+    border-bottom: 1.5px solid #d4a574;
+    padding: 2px 0;
+    letter-spacing: 1px;
+  }
+  .tpl-preview-warm .tp-line{
+    height: 8px;
+    background: #fff;
+    border: 1px dashed #e0c7a0;
+    border-radius: 4px;
+    margin-top: 4px;
+  }
+  .tpl-preview-warm .tp-box{
+    height: 8px;
+    background: #fff;
+    border: 1px dashed #e0c7a0;
+    border-radius: 4px;
+    margin-top: 3px;
+  }
+  /* 미리보기: 친근한 손글씨 */
+  .tpl-preview-friendly{ padding: 0;}
+  .tpl-preview-friendly .tp-banner{
+    background: linear-gradient(135deg, #ffecc7, #fff3e0);
+    padding: 6px 8px;
+    border-bottom: 2px dashed #f5a623;
+    height: 40%;
+    display: flex;
+    align-items: center;
+  }
+  .tpl-preview-friendly .tp-pen{
+    font-family: 'Nanum Pen Script', cursive;
+    font-size: 14px;
+    color: #c97014;
+  }
+  .tpl-preview-friendly .tp-line-dot{
+    height: 6px;
+    background: #fff;
+    border-bottom: 1px dotted #ccc;
+    margin: 4px 6px 0;
+  }
+  /* 미리보기: 모던 네이비 */
+  .tpl-preview-modern{ padding: 0;}
+  .tpl-preview-modern .tp-navy{
+    background: #1a2332;
+    padding: 7px 8px;
+    height: 50%;
+    display: flex;
+    align-items: center;
+    border-radius: 0 0 6px 6px;
+  }
+  .tpl-preview-modern .tp-navy-title{
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+  }
+  .tpl-preview-modern .tp-line{
+    height: 6px;
+    background: #eef2f7;
+    border-radius: 3px;
+    margin: 4px 6px 0;
+  }
+
+  /* 고급 설정 토글 */
+  .advanced-section{
+    margin-top: 16px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .advanced-toggle{
+    width: 100%;
+    padding: 12px 14px;
+    background: #fbf7f0;
+    border: none;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all .15s ease;
+  }
+  .advanced-toggle:hover{ background: var(--primary-bg);}
+  .advanced-toggle .adv-arrow{
+    color: var(--primary);
+    transition: transform .2s ease;
+    font-size: 10px;
+  }
+  .advanced-toggle.open .adv-arrow{ transform: rotate(90deg);}
+  .advanced-toggle .adv-sub{
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-faint);
+  }
+  .advanced-body{
+    display: none;
+    padding: 14px;
+    background: #fffdf9;
+    border-top: 1px dashed var(--line);
+  }
+  .advanced-body.show{ display: block;}
+
+  /* 색상 스와치 */
+  .color-swatches{
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .swatch{
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 2px solid var(--line);
+    cursor: pointer;
+    padding: 0;
+    transition: all .15s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .swatch:hover{ transform: scale(1.1);}
+  .swatch.active{
+    border-color: var(--ink);
+    transform: scale(1.1);
+    box-shadow: 0 0 0 2px var(--primary-soft);
+  }
+  .swatch.active::after{
+    content: "✓";
+    position: absolute;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+  .swatch span{
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+  .swatch[data-color=""]{
+    background: linear-gradient(135deg, #fff, #f5efe3);
+    color: var(--ink-soft);
+  }
+  .swatch[data-color=""].active::after{ color: var(--ink); text-shadow: none;}
+
+
   .toast{
     position: fixed;
     bottom: calc(24px + env(safe-area-inset-bottom));
@@ -662,21 +863,30 @@
     .print-only{ display: block;}
   }
 
-  /* 학습지(출력용) 스타일 */
+  /* ======================================================================
+     학습지(출력용) 스타일 - 3가지 템플릿 + 커스터마이징 지원
+     ====================================================================== */
+
   .worksheet-doc{
-    font-family: 'Noto Sans KR', sans-serif;
     color: #000;
     line-height: 1.6;
     max-width: 100%;
+    /* CSS 변수: 커스터마이징으로 덮어씀 */
+    --ws-accent: #f59e3b;
+    --ws-accent-soft: #fff3e0;
+    --ws-accent-dark: #c97014;
+    --ws-body-font: 'Noto Sans KR', sans-serif;
+    --ws-title-font: 'Nanum Myeongjo', serif;
+    --ws-question-gap: 14px;
+    --ws-question-pad: 6px 0;
+    --ws-question-divider: none;
+    font-family: var(--ws-body-font);
   }
-  .ws-header{
-    border-bottom: 2px solid #000;
-    padding-bottom: 10px;
-    margin-bottom: 16px;
-  }
+
+  /* ============================ 공통 요소 ============================ */
+  .ws-header{ margin-bottom: 14px;}
   .ws-header .ws-title{
-    font-family: 'Nanum Myeongjo', serif;
-    font-size: 20pt;
+    font-family: var(--ws-title-font);
     font-weight: 800;
     letter-spacing: -0.5px;
     margin-bottom: 3px;
@@ -687,58 +897,31 @@
     margin-bottom: 8px;
   }
   .ws-header .ws-meta{
-    display: flex;
-    gap: 14px;
-    font-size: 10pt;
-  }
-  .ws-header .ws-meta span{
-    border-bottom: 1px solid #000;
-    padding: 2px 8px 2px 4px;
-    min-width: 70px;
-    display: inline-block;
+    display: flex; gap: 14px; font-size: 10pt; flex-wrap: wrap;
   }
 
-  .ws-questions{
-    column-count: 1;
-    column-gap: 24px;
-  }
+  .ws-questions{ column-count: 1; column-gap: 24px;}
   .ws-questions.two-col{ column-count: 2;}
 
   .ws-question{
     break-inside: avoid;
-    margin-bottom: 14px;
-    padding: 6px 0;
+    margin-bottom: var(--ws-question-gap);
+    padding: var(--ws-question-pad);
     font-size: 11pt;
     line-height: 1.7;
   }
   .ws-q-head{
-    display: flex;
-    gap: 6px;
+    display: flex; gap: 6px;
     align-items: baseline;
     margin-bottom: 4px;
   }
-  .ws-q-num{
-    font-weight: 800;
-    font-size: 11pt;
-    flex-shrink: 0;
-  }
-  .ws-q-score{
-    font-size: 9pt;
-    color: #666;
-    margin-left: 4px;
-  }
-  .ws-q-stem{
-    margin-bottom: 6px;
-  }
+  .ws-q-num{ font-weight: 800; font-size: 11pt; flex-shrink: 0;}
+  .ws-q-score{ font-size: 9pt; color: #666; margin-left: 4px;}
+  .ws-q-stem{ margin-bottom: 6px;}
   .ws-choices{
-    list-style: none;
-    padding-left: 16px;
-    margin-top: 4px;
+    list-style: none; padding-left: 16px; margin-top: 4px;
   }
-  .ws-choices li{
-    margin-bottom: 2px;
-    font-size: 10.5pt;
-  }
+  .ws-choices li{ margin-bottom: 2px; font-size: 10.5pt;}
   .ws-short-space{
     border-bottom: 1px solid #999;
     margin: 6px 0 8px;
@@ -746,18 +929,206 @@
     width: 50%;
   }
 
-  /* 답안 / 해설 페이지 */
+  /* ============ 템플릿 ① 모던 네이비 ============ */
+  .worksheet-doc.tpl-modern{
+    --ws-accent: var(--color-override, #1a2332);
+    --ws-accent-soft: #eef2f7;
+    --ws-accent-dark: #0d1420;
+    --ws-body-font: 'Noto Sans KR', sans-serif;
+    --ws-title-font: 'Noto Sans KR', sans-serif;
+  }
+  .worksheet-doc.tpl-modern .ws-header{
+    background: var(--ws-accent);
+    color: #fff;
+    padding: 14px 18px;
+    border-radius: 0 0 14px 14px;
+    margin: 0 0 18px;
+  }
+  .worksheet-doc.tpl-modern .ws-header .ws-title{
+    font-size: 20pt;
+    font-weight: 900;
+    color: #fff;
+  }
+  .worksheet-doc.tpl-modern .ws-header .ws-subtitle{
+    color: rgba(255,255,255,0.75);
+    font-size: 11pt;
+    margin-bottom: 10px;
+  }
+  .worksheet-doc.tpl-modern .ws-header .ws-meta{ gap: 10px;}
+  .worksheet-doc.tpl-modern .ws-header .ws-meta span{
+    background: rgba(255,255,255,0.2);
+    padding: 3px 12px;
+    border-radius: 12px;
+    min-width: 60px;
+  }
+  .worksheet-doc.tpl-modern .ws-question{
+    border-left: 3px solid var(--ws-accent-soft);
+    padding-left: 12px;
+    padding-top: 4px;
+  }
+  .worksheet-doc.tpl-modern .ws-q-score{
+    background: var(--ws-accent-soft);
+    color: var(--ws-accent);
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-weight: 700;
+  }
+
+  /* ============ 템플릿 ② 따뜻한 교과서 ============ */
+  .worksheet-doc.tpl-warm{
+    --ws-accent: var(--color-override, #b8741f);
+    --ws-accent-soft: #fff3e0;
+    --ws-accent-dark: #8a5614;
+    --ws-body-font: 'Gowun Dodum', 'Noto Sans KR', sans-serif;
+    --ws-title-font: 'Nanum Myeongjo', serif;
+    background: #fffaf1;
+    padding: 16px;
+    color: #3d2f20;
+  }
+  .worksheet-doc.tpl-warm .ws-header{
+    text-align: center;
+    border-top: 2.5px solid var(--ws-accent);
+    border-bottom: 2.5px solid var(--ws-accent);
+    padding: 12px 0;
+    margin-bottom: 16px;
+  }
+  .worksheet-doc.tpl-warm .ws-header .ws-title{
+    font-size: 22pt;
+    color: var(--ws-accent);
+    letter-spacing: 3px;
+  }
+  .worksheet-doc.tpl-warm .ws-header .ws-subtitle{
+    color: #8a6a3d;
+    margin-top: 4px;
+  }
+  .worksheet-doc.tpl-warm .ws-header .ws-meta{
+    justify-content: center;
+    color: #7a5930;
+    margin-top: 8px;
+  }
+  .worksheet-doc.tpl-warm .ws-header .ws-meta span{
+    border-bottom: 1px solid var(--ws-accent);
+    padding: 0 6px 1px;
+    min-width: 60px;
+  }
+  .worksheet-doc.tpl-warm .ws-question{
+    background: #fff;
+    border: 1px dashed #e0c7a0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+  }
+  .worksheet-doc.tpl-warm .ws-q-num{ color: var(--ws-accent);}
+  .worksheet-doc.tpl-warm .ws-q-score{
+    background: var(--ws-accent-soft);
+    color: var(--ws-accent);
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-weight: 700;
+  }
+
+  /* ============ 템플릿 ③ 친근한 손글씨 ============ */
+  .worksheet-doc.tpl-friendly{
+    --ws-accent: var(--color-override, #f59e3b);
+    --ws-accent-soft: #fff3e0;
+    --ws-accent-dark: #c97014;
+    --ws-body-font: 'Gowun Dodum', 'Noto Sans KR', sans-serif;
+    --ws-title-font: 'Nanum Pen Script', cursive;
+    color: #2d2a26;
+  }
+  .worksheet-doc.tpl-friendly .ws-header{
+    background: linear-gradient(135deg, var(--ws-accent-soft), #fff8ec);
+    padding: 14px 18px;
+    border-bottom: 3px dashed var(--ws-accent);
+    position: relative;
+    margin-bottom: 16px;
+    border-radius: 10px 10px 0 0;
+  }
+  .worksheet-doc.tpl-friendly .ws-header::after{
+    content: "✏️";
+    position: absolute;
+    top: 12px; right: 14px;
+    font-size: 22pt;
+  }
+  .worksheet-doc.tpl-friendly .ws-header .ws-title{
+    font-family: var(--ws-title-font);
+    font-size: 32pt;
+    color: var(--ws-accent-dark);
+    line-height: 1;
+    font-weight: 400;
+  }
+  .worksheet-doc.tpl-friendly .ws-header .ws-subtitle{
+    color: var(--ws-accent-dark);
+    margin-top: 4px;
+    font-weight: 500;
+  }
+  .worksheet-doc.tpl-friendly .ws-header .ws-meta{
+    margin-top: 6px;
+    color: #5c4a2d;
+  }
+  .worksheet-doc.tpl-friendly .ws-header .ws-meta span{
+    border-bottom: 1.5px dotted var(--ws-accent);
+    padding: 0 8px 2px;
+    min-width: 60px;
+  }
+  .worksheet-doc.tpl-friendly .ws-question{
+    padding: 8px 2px;
+  }
+  .worksheet-doc.tpl-friendly .ws-q-score{
+    color: var(--ws-accent-dark);
+    font-weight: 600;
+  }
+
+  /* ============ 문제 번호 스타일 변형 ============ */
+  /* 기본: 1. */
+  /* Q1 스타일 */
+  .ws-num-q .ws-q-num::before{ content: "Q"; }
+  /* 두자리 (01, 02...) */
+  .ws-num-pad .ws-q-num{ font-variant-numeric: tabular-nums;}
+  /* 원형 배지 */
+  .ws-num-badge .ws-q-num{
+    display: inline-block;
+    background: var(--ws-accent);
+    color: #fff;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 22px;
+    font-size: 10pt;
+    font-weight: 700;
+    margin-right: 4px;
+  }
+  .ws-num-badge .ws-q-num::after{ content: "";}
+
+  /* ============ 배점 스타일 변형 ============ */
+  .ws-score-brackets .ws-q-score::before{ content: "[";}
+  .ws-score-brackets .ws-q-score::after{ content: "]";}
+  .ws-score-paren .ws-q-score::before{ content: "(";}
+  .ws-score-paren .ws-q-score::after{ content: ")";}
+  .ws-score-pt .ws-q-score::after{ content: "pt";}
+  .ws-score-hide .ws-q-score{ display: none;}
+
+  /* ============ 구분선 ============ */
+  .ws-divider-dash .ws-question{ border-bottom: 1px dashed #d4c9b5; padding-bottom: 10px;}
+  .ws-divider-solid .ws-question{ border-bottom: 1px solid #ddd; padding-bottom: 10px;}
+
+  /* ============ 여백(density) ============ */
+  .worksheet-doc.ws-density-tight{ --ws-question-gap: 8px; --ws-question-pad: 3px 0;}
+  .worksheet-doc.ws-density-loose{ --ws-question-gap: 22px; --ws-question-pad: 10px 0;}
+
+  /* ============ 답안 / 해설 페이지 ============ */
   .ws-answer-page{
     page-break-before: always;
     padding-top: 10px;
   }
   .ws-answer-page h3{
-    font-family: 'Nanum Myeongjo', serif;
-    font-size: 14pt;
+    font-family: var(--ws-title-font);
+    font-size: 16pt;
     font-weight: 800;
-    border-bottom: 1px solid #000;
+    color: var(--ws-accent);
+    border-bottom: 2px solid var(--ws-accent);
     padding-bottom: 6px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
   .ws-answer-grid{
     display: grid;
@@ -765,10 +1136,8 @@
     gap: 4px 10px;
     font-size: 11pt;
   }
-  .ws-answer-grid .ans-item{
-    padding: 4px;
-  }
-  .ws-answer-grid .ans-item strong{ margin-right: 4px;}
+  .ws-answer-grid .ans-item{ padding: 4px;}
+  .ws-answer-grid .ans-item strong{ margin-right: 4px; color: var(--ws-accent);}
 
   .ws-solution{
     break-inside: avoid;
@@ -781,6 +1150,7 @@
   .ws-solution h4{
     font-size: 11pt;
     font-weight: 800;
+    color: var(--ws-accent);
     margin-bottom: 4px;
   }
   .ws-solution .sol-body{
@@ -794,7 +1164,13 @@
     left: 0; right: 0;
     text-align: center;
     font-size: 9pt;
-    color: #666;
+    color: var(--ws-accent-dark);
+    font-family: var(--ws-body-font);
+  }
+  .worksheet-doc.tpl-friendly ~ .ws-footer,
+  .worksheet-doc.tpl-friendly .ws-footer{
+    font-family: 'Nanum Pen Script', cursive;
+    font-size: 12pt;
   }
 </style>
 </head>
@@ -1025,6 +1401,42 @@
       <button class="modal-close" data-close>×</button>
     </div>
     <div class="modal-body">
+      <!-- 디자인 템플릿 선택 -->
+      <div class="form-group">
+        <label style="margin-bottom: 10px;">🎨 디자인 템플릿</label>
+        <div class="template-chooser" id="templateChooser">
+          <button class="tpl-card active" data-tpl="warm" type="button">
+            <div class="tpl-preview tpl-preview-warm">
+              <div class="tp-title">수학 학습지</div>
+              <div class="tp-line"></div>
+              <div class="tp-box"></div>
+              <div class="tp-box"></div>
+            </div>
+            <div class="tpl-name">🌸 따뜻한 교과서</div>
+          </button>
+          <button class="tpl-card" data-tpl="friendly" type="button">
+            <div class="tpl-preview tpl-preview-friendly">
+              <div class="tp-banner">
+                <div class="tp-pen">수학 학습지</div>
+              </div>
+              <div class="tp-line tp-line-dot"></div>
+              <div class="tp-line tp-line-dot"></div>
+            </div>
+            <div class="tpl-name">✏️ 친근한 손글씨</div>
+          </button>
+          <button class="tpl-card" data-tpl="modern" type="button">
+            <div class="tpl-preview tpl-preview-modern">
+              <div class="tp-navy">
+                <div class="tp-navy-title">수학 학습지</div>
+              </div>
+              <div class="tp-line"></div>
+              <div class="tp-line"></div>
+            </div>
+            <div class="tpl-name">🧭 모던 네이비</div>
+          </button>
+        </div>
+      </div>
+
       <div class="form-row">
         <div class="form-group">
           <label>학습지 제목 <span class="required">*</span></label>
@@ -1079,6 +1491,70 @@
             <input type="checkbox" id="wsIncludeScore" checked style="width:18px; height:18px; accent-color: var(--primary);"/>
             🏆 배점 표시
           </label>
+        </div>
+      </div>
+
+      <!-- 고급 설정 토글 -->
+      <div class="advanced-section">
+        <button class="advanced-toggle" id="advToggle" type="button">
+          <span class="adv-arrow">▶</span>
+          <span>⚙ 고급 디자인 설정</span>
+          <span class="adv-sub">색상, 번호 스타일, 여백 등</span>
+        </button>
+        <div class="advanced-body" id="advBody">
+          <div class="form-row-3">
+            <div class="form-group">
+              <label>포인트 색상</label>
+              <div class="color-swatches" id="colorSwatches">
+                <button class="swatch active" data-color="" type="button" title="템플릿 기본"><span>기본</span></button>
+                <button class="swatch" data-color="#f59e3b" type="button" style="background:#f59e3b;" title="오렌지"></button>
+                <button class="swatch" data-color="#1a2332" type="button" style="background:#1a2332;" title="네이비"></button>
+                <button class="swatch" data-color="#c0392b" type="button" style="background:#c0392b;" title="빨강"></button>
+                <button class="swatch" data-color="#27ae60" type="button" style="background:#27ae60;" title="초록"></button>
+                <button class="swatch" data-color="#8e44ad" type="button" style="background:#8e44ad;" title="보라"></button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>문제 번호 스타일</label>
+              <select id="wsNumStyle">
+                <option value="basic">1. 2. 3.</option>
+                <option value="q">Q1. Q2. Q3.</option>
+                <option value="pad">01. 02. 03.</option>
+                <option value="badge">원형 배지</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>배점 스타일</label>
+              <select id="wsScoreStyle">
+                <option value="brackets">[3점]</option>
+                <option value="paren">(3점)</option>
+                <option value="pt">3pt</option>
+                <option value="plain">3점</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>문제 간 구분선</label>
+              <select id="wsDivider">
+                <option value="none">없음</option>
+                <option value="dash">점선</option>
+                <option value="solid">실선</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>여백(간격)</label>
+              <select id="wsDensity">
+                <option value="tight">빽빽 (종이 절약)</option>
+                <option value="normal" selected>보통</option>
+                <option value="loose">여유 (풀이 공간 많이)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>푸터 문구 (선택)</label>
+            <input id="wsFooter" type="text" placeholder="예) 파이팅! / 서천고 수학부 / 2학기 중간고사 대비"/>
+          </div>
         </div>
       </div>
 
@@ -1633,6 +2109,33 @@
     worksheetModal.classList.add('show');
   });
 
+  /* ======================= 학습지 모달 인터랙션 ======================= */
+  // 템플릿 카드 선택
+  let selectedTemplate = 'warm';
+  document.querySelectorAll('#templateChooser .tpl-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('#templateChooser .tpl-card').forEach(x => x.classList.remove('active'));
+      card.classList.add('active');
+      selectedTemplate = card.dataset.tpl;
+    });
+  });
+
+  // 색상 스와치 선택
+  let selectedColor = '';
+  document.querySelectorAll('#colorSwatches .swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      document.querySelectorAll('#colorSwatches .swatch').forEach(x => x.classList.remove('active'));
+      sw.classList.add('active');
+      selectedColor = sw.dataset.color;
+    });
+  });
+
+  // 고급 설정 토글
+  document.getElementById('advToggle').addEventListener('click', () => {
+    document.getElementById('advToggle').classList.toggle('open');
+    document.getElementById('advBody').classList.toggle('show');
+  });
+
   document.getElementById('btnGenerateWorksheet').addEventListener('click', () => {
     const title = document.getElementById('wsTitle').value.trim() || '수학 학습지';
     const subtitle = document.getElementById('wsSubtitle').value.trim();
@@ -1643,7 +2146,13 @@
     const includeExplanations = document.getElementById('wsIncludeExplanations').checked;
     const includeScore = document.getElementById('wsIncludeScore').checked;
 
-    // 선택 문제 가져오기
+    // 고급 설정
+    const numStyle = document.getElementById('wsNumStyle').value;
+    const scoreStyle = document.getElementById('wsScoreStyle').value;
+    const divider = document.getElementById('wsDivider').value;
+    const density = document.getElementById('wsDensity').value;
+    const footerText = document.getElementById('wsFooter').value.trim();
+
     let selected = problems.filter(p => selectedIds.has(p.id));
     if (selected.length === 0) { showToast('선택된 문제가 없습니다', 'error'); return; }
 
@@ -1652,33 +2161,32 @@
       selected = [...selected].sort(() => Math.random() - 0.5);
     } else if (order === 'chapter') {
       const chapterOrder = ['공통수학Ⅰ','공통수학Ⅱ','수학Ⅰ','수학Ⅱ','미적분','확률과 통계','기하'];
-      selected = [...selected].sort((a,b) => {
-        return chapterOrder.indexOf(a.chapter) - chapterOrder.indexOf(b.chapter);
-      });
+      selected = [...selected].sort((a,b) =>
+        chapterOrder.indexOf(a.chapter) - chapterOrder.indexOf(b.chapter)
+      );
     } else if (order === 'difficulty') {
       const diffOrder = {'하':0, '중':1, '상':2};
       selected = [...selected].sort((a,b) =>
         (diffOrder[a.difficulty] ?? 1) - (diffOrder[b.difficulty] ?? 1)
       );
     }
-    // 'keep'인 경우 — selectedIds 순서 유지는 이미 problems에서 추출한 순서
 
-    // 조판 결정 (자동)
+    // 자동 조판
     let useTwoCol = layout === '2';
     if (layout === 'auto') {
-      // 평균 지문 길이로 결정
       const avgLen = selected.reduce((sum, p) => sum + (p.stem || '').length, 0) / selected.length;
       useTwoCol = avgLen < 80;
     }
 
-    // HTML 생성
     const printArea = document.getElementById('printArea');
     printArea.innerHTML = generateWorksheetHTML({
       selected, title, subtitle, useTwoCol, fields,
-      includeAnswers, includeExplanations, includeScore
+      includeAnswers, includeExplanations, includeScore,
+      template: selectedTemplate,
+      color: selectedColor,
+      numStyle, scoreStyle, divider, density, footerText
     });
 
-    // 인쇄 대화창 열기
     setTimeout(() => {
       closeAllModals();
       window.print();
@@ -1686,12 +2194,28 @@
   });
 
   function generateWorksheetHTML(opts){
-    const { selected, title, subtitle, useTwoCol, fields, includeAnswers, includeExplanations, includeScore } = opts;
+    const {
+      selected, title, subtitle, useTwoCol, fields,
+      includeAnswers, includeExplanations, includeScore,
+      template, color, numStyle, scoreStyle, divider, density, footerText
+    } = opts;
+
     const today = new Date();
     const dateStr = `${today.getFullYear()}년 ${today.getMonth()+1}월 ${today.getDate()}일`;
 
+    // 루트 클래스 조립
+    const classes = ['worksheet-doc', `tpl-${template}`];
+    if (numStyle !== 'basic') classes.push(`ws-num-${numStyle}`);
+    if (scoreStyle !== 'plain') classes.push(`ws-score-${scoreStyle}`);
+    if (divider !== 'none') classes.push(`ws-divider-${divider}`);
+    if (density !== 'normal') classes.push(`ws-density-${density}`);
+
+    // 인라인 스타일 (색상 override)
+    const styleAttr = color ? ` style="--color-override: ${color};"` : '';
+
+    let html = `<div class="${classes.join(' ')}"${styleAttr}>`;
+
     // 헤더
-    let html = `<div class="worksheet-doc">`;
     html += `<div class="ws-header">`;
     html += `<div class="ws-title">${escapeHtml(title)}</div>`;
     if (subtitle) html += `<div class="ws-subtitle">${escapeHtml(subtitle)}</div>`;
@@ -1711,14 +2235,30 @@
     }
     html += `</div>`;
 
+    // 번호 포맷 함수
+    const formatNum = (idx) => {
+      if (numStyle === 'pad') return String(idx).padStart(2, '0');
+      return String(idx);
+    };
+
     // 문제들
     const marks = ['①','②','③','④','⑤'];
     html += `<div class="ws-questions ${useTwoCol ? 'two-col' : ''}">`;
     selected.forEach((p, idx) => {
       html += `<div class="ws-question">`;
       html += `<div class="ws-q-head">`;
-      html += `<span class="ws-q-num">${idx+1}.</span>`;
-      if (includeScore && p.score) html += `<span class="ws-q-score">[${escapeHtml(p.score)}]</span>`;
+      // 번호 (badge 스타일은 원형 배지, 나머지는 "N." 형식)
+      if (numStyle === 'badge') {
+        html += `<span class="ws-q-num">${formatNum(idx+1)}</span>`;
+      } else {
+        html += `<span class="ws-q-num">${formatNum(idx+1)}.</span>`;
+      }
+      if (includeScore && p.score) {
+        // 배점 값에서 "3점" → 숫자 추출 (scoreStyle에 따라)
+        const scoreNum = (p.score.match(/\d+/) || ['3'])[0];
+        const scoreDisplay = scoreStyle === 'pt' ? scoreNum : (scoreStyle === 'plain' ? p.score : `${scoreNum}점`);
+        html += `<span class="ws-q-score">${escapeHtml(scoreDisplay)}</span>`;
+      }
       html += `</div>`;
       html += `<div class="ws-q-stem">${escapeHtml(p.stem).replace(/\n/g, '<br>')}</div>`;
 
@@ -1735,6 +2275,11 @@
     });
     html += `</div>`;
 
+    // 푸터 문구
+    if (footerText) {
+      html += `<div class="ws-footer">${escapeHtml(footerText)}</div>`;
+    }
+
     // 정답지
     if (includeAnswers) {
       html += `<div class="ws-answer-page">`;
@@ -1742,7 +2287,7 @@
       html += `<div class="ws-answer-grid">`;
       selected.forEach((p, idx) => {
         const ans = p.type === 'multiple' ? marks[p.answer - 1] : p.answer;
-        html += `<div class="ans-item"><strong>${idx+1}.</strong> ${escapeHtml(String(ans))}</div>`;
+        html += `<div class="ans-item"><strong>${formatNum(idx+1)}.</strong> ${escapeHtml(String(ans))}</div>`;
       });
       html += `</div></div>`;
     }
@@ -1754,7 +2299,7 @@
       selected.forEach((p, idx) => {
         const ans = p.type === 'multiple' ? marks[p.answer - 1] : p.answer;
         html += `<div class="ws-solution">`;
-        html += `<h4>${idx+1}. 정답 ${escapeHtml(String(ans))}</h4>`;
+        html += `<h4>${formatNum(idx+1)}. 정답 ${escapeHtml(String(ans))}</h4>`;
         if (p.explanation) {
           html += `<div class="sol-body">${escapeHtml(p.explanation).replace(/\n/g, '<br>')}</div>`;
         } else {
