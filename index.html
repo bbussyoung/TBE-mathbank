@@ -903,6 +903,78 @@
   .ws-questions{ column-count: 1; column-gap: 24px;}
   .ws-questions.two-col{ column-count: 2;}
 
+  /* ========== 균등 분할 레이아웃 (2×N 그리드) ==========
+     페이지당 N개 칸으로 나누고 각 칸을 균등 크기로 배치.
+     칸 하나에 문제가 1개씩 들어가며, 오버플로는 축소하여 맞춤.
+  */
+  .ws-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr;  /* 항상 2단 */
+    gap: 4mm 6mm;
+  }
+  .ws-grid.rows-1{ grid-template-rows: 1fr;}           /* 2분할: 2×1 = 2칸 */
+  .ws-grid.rows-2{ grid-template-rows: 1fr 1fr;}       /* 4분할: 2×2 = 4칸 */
+  .ws-grid.rows-3{ grid-template-rows: 1fr 1fr 1fr;}   /* 6분할: 2×3 = 6칸 */
+  .ws-cell{
+    border: 1px dashed #ddd;
+    border-radius: 6px;
+    padding: 6mm 5mm;
+    overflow: hidden;           /* 칸을 넘으면 숨김(폰트 축소로 먼저 맞춤) */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;              /* 그리드 셀이 높이에 맞춰 줄어들 수 있게 */
+  }
+  .ws-cell .ws-question{
+    margin-bottom: 0;
+    padding: 0;
+    flex: 1;
+    min-height: 0;
+  }
+  /* 각 분할별 기본 폰트 크기 (칸에 맞게 축소) */
+  .ws-grid.rows-1 .ws-cell{ font-size: 11pt;}
+  .ws-grid.rows-2 .ws-cell{ font-size: 10.5pt;}
+  .ws-grid.rows-3 .ws-cell{ font-size: 10pt;}
+  .ws-grid.rows-2 .ws-cell .ws-q-stem{ font-size: 0.95em;}
+  .ws-grid.rows-3 .ws-cell .ws-q-stem{ font-size: 0.9em; line-height: 1.5;}
+  .ws-grid.rows-3 .ws-cell .ws-choices{ font-size: 0.85em;}
+  /* 인쇄 시 각 칸이 페이지 높이의 균등한 비율을 갖도록 */
+  @media print{
+    .ws-grid{
+      min-height: calc(297mm - 32mm - 40mm); /* A4 높이 - 상하 여백 - 헤더 */
+      page-break-inside: auto;
+    }
+    /* 분할 페이지: 그리드 셀 개수에 따라 자동 페이지 나누기 */
+    .ws-grid.multi-page{
+      display: block;  /* 페이지 단위로 나누기 위해 블록으로 */
+    }
+    .ws-page{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4mm 6mm;
+      page-break-after: always;
+      page-break-inside: avoid;
+      min-height: calc(297mm - 32mm - 40mm);
+    }
+    .ws-page.rows-1{ grid-template-rows: 1fr;}
+    .ws-page.rows-2{ grid-template-rows: 1fr 1fr;}
+    .ws-page.rows-3{ grid-template-rows: 1fr 1fr 1fr;}
+    .ws-page:last-child{ page-break-after: auto;}
+  }
+  /* 화면 미리보기에서는 페이지 구분 명확히 */
+  .ws-page{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4mm 6mm;
+    margin-bottom: 12mm;
+    padding-bottom: 10mm;
+    border-bottom: 2px dashed #ccc;
+  }
+  .ws-page.rows-1{ grid-template-rows: 1fr;}
+  .ws-page.rows-2{ grid-template-rows: 1fr 1fr;}
+  .ws-page.rows-3{ grid-template-rows: 1fr 1fr 1fr;}
+  .ws-page:last-child{ border-bottom: none; margin-bottom: 0;}
+
   .ws-question{
     break-inside: avoid;
     margin-bottom: var(--ws-question-gap);
@@ -1452,9 +1524,10 @@
         <div class="form-group">
           <label>조판</label>
           <select id="wsLayout">
-            <option value="auto">자동 (문제에 따라)</option>
-            <option value="1">1단 (한 줄에 한 문제)</option>
-            <option value="2">2단 (종이 절약)</option>
+            <option value="1col">1단 (한 줄에 한 문제)</option>
+            <option value="split2" selected>2분할 (2단 × 1 = 한 페이지 2문제)</option>
+            <option value="split4">4분할 (2단 × 2 = 한 페이지 4문제)</option>
+            <option value="split6">6분할 (2단 × 3 = 한 페이지 6문제)</option>
           </select>
         </div>
         <div class="form-group">
@@ -2171,16 +2244,15 @@
       );
     }
 
-    // 자동 조판
-    let useTwoCol = layout === '2';
-    if (layout === 'auto') {
-      const avgLen = selected.reduce((sum, p) => sum + (p.stem || '').length, 0) / selected.length;
-      useTwoCol = avgLen < 80;
-    }
+    // 조판 결정: 1col / split2 / split4 / split6
+    // split2 = 2×1 = 페이지당 2문제
+    // split4 = 2×2 = 페이지당 4문제
+    // split6 = 2×3 = 페이지당 6문제
+    let splitMode = layout;  // '1col' | 'split2' | 'split4' | 'split6'
 
     const printArea = document.getElementById('printArea');
     printArea.innerHTML = generateWorksheetHTML({
-      selected, title, subtitle, useTwoCol, fields,
+      selected, title, subtitle, splitMode, fields,
       includeAnswers, includeExplanations, includeScore,
       template: selectedTemplate,
       color: selectedColor,
@@ -2195,7 +2267,7 @@
 
   function generateWorksheetHTML(opts){
     const {
-      selected, title, subtitle, useTwoCol, fields,
+      selected, title, subtitle, splitMode, fields,
       includeAnswers, includeExplanations, includeScore,
       template, color, numStyle, scoreStyle, divider, density, footerText
     } = opts;
@@ -2203,16 +2275,22 @@
     const today = new Date();
     const dateStr = `${today.getFullYear()}년 ${today.getMonth()+1}월 ${today.getDate()}일`;
 
-    // 루트 클래스 조립
+    // 분할 모드 → 페이지당 문제 수, 행 수
+    const splitConfig = {
+      '1col':  { perPage: null, rows: null, use1Col: true },
+      'split2':{ perPage: 2, rows: 1, use1Col: false },
+      'split4':{ perPage: 4, rows: 2, use1Col: false },
+      'split6':{ perPage: 6, rows: 3, use1Col: false }
+    }[splitMode] || { perPage: 2, rows: 1, use1Col: false };
+
+    // 루트 클래스
     const classes = ['worksheet-doc', `tpl-${template}`];
     if (numStyle !== 'basic') classes.push(`ws-num-${numStyle}`);
     if (scoreStyle !== 'plain') classes.push(`ws-score-${scoreStyle}`);
     if (divider !== 'none') classes.push(`ws-divider-${divider}`);
     if (density !== 'normal') classes.push(`ws-density-${density}`);
 
-    // 인라인 스타일 (색상 override)
     const styleAttr = color ? ` style="--color-override: ${color};"` : '';
-
     let html = `<div class="${classes.join(' ')}"${styleAttr}>`;
 
     // 헤더
@@ -2235,47 +2313,74 @@
     }
     html += `</div>`;
 
-    // 번호 포맷 함수
+    // 번호 포맷
     const formatNum = (idx) => {
       if (numStyle === 'pad') return String(idx).padStart(2, '0');
       return String(idx);
     };
 
-    // 문제들
     const marks = ['①','②','③','④','⑤'];
-    html += `<div class="ws-questions ${useTwoCol ? 'two-col' : ''}">`;
-    selected.forEach((p, idx) => {
-      html += `<div class="ws-question">`;
-      html += `<div class="ws-q-head">`;
-      // 번호 (badge 스타일은 원형 배지, 나머지는 "N." 형식)
+
+    // 한 문제 HTML 생성 헬퍼
+    const renderQuestion = (p, idx) => {
+      let q = `<div class="ws-question">`;
+      q += `<div class="ws-q-head">`;
       if (numStyle === 'badge') {
-        html += `<span class="ws-q-num">${formatNum(idx+1)}</span>`;
+        q += `<span class="ws-q-num">${formatNum(idx+1)}</span>`;
       } else {
-        html += `<span class="ws-q-num">${formatNum(idx+1)}.</span>`;
+        q += `<span class="ws-q-num">${formatNum(idx+1)}.</span>`;
       }
       if (includeScore && p.score) {
-        // 배점 값에서 "3점" → 숫자 추출 (scoreStyle에 따라)
         const scoreNum = (p.score.match(/\d+/) || ['3'])[0];
         const scoreDisplay = scoreStyle === 'pt' ? scoreNum : (scoreStyle === 'plain' ? p.score : `${scoreNum}점`);
-        html += `<span class="ws-q-score">${escapeHtml(scoreDisplay)}</span>`;
+        q += `<span class="ws-q-score">${escapeHtml(scoreDisplay)}</span>`;
       }
-      html += `</div>`;
-      html += `<div class="ws-q-stem">${escapeHtml(p.stem).replace(/\n/g, '<br>')}</div>`;
+      q += `</div>`;
+      q += `<div class="ws-q-stem">${escapeHtml(p.stem).replace(/\n/g, '<br>')}</div>`;
 
       if (p.type === 'multiple' && p.choices) {
-        html += `<ol class="ws-choices">`;
+        q += `<ol class="ws-choices">`;
         p.choices.forEach((c, i) => {
-          html += `<li>${marks[i]} ${escapeHtml(c)}</li>`;
+          q += `<li>${marks[i]} ${escapeHtml(c)}</li>`;
         });
-        html += `</ol>`;
+        q += `</ol>`;
       } else if (p.type === 'short') {
-        html += `<div class="ws-short-space"></div>`;
+        q += `<div class="ws-short-space"></div>`;
       }
-      html += `</div>`;
-    });
-    html += `</div>`;
+      q += `</div>`;
+      return q;
+    };
 
-    // 푸터 문구
+    // ==== 분할 모드 렌더링 ====
+    if (splitConfig.use1Col) {
+      // 1단: 전통 방식 (문제 이어서 배치)
+      html += `<div class="ws-questions">`;
+      selected.forEach((p, idx) => { html += renderQuestion(p, idx); });
+      html += `</div>`;
+    } else {
+      // 2/4/6 분할: 페이지 단위로 쪼개서 그리드에 배치
+      const { perPage, rows } = splitConfig;
+      const pageCount = Math.ceil(selected.length / perPage);
+      for (let pg = 0; pg < pageCount; pg++) {
+        const start = pg * perPage;
+        const pageItems = selected.slice(start, start + perPage);
+        html += `<div class="ws-page rows-${rows}">`;
+        pageItems.forEach((p, i) => {
+          const globalIdx = start + i;
+          html += `<div class="ws-cell">`;
+          html += renderQuestion(p, globalIdx);
+          html += `</div>`;
+        });
+        // 남은 칸 채우기 (빈 셀) - 그리드 균등 배치 유지
+        const remainingCells = perPage - pageItems.length;
+        for (let i = 0; i < remainingCells; i++) {
+          html += `<div class="ws-cell" style="border-style: solid; border-color: transparent;"></div>`;
+        }
+        html += `</div>`;
+      }
+    }
+
+    // 푸터
     if (footerText) {
       html += `<div class="ws-footer">${escapeHtml(footerText)}</div>`;
     }
