@@ -880,6 +880,9 @@
       size: A4;
       margin: 16mm 14mm 16mm 14mm;
     }
+    /* 브라우저 인쇄 헤더/푸터 제거 (날짜, URL 등) */
+    @page { margin: 0; }
+    body { margin: 1.6cm; }
     .print-only{ display: block;}
   }
 
@@ -1398,6 +1401,18 @@
     margin-bottom: 8px;
   }
   .ws-saved-meta{ display: flex; gap: 5px; flex-wrap: wrap;}
+  .tag{
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 10px;
+    line-height: 1.3;
+  }
+  .tag-chapter{ background: #fff3e0; color: #c97014;}
+  .tag-count{ background: #e8f1f9; color: #2c6a99;}
+  .tag-tpl{ background: #f1ebf7; color: #6f4ea0;}
+  .tag-layout{ background: #eaf6e3; color: #3a7343;}
+  .tag-date{ background: #f5efe3; color: #6b6660;}
   .ws-saved-warn{
     font-size: 11px;
     color: #8c3c2a;
@@ -1493,9 +1508,9 @@
     </div>
 
     <div class="mode-switch" id="modeSwitch">
-      <button class="active" data-mode="browse">🔍 둘러보기</button>
+      <button data-mode="browse">🔍 둘러보기</button>
       <button data-mode="worksheet">📝 학습지 만들기</button>
-      <button data-mode="myws">📚 내 학습지</button>
+      <button class="active" data-mode="myws">📚 내 학습지</button>
     </div>
 
     <div class="nav-section">
@@ -1525,7 +1540,7 @@
 
   <main id="mainArea">
     <!-- 둘러보기 모드 헤더 -->
-    <div class="page-head" id="headBrowse">
+    <div class="page-head" id="headBrowse" style="display:none;">
       <div>
         <h2><span class="emoji" id="chapterEmoji">📚</span><span id="chapterTitle">전체</span></h2>
         <div class="desc" id="chapterDesc">등록된 모든 문제</div>
@@ -1592,10 +1607,10 @@
       </div>
     </div>
 
-    <div id="problemList"></div>
+    <div id="problemList" style="display:none;"></div>
 
     <!-- 내 학습지 모드 헤더 -->
-    <div class="page-head" id="headMyws" style="display:none;">
+    <div class="page-head" id="headMyws">
       <div>
         <h2>📚 내 학습지</h2>
         <div class="desc" id="mywsDesc">저장된 학습지 목록</div>
@@ -1609,7 +1624,7 @@
         </select>
       </div>
     </div>
-    <div id="mywsList" style="display:none;"></div>
+    <div id="mywsList"></div>
 
   </main>
 </div>
@@ -1805,8 +1820,7 @@
         <div class="form-group">
           <label>기재란 표시</label>
           <select id="wsFields">
-            <option value="all">학번 · 이름 · 날짜</option>
-            <option value="name-only">이름만</option>
+            <option value="name-only">이름 · 날짜</option>
             <option value="none">없음</option>
           </select>
         </div>
@@ -1900,6 +1914,7 @@
     <div class="modal-foot">
       <button class="tool-btn" data-close>취소</button>
       <button class="tool-btn primary" id="btnGenerateWorksheet">🖨 미리보기 & 인쇄</button>
+      <button class="tool-btn primary" id="btnSaveWorksheet" style="background: var(--green);">💾 저장 후 인쇄</button>
     </div>
   </div>
 </div>
@@ -1934,7 +1949,7 @@
   /* ======================= 상태 ======================= */
   let problems = [];
   let currentChapter = '전체';
-  let currentMode = 'browse';          // 'browse' | 'worksheet'
+  let currentMode = 'myws';          // 'browse' | 'worksheet' | 'myws'
   let selectedIds = new Set();         // 선택된 문제 ID 집합
   let filters = { chapter:'', difficulty:'', type:'', source:'', keyword:'' };
 
@@ -1977,6 +1992,32 @@
   window.fbDeleteProblem = async (id) => {
     try { await deleteDoc(doc(db, 'problems', id)); return true;}
     catch(e) { console.error(e); showToast('삭제 실패: ' + e.message, 'error'); return false;}
+  };
+
+  // ==================== 학습지 저장/불러오기 ====================
+  const worksheetsRef = collection(db, 'worksheets');
+  let worksheets = [];
+
+  // 학습지 실시간 구독
+  onSnapshot(worksheetsRef, (snap) => {
+    worksheets = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    if (currentMode === 'myws') renderMyWorksheets();
+  });
+
+  window.fbSaveWorksheet = async (worksheet) => {
+    try {
+      await addDoc(worksheetsRef, {...worksheet, createdAt: serverTimestamp()});
+      showToast('학습지 저장 완료', 'success');
+      return true;
+    } catch(e) { console.error(e); showToast('저장 실패: ' + e.message, 'error'); return false;}
+  };
+
+  window.fbDeleteWorksheet = async (id) => {
+    try {
+      await deleteDoc(doc(db, 'worksheets', id));
+      showToast('학습지 삭제 완료', 'success');
+      return true;
+    } catch(e) { console.error(e); showToast('삭제 실패: ' + e.message, 'error'); return false;}
   };
 
   /* ======================= 유틸 ======================= */
@@ -2224,8 +2265,125 @@
 
   function renderAll(){
     renderSidebar();
-    renderProblems();
+    if (currentMode === 'myws') {
+      renderMyWorksheets();
+    } else {
+      renderProblems();
+    }
     updateSelectionBar();
+  }
+
+  /* ======================= 내 학습지 렌더링 ======================= */
+  function renderMyWorksheets(){
+    const list = document.getElementById('mywsList');
+    const desc = document.getElementById('mywsDesc');
+    
+    if (worksheets.length === 0) {
+      list.innerHTML = `
+        <div class="ws-saved-empty">
+          <div class="big-emoji">📚</div>
+          <h3>저장된 학습지가 없습니다</h3>
+          <p>"학습지 만들기" 탭에서 문제를 선택하고 학습지를 만든 뒤<br>"💾 저장 후 인쇄" 버튼을 누르면 여기에 저장됩니다.</p>
+        </div>
+      `;
+      desc.textContent = '저장된 학습지 0개';
+      return;
+    }
+
+    desc.textContent = `저장된 학습지 ${worksheets.length}개`;
+
+    // 검색/정렬 (나중에 구현 가능, 일단 최신순)
+    const sorted = [...worksheets].sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || 0;
+      const bTime = b.createdAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+
+    list.innerHTML = sorted.map(ws => {
+      // 삭제된 문제 확인
+      const validProblems = ws.problemIds.filter(pid => problems.some(p => p.id === pid));
+      const deletedCount = ws.problemIds.length - validProblems.length;
+      const hasDeleted = deletedCount > 0;
+
+      const dateStr = ws.createdAt?.toDate?.() 
+        ? new Intl.DateTimeFormat('ko-KR', {month: 'long', day: 'numeric'}).format(ws.createdAt.toDate())
+        : '날짜 미상';
+
+      return `
+        <div class="ws-saved-card ${hasDeleted ? 'warning' : ''}">
+          <div class="ws-saved-left">
+            <div class="ws-saved-title">
+              ${escapeHtml(ws.title)}
+              ${hasDeleted ? `<span class="ws-saved-warn">⚠️ 문제 ${deletedCount}개 삭제됨</span>` : ''}
+            </div>
+            <div class="ws-saved-sub">${escapeHtml(ws.subtitle || '')}</div>
+            <div class="ws-saved-meta">
+              <span class="tag tag-count">${validProblems.length}문제${hasDeleted ? ` (${ws.problemIds.length} → ${validProblems.length})` : ''}</span>
+              <span class="tag tag-date">📅 ${dateStr}</span>
+            </div>
+          </div>
+          <div class="ws-saved-actions">
+            <button class="tool-btn" data-print-ws="${ws.id}" title="바로 인쇄">🖨</button>
+            <button class="tool-btn" data-edit-ws="${ws.id}" title="편집">✏️</button>
+            <button class="tool-btn" data-delete-ws="${ws.id}" title="삭제">🗑</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // 이벤트 리스너
+    list.querySelectorAll('[data-print-ws]').forEach(btn => {
+      btn.addEventListener('click', () => printWorksheet(btn.dataset.printWs));
+    });
+    list.querySelectorAll('[data-edit-ws]').forEach(btn => {
+      btn.addEventListener('click', () => editWorksheet(btn.dataset.editWs));
+    });
+    list.querySelectorAll('[data-delete-ws]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('이 학습지를 삭제하시겠어요?')) return;
+        await window.fbDeleteWorksheet(btn.dataset.deleteWs);
+      });
+    });
+  }
+
+  function printWorksheet(wsId){
+    const ws = worksheets.find(w => w.id === wsId);
+    if (!ws) return;
+
+    // 삭제된 문제 제외하고 유효한 문제만
+    const validProblems = ws.problemIds
+      .map(pid => problems.find(p => p.id === pid))
+      .filter(Boolean);
+
+    if (validProblems.length === 0) {
+      showToast('모든 문제가 삭제되어 인쇄할 수 없습니다', 'error');
+      return;
+    }
+
+    const printArea = document.getElementById('printArea');
+    printArea.innerHTML = generateWorksheetHTML({
+      selected: validProblems,
+      title: ws.title,
+      subtitle: ws.subtitle,
+      splitMode: ws.settings.layout,
+      fields: ws.settings.fields,
+      includeAnswers: ws.settings.includeAnswers,
+      includeExplanations: ws.settings.includeExplanations,
+      template: ws.settings.template,
+      color: ws.settings.color,
+      numStyle: ws.settings.numStyle,
+      font: ws.settings.font,
+      divider: ws.settings.divider,
+      density: ws.settings.density,
+      footerText: ws.settings.footerText
+    });
+
+    setTimeout(() => window.print(), 100);
+  }
+
+  function editWorksheet(wsId){
+    // 편집 기능 (모달 열고 설정 채우기) - 나중에 구현 가능
+    showToast('편집 기능은 곧 추가됩니다', 'info');
   }
 
   /* ======================= 모드 전환 ======================= */
@@ -2235,12 +2393,20 @@
       b.classList.add('active');
       currentMode = b.dataset.mode;
 
+      // 각 모드별 표시/숨김
       document.getElementById('headBrowse').style.display = currentMode === 'browse' ? '' : 'none';
       document.getElementById('headWorksheet').style.display = currentMode === 'worksheet' ? '' : 'none';
       document.getElementById('filterPanel').style.display = currentMode === 'worksheet' ? '' : 'none';
       document.getElementById('selectionBar').style.display = currentMode === 'worksheet' ? '' : 'none';
+      document.getElementById('headMyws').style.display = currentMode === 'myws' ? '' : 'none';
+      document.getElementById('mywsList').style.display = currentMode === 'myws' ? '' : 'none';
+      document.getElementById('problemList').style.display = currentMode === 'myws' ? 'none' : '';
 
-      renderProblems();
+      if (currentMode === 'myws') {
+        renderMyWorksheets();
+      } else {
+        renderProblems();
+      }
     });
   });
 
@@ -2523,6 +2689,72 @@
     }, 100);
   });
 
+  // 저장 후 인쇄
+  document.getElementById('btnSaveWorksheet').addEventListener('click', async () => {
+    const title = document.getElementById('wsTitle').value.trim() || '수학 학습지';
+    const subtitle = document.getElementById('wsSubtitle').value.trim();
+    const layout = document.getElementById('wsLayout').value;
+    const order = document.getElementById('wsOrder').value;
+    const fields = document.getElementById('wsFields').value;
+    const includeAnswers = document.getElementById('wsIncludeAnswers').checked;
+    const includeExplanations = document.getElementById('wsIncludeExplanations').checked;
+
+    const numStyle = document.getElementById('wsNumStyle').value;
+    const font = document.getElementById('wsFont').value;
+    const divider = document.getElementById('wsDivider').value;
+    const density = document.getElementById('wsDensity').value;
+    const footerText = document.getElementById('wsFooter').value.trim();
+
+    let selected = problems.filter(p => selectedIds.has(p.id));
+    if (selected.length === 0) { showToast('선택된 문제가 없습니다', 'error'); return; }
+
+    // 순서 정렬
+    if (order === 'shuffle') {
+      selected = [...selected].sort(() => Math.random() - 0.5);
+    } else if (order === 'chapter') {
+      const chapterOrder = ['공통수학Ⅰ','공통수학Ⅱ','수학Ⅰ','수학Ⅱ','미적분','확률과 통계','기하'];
+      selected = [...selected].sort((a,b) =>
+        chapterOrder.indexOf(a.chapter) - chapterOrder.indexOf(b.chapter)
+      );
+    } else if (order === 'difficulty') {
+      const diffOrder = {'하':0, '중':1, '상':2};
+      selected = [...selected].sort((a,b) =>
+        (diffOrder[a.difficulty] ?? 1) - (diffOrder[b.difficulty] ?? 1)
+      );
+    }
+
+    // Firestore에 저장
+    const worksheet = {
+      title,
+      subtitle,
+      problemIds: selected.map(p => p.id),
+      settings: {
+        layout, fields, includeAnswers, includeExplanations,
+        template: selectedTemplate, color: selectedColor,
+        numStyle, font, divider, density, footerText
+      }
+    };
+
+    const ok = await window.fbSaveWorksheet(worksheet);
+    if (!ok) return;
+
+    // 저장 성공 후 인쇄
+    let splitMode = layout;
+    const printArea = document.getElementById('printArea');
+    printArea.innerHTML = generateWorksheetHTML({
+      selected, title, subtitle, splitMode, fields,
+      includeAnswers, includeExplanations,
+      template: selectedTemplate,
+      color: selectedColor,
+      numStyle, font, divider, density, footerText
+    });
+
+    setTimeout(() => {
+      closeAllModals();
+      window.print();
+    }, 100);
+  });
+
   function generateWorksheetHTML(opts){
     const {
       selected, title, subtitle, splitMode, fields,
@@ -2558,15 +2790,7 @@
     }
     html += `<div class="ws-title">${escapeHtml(title)}</div>`;
     if (subtitle) html += `<div class="ws-subtitle">${escapeHtml(subtitle)}</div>`;
-    if (fields === 'all') {
-      html += `<div class="ws-meta">
-        <span>학년: </span>
-        <span>반: </span>
-        <span>번호: </span>
-        <span>이름: </span>
-        <span>날짜: ${dateStr}</span>
-      </div>`;
-    } else if (fields === 'name-only') {
+    if (fields === 'name-only') {
       html += `<div class="ws-meta">
         <span>이름: </span>
         <span>날짜: ${dateStr}</span>
