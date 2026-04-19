@@ -878,11 +878,8 @@
     }
     @page{
       size: A4;
-      margin: 16mm 14mm 16mm 14mm;
+      margin: 14mm 12mm 14mm 12mm;
     }
-    /* 브라우저 인쇄 헤더/푸터 제거 (날짜, URL 등) */
-    @page { margin: 0; }
-    body { margin: 1.6cm; }
     .print-only{ display: block;}
   }
 
@@ -892,18 +889,22 @@
 
   .worksheet-doc{
     color: #000;
-    line-height: 1.6;
+    line-height: 1.55;
     max-width: 100%;
+    box-sizing: border-box;
     /* CSS 변수: 커스터마이징으로 덮어씀 */
     --ws-accent: #f59e3b;
     --ws-accent-soft: #fff3e0;
     --ws-accent-dark: #c97014;
     --ws-body-font: 'Noto Sans KR', sans-serif;
     --ws-title-font: 'Nanum Myeongjo', serif;
-    --ws-question-gap: 14px;
-    --ws-question-pad: 6px 0;
+    --ws-question-gap: 10px;
+    --ws-question-pad: 4px 0;
     --ws-question-divider: none;
     font-family: var(--ws-body-font);
+  }
+  .worksheet-doc *{
+    box-sizing: border-box;
   }
 
   /* ============================ 공통 요소 ============================ */
@@ -995,23 +996,41 @@
 
   /* 인쇄 시 각 칸이 페이지 높이의 균등한 비율을 갖도록 */
   @media print{
+    .worksheet-doc{
+      max-width: 100%;
+      overflow: hidden;
+    }
     .ws-grid{
-      min-height: calc(297mm - 32mm - 40mm);
       page-break-inside: auto;
     }
     .ws-grid.multi-page{ display: block;}
     .ws-page{
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 6mm 8mm;
+      gap: 4mm 6mm;
       page-break-after: always;
       page-break-inside: avoid;
-      min-height: calc(297mm - 32mm - 40mm);
+      /* A4 269mm - 헤더 약 30mm - 여유 5mm */
+      height: 234mm;
+      max-height: 234mm;
+      overflow: hidden;
     }
     .ws-page.rows-1{ grid-template-rows: 1fr;}
     .ws-page.rows-2{ grid-template-rows: 1fr 1fr;}
     .ws-page.rows-3{ grid-template-rows: 1fr 1fr 1fr;}
     .ws-page:last-child{ page-break-after: auto;}
+    .ws-cell{
+      overflow: hidden;
+      padding: 2mm;
+    }
+    /* 1단 모드 overflow 방지 */
+    .ws-question{
+      page-break-inside: avoid;
+    }
+    /* 헤더도 적절한 크기로 */
+    .worksheet-doc .ws-header{
+      page-break-after: avoid;
+    }
   }
 
   /* 화면 미리보기 */
@@ -1929,7 +1948,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import {
     getFirestore, collection, onSnapshot,
-    addDoc, deleteDoc, doc, writeBatch,
+    addDoc, deleteDoc, updateDoc, doc, writeBatch,
     query, orderBy, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -2010,6 +2029,14 @@
       showToast('학습지 저장 완료', 'success');
       return true;
     } catch(e) { console.error(e); showToast('저장 실패: ' + e.message, 'error'); return false;}
+  };
+
+  window.fbUpdateWorksheet = async (id, worksheet) => {
+    try {
+      await updateDoc(doc(db, 'worksheets', id), {...worksheet, updatedAt: serverTimestamp()});
+      showToast('학습지 수정 완료', 'success');
+      return true;
+    } catch(e) { console.error(e); showToast('수정 실패: ' + e.message, 'error'); return false;}
   };
 
   window.fbDeleteWorksheet = async (id) => {
@@ -2381,9 +2408,69 @@
     setTimeout(() => window.print(), 100);
   }
 
+  // 현재 편집 중인 학습지 ID (null이면 새 학습지)
+  let editingWsId = null;
+
   function editWorksheet(wsId){
-    // 편집 기능 (모달 열고 설정 채우기) - 나중에 구현 가능
-    showToast('편집 기능은 곧 추가됩니다', 'info');
+    const ws = worksheets.find(w => w.id === wsId);
+    if (!ws) {
+      showToast('학습지를 찾을 수 없습니다', 'error');
+      return;
+    }
+
+    editingWsId = wsId;
+
+    // 유효한 문제들만 선택된 상태로
+    const validProblemIds = ws.problemIds.filter(pid => problems.some(p => p.id === pid));
+    selectedIds.clear();
+    validProblemIds.forEach(pid => selectedIds.add(pid));
+
+    // 학습지 만들기 모드로 전환
+    const worksheetBtn = document.querySelector('#modeSwitch button[data-mode="worksheet"]');
+    worksheetBtn.click();
+
+    // 모달에 설정 채우기
+    setTimeout(() => {
+      document.getElementById('wsTitle').value = ws.title || '';
+      document.getElementById('wsSubtitle').value = ws.subtitle || '';
+      document.getElementById('wsLayout').value = ws.settings.layout || 'split4';
+      document.getElementById('wsFields').value = ws.settings.fields || 'name-only';
+      document.getElementById('wsIncludeAnswers').checked = !!ws.settings.includeAnswers;
+      document.getElementById('wsIncludeExplanations').checked = !!ws.settings.includeExplanations;
+
+      // 고급 설정
+      document.getElementById('wsNumStyle').value = ws.settings.numStyle || 'basic';
+      document.getElementById('wsFont').value = ws.settings.font || '';
+      document.getElementById('wsDivider').value = ws.settings.divider || 'none';
+      document.getElementById('wsDensity').value = ws.settings.density || 'normal';
+      document.getElementById('wsFooter').value = ws.settings.footerText || '';
+
+      // 템플릿 선택
+      document.querySelectorAll('#templateChooser .tpl-card').forEach(card => {
+        card.classList.toggle('active', card.dataset.tpl === ws.settings.template);
+      });
+      selectedTemplate = ws.settings.template || 'friendly';
+
+      // 색상
+      document.querySelectorAll('#colorSwatches .swatch').forEach(sw => {
+        sw.classList.toggle('active', sw.dataset.color === (ws.settings.color || ''));
+      });
+      selectedColor = ws.settings.color || '';
+
+      // 학습지 만들기 모달 열기
+      document.getElementById('worksheetModal').classList.add('show');
+
+      // "편집 중" 표시
+      const btnSave = document.getElementById('btnSaveWorksheet');
+      btnSave.textContent = '💾 변경 저장 후 인쇄';
+
+      const deletedCount = ws.problemIds.length - validProblemIds.length;
+      if (deletedCount > 0) {
+        showToast(`⚠️ 삭제된 문제 ${deletedCount}개는 제외되었습니다`, 'info');
+      } else {
+        showToast('편집 모드로 열었습니다', 'success');
+      }
+    }, 300);
   }
 
   /* ======================= 모드 전환 ======================= */
@@ -2470,6 +2557,10 @@
     addModal.classList.remove('show');
     importModal.classList.remove('show');
     worksheetModal.classList.remove('show');
+    // 편집 모드 해제
+    editingWsId = null;
+    const btnSave = document.getElementById('btnSaveWorksheet');
+    if (btnSave) btnSave.textContent = '💾 저장 후 인쇄';
   }
   document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeAllModals));
   [addModal, importModal, worksheetModal].forEach(m => {
@@ -2723,7 +2814,7 @@
       );
     }
 
-    // Firestore에 저장
+    // Firestore에 저장 (또는 수정)
     const worksheet = {
       title,
       subtitle,
@@ -2735,8 +2826,19 @@
       }
     };
 
-    const ok = await window.fbSaveWorksheet(worksheet);
+    let ok;
+    if (editingWsId) {
+      // 편집 모드: 기존 학습지 수정
+      ok = await window.fbUpdateWorksheet(editingWsId, worksheet);
+    } else {
+      // 새 학습지 저장
+      ok = await window.fbSaveWorksheet(worksheet);
+    }
     if (!ok) return;
+
+    // 편집 모드 해제
+    editingWsId = null;
+    document.getElementById('btnSaveWorksheet').textContent = '💾 저장 후 인쇄';
 
     // 저장 성공 후 인쇄
     let splitMode = layout;
