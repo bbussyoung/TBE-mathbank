@@ -1700,8 +1700,24 @@
         <textarea id="fStem" rows="3"></textarea>
       </div>
       <div class="form-group">
-        <label>그래프/도형 SVG 코드 (선택)</label>
-        <textarea id="fGraphSvg" rows="3" placeholder="<svg>...</svg> 형식의 SVG 코드를 붙여넣으세요. 비워두면 표시되지 않습니다." style="font-family: monospace; font-size: 11px;"></textarea>
+        <label>그래프/도형 이미지 (선택) 📷</label>
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <label for="fGraphImageInput" style="display: inline-block; padding: 8px 16px; background: var(--primary); color: white; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500;">
+            📷 이미지 선택
+          </label>
+          <input type="file" id="fGraphImageInput" accept="image/*" style="display: none;"/>
+          <span id="fGraphImageStatus" style="font-size: 12px; color: var(--ink-soft);">선택된 이미지 없음</span>
+          <button type="button" id="fGraphImageClear" style="display: none; padding: 6px 12px; background: #fff; color: var(--red); border: 1px solid var(--red); border-radius: 6px; cursor: pointer; font-size: 12px;">❌ 제거</button>
+        </div>
+        <div id="fGraphImagePreview" style="margin-top: 10px; display: none;">
+          <img id="fGraphImageThumb" style="max-width: 200px; max-height: 200px; border: 1px solid var(--line); border-radius: 6px;"/>
+        </div>
+        <input type="hidden" id="fGraphImage" value=""/>
+        <div style="font-size: 11px; color: var(--ink-faint); margin-top: 4px;">💡 JPG, PNG, WebP 등 이미지 파일 업로드 가능 (최대 500KB 권장)</div>
+      </div>
+      <div class="form-group">
+        <label>또는 SVG 코드 직접 입력 (고급)</label>
+        <textarea id="fGraphSvg" rows="2" placeholder="<svg>...</svg> SVG 코드가 있으면 여기에 붙여넣으세요. 이미지가 있으면 이미지 우선 사용." style="font-family: monospace; font-size: 11px;"></textarea>
       </div>
       <div id="choiceFields">
         <div class="form-group">
@@ -2212,7 +2228,7 @@
           </div>
         </header>
         <div class="stem"><p>${escapeHtml(p.stem).replace(/\n/g, '<br>')}</p></div>
-        ${p.graphSvg ? `<div class="problem-graph" style="display: flex; justify-content: center; margin: 10px 0;">${p.graphSvg}</div>` : ''}
+        ${p.graphImage ? `<div class="problem-graph" style="display: flex; justify-content: center; margin: 10px 0;"><img src="${p.graphImage}" style="max-width: 280px; max-height: 260px; border: 1px solid var(--line); border-radius: 6px;" alt="문제 그래프"/></div>` : (p.graphSvg ? `<div class="problem-graph" style="display: flex; justify-content: center; margin: 10px 0;">${p.graphSvg}</div>` : '')}
         ${answerBlock}
         ${actionsBlock}
       </article>`;
@@ -2595,6 +2611,42 @@
     resetAddForm();
     addModal.classList.add('show');
   });
+
+  /* ---------- 이미지 업로드 처리 ---------- */
+  document.getElementById('fGraphImageInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // 파일 크기 체크 (1MB 초과 시 경고)
+    if (file.size > 1024 * 1024) {
+      if (!confirm(`이미지 크기가 ${(file.size/1024).toFixed(0)}KB 입니다. 500KB 이하 권장합니다. 계속할까요?`)) {
+        e.target.value = '';
+        return;
+      }
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const base64 = ev.target.result;
+      document.getElementById('fGraphImage').value = base64;
+      document.getElementById('fGraphImageThumb').src = base64;
+      document.getElementById('fGraphImagePreview').style.display = '';
+      document.getElementById('fGraphImageStatus').textContent = `✓ ${file.name} (${(file.size/1024).toFixed(0)}KB)`;
+      document.getElementById('fGraphImageClear').style.display = '';
+    };
+    reader.onerror = () => showToast('이미지 읽기 실패', 'error');
+    reader.readAsDataURL(file);
+  });
+  
+  document.getElementById('fGraphImageClear').addEventListener('click', () => {
+    document.getElementById('fGraphImage').value = '';
+    document.getElementById('fGraphImageInput').value = '';
+    document.getElementById('fGraphImageThumb').src = '';
+    document.getElementById('fGraphImagePreview').style.display = 'none';
+    document.getElementById('fGraphImageStatus').textContent = '선택된 이미지 없음';
+    document.getElementById('fGraphImageClear').style.display = 'none';
+  });
+
   document.getElementById('typeToggle').querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => {
       document.getElementById('typeToggle').querySelectorAll('button').forEach(x => x.classList.remove('active'));
@@ -2613,6 +2665,12 @@
     document.getElementById('fTopic').value = '';
     document.getElementById('fStem').value = '';
     document.getElementById('fGraphSvg').value = '';
+    document.getElementById('fGraphImage').value = '';
+    document.getElementById('fGraphImageInput').value = '';
+    document.getElementById('fGraphImageThumb').src = '';
+    document.getElementById('fGraphImagePreview').style.display = 'none';
+    document.getElementById('fGraphImageStatus').textContent = '선택된 이미지 없음';
+    document.getElementById('fGraphImageClear').style.display = 'none';
     document.querySelectorAll('.choice-input').forEach(i => i.value = '');
     document.querySelectorAll('[name="correctChoice"]').forEach(r => r.checked = false);
     document.getElementById('fShortAnswer').value = '';
@@ -2626,13 +2684,14 @@
     const topic = document.getElementById('fTopic').value.trim();
     const stem = document.getElementById('fStem').value.trim();
     const graphSvg = document.getElementById('fGraphSvg').value.trim();
+    const graphImage = document.getElementById('fGraphImage').value.trim();
     const explanation = document.getElementById('fExplanation').value.trim();
     const difficulty = document.getElementById('fDifficulty').value;
     const score = document.getElementById('fScore').value;
     const source = document.getElementById('fSource').value.trim();
     if (!stem) { showToast('문제 지문을 입력하세요', 'error'); return; }
 
-    const base = { chapter, topic, stem, graphSvg, explanation, difficulty, score, source, tags: [] };
+    const base = { chapter, topic, stem, graphSvg, graphImage, explanation, difficulty, score, source, tags: [] };
     let problem;
     if (formType === 'multiple') {
       const choices = Array.from(document.querySelectorAll('.choice-input')).map(i => i.value.trim());
@@ -2679,7 +2738,7 @@
         validated.push({
           chapter: p.chapter || '수학Ⅰ', topic: p.topic || '',
           type: p.type === 'short' ? 'short' : 'multiple',
-          stem: p.stem, graphSvg: p.graphSvg || '', choices: p.choices || null, answer: p.answer,
+          stem: p.stem, graphSvg: p.graphSvg || '', graphImage: p.graphImage || '', choices: p.choices || null, answer: p.answer,
           explanation: p.explanation || '', difficulty: p.difficulty || '중',
           source: p.source || 'AI 변형', score: p.score || '3점', tags: p.tags || []
         });
@@ -2944,7 +3003,9 @@
       }
       q += `</div>`;
       q += `<div class="ws-q-stem">${escapeHtml(p.stem).replace(/\n/g, '<br>')}</div>`;
-      if (p.graphSvg) {
+      if (p.graphImage) {
+        q += `<div class="ws-q-graph" style="display: flex; justify-content: center; margin: 4px 0;"><img src="${p.graphImage}" style="max-width: 100%; max-height: 200px;" alt="그래프"/></div>`;
+      } else if (p.graphSvg) {
         q += `<div class="ws-q-graph" style="display: flex; justify-content: center; margin: 4px 0;">${p.graphSvg}</div>`;
       }
 
