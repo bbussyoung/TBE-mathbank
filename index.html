@@ -17,6 +17,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;500;600&family=Nanum+Gothic:wght@400;700&family=Black+Han+Sans&family=Sunflower:wght@300;500;700&family=Do+Hyeon&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
 <style>
   :root{
@@ -1698,6 +1700,9 @@
       <div class="form-group">
         <label>문제 지문 <span class="required">*</span></label>
         <textarea id="fStem" rows="3"></textarea>
+        <div style="font-size: 11px; color: var(--ink-faint); margin-top: 4px; line-height: 1.5;">
+          💡 <strong>수식 입력</strong>: <code>$y = 2^x$</code>, <code>$\\frac{1}{2}$</code>, <code>$\\sqrt{3}$</code>, <code>$a^{x+1}$</code> 처럼 <code>$...$</code> 로 감싸면 수학 수식으로 표시됩니다.
+        </div>
       </div>
       <div class="form-group">
         <label>그래프/도형 이미지 (선택) 📷</label>
@@ -2091,6 +2096,29 @@
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
+  /* KaTeX 수식 렌더링: $...$ 로 감싼 부분을 수식으로 변환 */
+  function renderMath(element){
+    if (!element || typeof renderMathInElement === 'undefined') return;
+    try {
+      renderMathInElement(element, {
+        delimiters: [
+          {left: '$$', right: '$$', display: true},
+          {left: '$', right: '$', display: false},
+          {left: '\\(', right: '\\)', display: false},
+          {left: '\\[', right: '\\]', display: true}
+        ],
+        throwOnError: false,
+        errorColor: '#cc0000',
+        strict: false
+      });
+    } catch(e) { console.warn('KaTeX 렌더링 오류:', e); }
+  }
+
+  /* 전체 문제 영역에 수식 렌더링 적용 */
+  function renderAllMath(){
+    document.querySelectorAll('.stem, .choices, .explanation, .ws-q-stem, .ws-choices, .ws-q-graph, .preview-item').forEach(el => renderMath(el));
+  }
+
   const chapterDescs = {
     '전체': '등록된 모든 문제',
     '수학Ⅰ': '지수와 로그 · 수열 · 삼각함수',
@@ -2156,6 +2184,8 @@
 
     list.innerHTML = filtered.map((p, idx) => renderProblemCard(p, idx + 1)).join('');
     attachProblemHandlers();
+    // KaTeX 수식 렌더링 적용
+    setTimeout(() => renderAllMath(), 10);
   }
 
   function renderProblemCard(p, displayNum){
@@ -2444,7 +2474,11 @@
       footerText: ws.settings.footerText
     });
 
-    setTimeout(() => window.print(), 100);
+    // 인쇄 영역에 KaTeX 수식 렌더링 적용
+    setTimeout(() => {
+      renderMath(printArea);
+      setTimeout(() => window.print(), 200);
+    }, 100);
   }
 
   // 현재 편집 중인 학습지 ID (null이면 새 학습지)
