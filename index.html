@@ -1556,9 +1556,9 @@
       <div class="nav-label">단원</div>
       <ul class="nav-list" id="chapterNav">
         <li class="active" data-chapter="전체" data-emoji="📚">📚 전체 <span class="count" id="count-전체">0</span></li>
-        <li data-chapter="수학Ⅰ" data-emoji="📘">📘 수학Ⅰ <span class="count" id="count-수학Ⅰ">0</span></li>
-        <li data-chapter="수학Ⅱ" data-emoji="📗">📗 수학Ⅱ <span class="count" id="count-수학Ⅱ">0</span></li>
-        <li data-chapter="미적분" data-emoji="📕">📕 미적분 <span class="count" id="count-미적분">0</span></li>
+        <li data-chapter="대수" data-emoji="📘">📘 대수 <span class="count" id="count-대수">0</span></li>
+        <li data-chapter="미적분Ⅰ" data-emoji="📗">📗 미적분Ⅰ <span class="count" id="count-미적분Ⅰ">0</span></li>
+        <li data-chapter="미적분Ⅱ" data-emoji="📕">📕 미적분Ⅱ <span class="count" id="count-미적분Ⅱ">0</span></li>
         <li data-chapter="확률과 통계" data-emoji="📙">📙 확률과 통계 <span class="count" id="count-확률과 통계">0</span></li>
         <li data-chapter="기하" data-emoji="📓">📓 기하 <span class="count" id="count-기하">0</span></li>
         <li data-chapter="공통수학Ⅰ" data-emoji="📔">📔 공통수학Ⅰ <span class="count" id="count-공통수학Ⅰ">0</span></li>
@@ -1604,7 +1604,7 @@
         <label>단원</label>
         <select id="fltChapter">
           <option value="">전체</option>
-          <option>수학Ⅰ</option><option>수학Ⅱ</option><option>미적분</option>
+          <option>대수</option><option>미적분Ⅰ</option><option>미적분Ⅱ</option>
           <option>확률과 통계</option><option>기하</option>
           <option>공통수학Ⅰ</option><option>공통수학Ⅱ</option>
         </select>
@@ -1687,7 +1687,7 @@
         <div class="form-group">
           <label>단원 <span class="required">*</span></label>
           <select id="fChapter">
-            <option>수학Ⅰ</option><option>수학Ⅱ</option><option>미적분</option>
+            <option>대수</option><option>미적분Ⅰ</option><option>미적분Ⅱ</option>
             <option>확률과 통계</option><option>기하</option>
             <option>공통수학Ⅰ</option><option>공통수학Ⅱ</option>
           </select>
@@ -1777,7 +1777,7 @@
       <div class="import-hint">
         💡 Claude에게 원본 문제를 주고 받은 JSON을 붙여넣은 뒤 <code>미리보기</code> → <code>가져오기</code>.
       </div>
-      <textarea class="import-textarea" id="importArea" placeholder='[{"chapter":"수학Ⅰ","topic":"...","type":"multiple","stem":"...","graphSvg":"<svg>...</svg> (선택)","choices":["①","②","③","④","⑤"],"answer":2,"explanation":"...","difficulty":"중","source":"서천고 기출 변형"}]'></textarea>
+      <textarea class="import-textarea" id="importArea" placeholder='[{"chapter":"대수","topic":"...","type":"multiple","stem":"...","graphImage":"data:image/png;base64,... (선택)","choices":["①","②","③","④","⑤"],"answer":2,"explanation":"...","difficulty":"중","source":"서천고 기출 변형"}]'></textarea>
       <div id="importPreview" style="margin-top: 14px; display: none;">
         <div style="font-size: 12px; font-weight: 700; color: var(--ink-soft); margin-bottom: 8px;" id="previewCount"></div>
         <div class="preview-list" id="previewList"></div>
@@ -1852,7 +1852,7 @@
       <div class="form-row">
         <div class="form-group">
           <label>학습지 제목 <span class="required">*</span></label>
-          <input id="wsTitle" type="text" value="수학 학습지" placeholder="예) 수학Ⅰ 단원평가"/>
+          <input id="wsTitle" type="text" value="수학 학습지" placeholder="예) 대수 단원평가"/>
         </div>
         <div class="form-group">
           <label>부제 / 대상</label>
@@ -2121,13 +2121,13 @@
 
   const chapterDescs = {
     '전체': '등록된 모든 문제',
-    '수학Ⅰ': '지수와 로그 · 수열 · 삼각함수',
-    '수학Ⅱ': '함수의 극한 · 미분 · 적분',
-    '미적분': '여러 가지 함수의 미적분',
+    '대수': '지수함수와 로그함수 · 삼각함수 · 수열',
+    '미적분Ⅰ': '함수의 극한과 연속 · 미분 · 적분',
+    '미적분Ⅱ': '수열의 극한 · 여러 가지 함수의 미적분',
     '확률과 통계': '경우의 수 · 확률 · 통계',
     '기하': '이차곡선 · 공간도형 · 벡터',
-    '공통수학Ⅰ': '다항식 · 방정식과 부등식 · 도형',
-    '공통수학Ⅱ': '집합과 명제 · 함수 · 경우의 수'
+    '공통수학Ⅰ': '다항식 · 방정식과 부등식 · 경우의 수 · 행렬',
+    '공통수학Ⅱ': '도형의 방정식 · 집합과 명제 · 함수와 그래프'
   };
 
   /* ======================= 필터 ======================= */
@@ -2158,7 +2158,7 @@
     const total = problems.length;
     document.getElementById('totalCount').textContent = total;
     document.getElementById('count-전체').textContent = total;
-    ['수학Ⅰ','수학Ⅱ','미적분','확률과 통계','기하','공통수학Ⅰ','공통수학Ⅱ'].forEach(c => {
+    ['대수','미적분Ⅰ','미적분Ⅱ','확률과 통계','기하','공통수학Ⅰ','공통수학Ⅱ'].forEach(c => {
       const count = problems.filter(p => p.chapter === c).length;
       const el = document.getElementById('count-' + c);
       if (el) el.textContent = count;
@@ -2695,7 +2695,7 @@
     document.getElementById('typeToggle').querySelectorAll('button').forEach((b, i) => b.classList.toggle('active', i === 0));
     document.getElementById('choiceFields').style.display = '';
     document.getElementById('shortFields').style.display = 'none';
-    document.getElementById('fChapter').value = currentChapter === '전체' ? '수학Ⅰ' : currentChapter;
+    document.getElementById('fChapter').value = currentChapter === '전체' ? '대수' : currentChapter;
     document.getElementById('fTopic').value = '';
     document.getElementById('fStem').value = '';
     document.getElementById('fGraphSvg').value = '';
@@ -2770,7 +2770,7 @@
           if (!p.answer || p.answer < 1 || p.answer > 5) throw new Error('answer는 1~5');
         }
         validated.push({
-          chapter: p.chapter || '수학Ⅰ', topic: p.topic || '',
+          chapter: p.chapter || '대수', topic: p.topic || '',
           type: p.type === 'short' ? 'short' : 'multiple',
           stem: p.stem, graphSvg: p.graphSvg || '', graphImage: p.graphImage || '', choices: p.choices || null, answer: p.answer,
           explanation: p.explanation || '', difficulty: p.difficulty || '중',
@@ -2870,7 +2870,7 @@
     if (order === 'shuffle') {
       selected = [...selected].sort(() => Math.random() - 0.5);
     } else if (order === 'chapter') {
-      const chapterOrder = ['공통수학Ⅰ','공통수학Ⅱ','수학Ⅰ','수학Ⅱ','미적분','확률과 통계','기하'];
+      const chapterOrder = ['공통수학Ⅰ','공통수학Ⅱ','대수','미적분Ⅰ','미적분Ⅱ','확률과 통계','기하'];
       selected = [...selected].sort((a,b) =>
         chapterOrder.indexOf(a.chapter) - chapterOrder.indexOf(b.chapter)
       );
@@ -2921,7 +2921,7 @@
     if (order === 'shuffle') {
       selected = [...selected].sort(() => Math.random() - 0.5);
     } else if (order === 'chapter') {
-      const chapterOrder = ['공통수학Ⅰ','공통수학Ⅱ','수학Ⅰ','수학Ⅱ','미적분','확률과 통계','기하'];
+      const chapterOrder = ['공통수학Ⅰ','공통수학Ⅱ','대수','미적분Ⅰ','미적분Ⅱ','확률과 통계','기하'];
       selected = [...selected].sort((a,b) =>
         chapterOrder.indexOf(a.chapter) - chapterOrder.indexOf(b.chapter)
       );
