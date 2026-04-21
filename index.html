@@ -118,6 +118,95 @@
   }
   .nav-list li.active .count{ background: rgba(255,255,255,0.25); color: #fff;}
 
+  /* 트리 구조 - 중단원 (subchapter) */
+  .nav-list .subchapter-group {
+    display: none;
+    margin-left: 0;
+    margin-bottom: 4px;
+    border-left: 2px solid rgba(245, 158, 59, 0.15);
+    padding-left: 0;
+  }
+  .nav-list .subchapter-group.expanded {
+    display: block;
+  }
+  .nav-list .subchapter {
+    padding: 6px 10px 6px 24px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-bottom: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .nav-list .subchapter:hover {
+    background: rgba(245, 158, 59, 0.06);
+    color: var(--ink);
+  }
+  .nav-list .subchapter.active {
+    background: rgba(245, 158, 59, 0.15);
+    color: var(--primary);
+    font-weight: 700;
+  }
+  .nav-list .subchapter .count {
+    font-size: 11px;
+    padding: 1px 6px;
+  }
+
+  /* 트리 구조 - 유형 (topic) */
+  .nav-list .topic-group {
+    display: none;
+    margin-left: 16px;
+    margin-bottom: 3px;
+  }
+  .nav-list .topic-group.expanded {
+    display: block;
+  }
+  .nav-list .topic {
+    padding: 4px 10px 4px 16px;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--ink-faint);
+    margin-bottom: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .nav-list .topic:hover {
+    background: rgba(245, 158, 59, 0.04);
+    color: var(--ink-soft);
+  }
+  .nav-list .topic.active {
+    background: rgba(245, 158, 59, 0.12);
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .nav-list .topic .count {
+    font-size: 10px;
+    padding: 1px 5px;
+  }
+
+  /* 펼침 화살표 */
+  .nav-list .arrow {
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 10px;
+    color: var(--ink-faint);
+    transition: transform 0.2s ease;
+    width: 10px;
+    text-align: center;
+  }
+  .nav-list li.expanded > .arrow,
+  .nav-list .subchapter.expanded > .arrow {
+    transform: rotate(90deg);
+  }
+
   /* 모드 전환 버튼 */
   .mode-switch{
     margin-bottom: 20px;
@@ -1555,14 +1644,7 @@
     <div class="nav-section">
       <div class="nav-label">단원</div>
       <ul class="nav-list" id="chapterNav">
-        <li class="active" data-chapter="전체" data-emoji="📚">📚 전체 <span class="count" id="count-전체">0</span></li>
-        <li data-chapter="대수" data-emoji="📘">📘 대수 <span class="count" id="count-대수">0</span></li>
-        <li data-chapter="미적분Ⅰ" data-emoji="📗">📗 미적분Ⅰ <span class="count" id="count-미적분Ⅰ">0</span></li>
-        <li data-chapter="미적분Ⅱ" data-emoji="📕">📕 미적분Ⅱ <span class="count" id="count-미적분Ⅱ">0</span></li>
-        <li data-chapter="확률과 통계" data-emoji="📙">📙 확률과 통계 <span class="count" id="count-확률과 통계">0</span></li>
-        <li data-chapter="기하" data-emoji="📓">📓 기하 <span class="count" id="count-기하">0</span></li>
-        <li data-chapter="공통수학Ⅰ" data-emoji="📔">📔 공통수학Ⅰ <span class="count" id="count-공통수학Ⅰ">0</span></li>
-        <li data-chapter="공통수학Ⅱ" data-emoji="📒">📒 공통수학Ⅱ <span class="count" id="count-공통수학Ⅱ">0</span></li>
+        <!-- JS에서 동적으로 생성 -->
       </ul>
     </div>
 
@@ -1581,7 +1663,7 @@
     <!-- 둘러보기 모드 헤더 -->
     <div class="page-head" id="headBrowse" style="display:none;">
       <div>
-        <h2><span class="emoji" id="chapterEmoji">📚</span><span id="chapterTitle">전체</span></h2>
+        <h2><span id="chapterTitle">📚 전체</span></h2>
         <div class="desc" id="chapterDesc">등록된 모든 문제</div>
       </div>
       <div class="toolbar">
@@ -1604,9 +1686,9 @@
         <label>단원</label>
         <select id="fltChapter">
           <option value="">전체</option>
+          <option>공통수학Ⅰ</option><option>공통수학Ⅱ</option>
           <option>대수</option><option>미적분Ⅰ</option><option>미적분Ⅱ</option>
           <option>확률과 통계</option><option>기하</option>
-          <option>공통수학Ⅰ</option><option>공통수학Ⅱ</option>
         </select>
       </div>
       <div class="filter-group">
@@ -1685,16 +1767,24 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>단원 <span class="required">*</span></label>
+          <label>대단원 <span class="required">*</span></label>
           <select id="fChapter">
+            <option>공통수학Ⅰ</option><option>공통수학Ⅱ</option>
             <option>대수</option><option>미적분Ⅰ</option><option>미적분Ⅱ</option>
             <option>확률과 통계</option><option>기하</option>
-            <option>공통수학Ⅰ</option><option>공통수학Ⅱ</option>
           </select>
         </div>
         <div class="form-group">
-          <label>세부 단원</label>
-          <input id="fTopic" type="text" placeholder="예) 지수와 로그"/>
+          <label>중단원</label>
+          <select id="fSubchapter">
+            <option value="">선택</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>유형</label>
+          <select id="fTopic">
+            <option value="">선택</option>
+          </select>
         </div>
       </div>
       <div class="form-group">
@@ -2130,6 +2220,74 @@
     '공통수학Ⅱ': '도형의 방정식 · 집합과 명제 · 함수와 그래프'
   };
 
+  /* ======================= 교육과정 구조 (2022 개정) ======================= */
+  const CURRICULUM = {
+    '공통수학Ⅰ': {
+      emoji: '📔',
+      middle: {
+        '다항식': ['다항식의 연산', '나머지정리', '인수분해'],
+        '방정식과 부등식': ['복소수와 이차방정식', '이차방정식과 이차함수', '여러 가지 방정식', '여러 가지 부등식'],
+        '경우의 수': ['경우의 수', '순열과 조합'],
+        '행렬': ['행렬의 뜻과 연산']
+      }
+    },
+    '공통수학Ⅱ': {
+      emoji: '📒',
+      middle: {
+        '도형의 방정식': ['평면좌표', '직선의 방정식', '원의 방정식', '도형의 이동'],
+        '집합과 명제': ['집합', '명제'],
+        '함수와 그래프': ['함수', '유리함수와 무리함수']
+      }
+    },
+    '대수': {
+      emoji: '📘',
+      middle: {
+        '지수함수와 로그함수': ['지수', '로그', '지수함수의 뜻과 그래프', '로그함수의 뜻과 그래프', '지수함수와 로그함수의 활용'],
+        '삼각함수': ['삼각함수', '삼각함수의 그래프', '사인법칙과 코사인법칙'],
+        '수열': ['등차수열', '등비수열', '수열의 합', '수학적 귀납법']
+      }
+    },
+    '미적분Ⅰ': {
+      emoji: '📗',
+      middle: {
+        '함수의 극한과 연속': ['함수의 극한', '함수의 연속'],
+        '미분': ['미분계수와 도함수', '도함수의 활용'],
+        '적분': ['부정적분', '정적분', '정적분의 활용']
+      }
+    },
+    '미적분Ⅱ': {
+      emoji: '📕',
+      middle: {
+        '수열의 극한': ['수열의 극한', '급수'],
+        '미분법': ['여러 가지 함수의 미분', '여러 가지 미분법', '도함수의 활용'],
+        '적분법': ['여러 가지 적분법', '정적분의 활용']
+      }
+    },
+    '확률과 통계': {
+      emoji: '📙',
+      middle: {
+        '경우의 수': ['순열과 조합', '이항정리'],
+        '확률': ['확률의 뜻과 활용', '조건부확률'],
+        '통계': ['확률변수와 확률분포', '통계적 추정']
+      }
+    },
+    '기하': {
+      emoji: '📓',
+      middle: {
+        '이차곡선': ['포물선', '타원', '쌍곡선'],
+        '공간도형과 공간좌표': ['공간도형', '공간좌표'],
+        '벡터': ['벡터의 연산', '평면벡터의 성분과 내적', '공간벡터', '직선과 평면의 방정식']
+      }
+    }
+  };
+
+  /* 확장된 항목 추적 */
+  const expandedChapters = new Set();
+  const expandedSubchapters = new Set();
+  /* 현재 선택된 중단원, 유형 */
+  let currentSubchapter = '';
+  let currentTopic = '';
+
   /* ======================= 필터 ======================= */
   function applyFilters(list){
     return list.filter(p => {
@@ -2147,22 +2305,176 @@
       // 학습지 모드: 필터만 적용 (사이드바 단원 선택 무시)
       return applyFilters(problems);
     }
-    // 둘러보기 모드: 사이드바 단원 필터
-    return currentChapter === '전체'
+    // 둘러보기 모드: 사이드바 단원/중단원/유형 필터
+    let filtered = currentChapter === '전체'
       ? problems
       : problems.filter(p => p.chapter === currentChapter);
+    if (currentSubchapter) {
+      filtered = filtered.filter(p => p.subchapter === currentSubchapter);
+    }
+    if (currentTopic) {
+      filtered = filtered.filter(p => p.topic === currentTopic);
+    }
+    return filtered;
   }
 
   /* ======================= 렌더링 ======================= */
   function renderSidebar(){
+    const nav = document.getElementById('chapterNav');
     const total = problems.length;
     document.getElementById('totalCount').textContent = total;
-    document.getElementById('count-전체').textContent = total;
-    ['대수','미적분Ⅰ','미적분Ⅱ','확률과 통계','기하','공통수학Ⅰ','공통수학Ⅱ'].forEach(c => {
-      const count = problems.filter(p => p.chapter === c).length;
-      const el = document.getElementById('count-' + c);
-      if (el) el.textContent = count;
+
+    let html = `<li class="${currentChapter === '전체' ? 'active' : ''}" data-chapter="전체" data-emoji="📚">📚 전체 <span class="count">${total}</span></li>`;
+
+    Object.keys(CURRICULUM).forEach(chapter => {
+      const info = CURRICULUM[chapter];
+      const chapterProbs = problems.filter(p => p.chapter === chapter);
+      const count = chapterProbs.length;
+      const isExpanded = expandedChapters.has(chapter);
+      const isActive = currentChapter === chapter && !currentSubchapter;
+
+      html += `
+        <li class="chapter-item ${isActive ? 'active' : ''} ${isExpanded ? 'expanded' : ''}" data-chapter="${chapter}">
+          <span><span class="arrow">▶</span>${info.emoji} ${chapter}</span>
+          <span class="count">${count}</span>
+        </li>
+        <div class="subchapter-group ${isExpanded ? 'expanded' : ''}" data-parent="${chapter}">`;
+
+      Object.keys(info.middle).forEach(subchapter => {
+        const subProbs = chapterProbs.filter(p => p.subchapter === subchapter);
+        const subCount = subProbs.length;
+        const subKey = `${chapter}::${subchapter}`;
+        const isSubExpanded = expandedSubchapters.has(subKey);
+        const isSubActive = currentChapter === chapter && currentSubchapter === subchapter && !currentTopic;
+
+        html += `
+          <div class="subchapter ${isSubActive ? 'active' : ''} ${isSubExpanded ? 'expanded' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}">
+            <span><span class="arrow">▶</span>${subchapter}</span>
+            <span class="count">${subCount}</span>
+          </div>
+          <div class="topic-group ${isSubExpanded ? 'expanded' : ''}" data-parent="${subKey}">`;
+
+        info.middle[subchapter].forEach(topic => {
+          const topicCount = subProbs.filter(p => p.topic === topic).length;
+          const isTopicActive = currentChapter === chapter && currentSubchapter === subchapter && currentTopic === topic;
+
+          html += `
+            <div class="topic ${isTopicActive ? 'active' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}" data-topic="${topic}">
+              <span>${topic}</span>
+              <span class="count">${topicCount}</span>
+            </div>`;
+        });
+
+        html += `</div>`;
+      });
+
+      html += `</div>`;
     });
+
+    nav.innerHTML = html;
+    attachSidebarHandlers();
+  }
+
+  function attachSidebarHandlers(){
+    const nav = document.getElementById('chapterNav');
+
+    // 전체
+    const allLi = nav.querySelector('[data-chapter="전체"]');
+    if (allLi) {
+      allLi.addEventListener('click', () => {
+        currentChapter = '전체';
+        currentSubchapter = '';
+        currentTopic = '';
+        updateMainTitle();
+        renderSidebar();
+        renderProblems();
+      });
+    }
+
+    // 대단원 (chapter)
+    nav.querySelectorAll('.chapter-item').forEach(el => {
+      el.addEventListener('click', (e) => {
+        const chapter = el.dataset.chapter;
+
+        // 화살표 클릭 vs 대단원 이름 클릭 구분
+        if (e.target.classList.contains('arrow')) {
+          // 펼침/접기 토글
+          if (expandedChapters.has(chapter)) expandedChapters.delete(chapter);
+          else expandedChapters.add(chapter);
+          renderSidebar();
+        } else {
+          // 대단원 선택
+          currentChapter = chapter;
+          currentSubchapter = '';
+          currentTopic = '';
+          // 자동 펼침
+          expandedChapters.add(chapter);
+          updateMainTitle();
+          renderSidebar();
+          renderProblems();
+        }
+      });
+    });
+
+    // 중단원 (subchapter)
+    nav.querySelectorAll('.subchapter').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const chapter = el.dataset.chapter;
+        const subchapter = el.dataset.subchapter;
+        const key = `${chapter}::${subchapter}`;
+
+        if (e.target.classList.contains('arrow')) {
+          if (expandedSubchapters.has(key)) expandedSubchapters.delete(key);
+          else expandedSubchapters.add(key);
+          renderSidebar();
+        } else {
+          currentChapter = chapter;
+          currentSubchapter = subchapter;
+          currentTopic = '';
+          expandedSubchapters.add(key);
+          updateMainTitle();
+          renderSidebar();
+          renderProblems();
+        }
+      });
+    });
+
+    // 유형 (topic)
+    nav.querySelectorAll('.topic').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentChapter = el.dataset.chapter;
+        currentSubchapter = el.dataset.subchapter;
+        currentTopic = el.dataset.topic;
+        updateMainTitle();
+        renderSidebar();
+        renderProblems();
+      });
+    });
+  }
+
+  function updateMainTitle(){
+    const titleEl = document.getElementById('chapterTitle');
+    const descEl = document.getElementById('chapterDesc');
+    if (!titleEl) return;
+
+    let title, desc;
+    if (currentTopic) {
+      title = currentTopic;
+      desc = `${currentChapter} > ${currentSubchapter}`;
+    } else if (currentSubchapter) {
+      title = currentSubchapter;
+      desc = currentChapter;
+    } else if (currentChapter === '전체') {
+      title = '📚 전체';
+      desc = chapterDescs['전체'];
+    } else {
+      title = (CURRICULUM[currentChapter]?.emoji || '') + ' ' + currentChapter;
+      desc = chapterDescs[currentChapter] || '';
+    }
+    titleEl.innerHTML = title;
+    if (descEl) descEl.textContent = desc;
   }
 
   function renderProblems(){
@@ -2571,19 +2883,7 @@
   });
 
   /* ======================= 사이드바 단원 ======================= */
-  document.querySelectorAll('#chapterNav li').forEach(li => {
-    li.addEventListener('click', () => {
-      document.querySelectorAll('#chapterNav li').forEach(x => x.classList.remove('active'));
-      li.classList.add('active');
-      currentChapter = li.dataset.chapter;
-      document.getElementById('chapterTitle').textContent = currentChapter;
-      document.getElementById('chapterEmoji').textContent = li.dataset.emoji;
-      document.getElementById('chapterDesc').textContent = chapterDescs[currentChapter] || '';
-      renderProblems();
-      document.getElementById('sidebar').classList.remove('open');
-      document.getElementById('backdrop').classList.remove('show');
-    });
-  });
+  /* 사이드바는 renderSidebar에서 동적 생성하고 이벤트도 attachSidebarHandlers에서 처리 */
 
   /* ======================= 필터 핸들러 ======================= */
   ['fltChapter','fltDifficulty','fltType','fltSource','fltKeyword'].forEach(id => {
@@ -2695,8 +2995,10 @@
     document.getElementById('typeToggle').querySelectorAll('button').forEach((b, i) => b.classList.toggle('active', i === 0));
     document.getElementById('choiceFields').style.display = '';
     document.getElementById('shortFields').style.display = 'none';
-    document.getElementById('fChapter').value = currentChapter === '전체' ? '대수' : currentChapter;
-    document.getElementById('fTopic').value = '';
+    const defaultChapter = currentChapter === '전체' ? '대수' : currentChapter;
+    document.getElementById('fChapter').value = defaultChapter;
+    updateSubchapterDropdown(defaultChapter, currentSubchapter || '');
+    updateTopicDropdown(defaultChapter, currentSubchapter || '', currentTopic || '');
     document.getElementById('fStem').value = '';
     document.getElementById('fGraphSvg').value = '';
     document.getElementById('fGraphImage').value = '';
@@ -2713,9 +3015,45 @@
     document.getElementById('fScore').value = '3점';
     document.getElementById('fSource').value = '';
   }
+
+  /* 대단원 선택 시 중단원 드롭다운 업데이트 */
+  function updateSubchapterDropdown(chapter, selectedValue = ''){
+    const select = document.getElementById('fSubchapter');
+    const middle = CURRICULUM[chapter]?.middle || {};
+    let html = '<option value="">선택</option>';
+    Object.keys(middle).forEach(sub => {
+      html += `<option value="${sub}" ${selectedValue === sub ? 'selected' : ''}>${sub}</option>`;
+    });
+    select.innerHTML = html;
+  }
+
+  /* 중단원 선택 시 유형 드롭다운 업데이트 */
+  function updateTopicDropdown(chapter, subchapter, selectedValue = ''){
+    const select = document.getElementById('fTopic');
+    const topics = CURRICULUM[chapter]?.middle?.[subchapter] || [];
+    let html = '<option value="">선택</option>';
+    topics.forEach(t => {
+      html += `<option value="${t}" ${selectedValue === t ? 'selected' : ''}>${t}</option>`;
+    });
+    select.innerHTML = html;
+  }
+
+  /* 대단원 변경 이벤트 */
+  document.getElementById('fChapter').addEventListener('change', (e) => {
+    updateSubchapterDropdown(e.target.value);
+    updateTopicDropdown(e.target.value, '');
+  });
+
+  /* 중단원 변경 이벤트 */
+  document.getElementById('fSubchapter').addEventListener('change', (e) => {
+    const chapter = document.getElementById('fChapter').value;
+    updateTopicDropdown(chapter, e.target.value);
+  });
+
   document.getElementById('btnSave').addEventListener('click', async () => {
     const chapter = document.getElementById('fChapter').value;
-    const topic = document.getElementById('fTopic').value.trim();
+    const subchapter = document.getElementById('fSubchapter').value;
+    const topic = document.getElementById('fTopic').value;
     const stem = document.getElementById('fStem').value.trim();
     const graphSvg = document.getElementById('fGraphSvg').value.trim();
     const graphImage = document.getElementById('fGraphImage').value.trim();
@@ -2725,7 +3063,7 @@
     const source = document.getElementById('fSource').value.trim();
     if (!stem) { showToast('문제 지문을 입력하세요', 'error'); return; }
 
-    const base = { chapter, topic, stem, graphSvg, graphImage, explanation, difficulty, score, source, tags: [] };
+    const base = { chapter, subchapter, topic, stem, graphSvg, graphImage, explanation, difficulty, score, source, tags: [] };
     let problem;
     if (formType === 'multiple') {
       const choices = Array.from(document.querySelectorAll('.choice-input')).map(i => i.value.trim());
@@ -2770,7 +3108,9 @@
           if (!p.answer || p.answer < 1 || p.answer > 5) throw new Error('answer는 1~5');
         }
         validated.push({
-          chapter: p.chapter || '대수', topic: p.topic || '',
+          chapter: p.chapter || '대수',
+          subchapter: p.subchapter || '',
+          topic: p.topic || '',
           type: p.type === 'short' ? 'short' : 'multiple',
           stem: p.stem, graphSvg: p.graphSvg || '', graphImage: p.graphImage || '', choices: p.choices || null, answer: p.answer,
           explanation: p.explanation || '', difficulty: p.difficulty || '중',
