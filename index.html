@@ -609,7 +609,7 @@
   }
   .modal-close:hover{ background: #f5efe3; color: var(--ink);}
   .modal-body{ padding: 20px 24px; overflow-y: auto; flex: 1;}
-  .modal-foot{
+  .modal-foot, .modal-footer{
     padding: 14px 24px; border-top: 1px solid var(--line);
     display: flex; justify-content: flex-end; gap: 8px;
     background: #fbf7f0;
@@ -1636,9 +1636,8 @@
     </div>
 
     <div class="mode-switch" id="modeSwitch">
-      <button data-mode="browse">🔍 둘러보기</button>
-      <button data-mode="worksheet">📝 학습지 만들기</button>
-      <button class="active" data-mode="myws">📚 내 학습지</button>
+      <button class="active" data-mode="worksheet">📝 학습지 만들기</button>
+      <button data-mode="myws">📚 내 학습지</button>
     </div>
 
     <div class="nav-section">
@@ -1660,11 +1659,11 @@
   </aside>
 
   <main id="mainArea">
-    <!-- 둘러보기 모드 헤더 -->
-    <div class="page-head" id="headBrowse" style="display:none;">
+    <!-- 학습지 모드 헤더 -->
+    <div class="page-head" id="headWorksheet">
       <div>
-        <h2><span id="chapterTitle">📚 전체</span></h2>
-        <div class="desc" id="chapterDesc">등록된 모든 문제</div>
+        <h2 id="chapterTitle">📝 학습지 만들기</h2>
+        <div class="desc" id="chapterDesc">사이드바에서 단원/유형을 선택하고, 문제를 체크해서 학습지를 만드세요.</div>
       </div>
       <div class="toolbar">
         <button class="tool-btn ghost-accent" id="btnImport">📥 AI 변형 가져오기</button>
@@ -1672,25 +1671,8 @@
       </div>
     </div>
 
-    <!-- 학습지 모드 헤더 -->
-    <div class="page-head" id="headWorksheet" style="display:none;">
-      <div>
-        <h2>📝 학습지 만들기</h2>
-        <div class="desc">필터로 문제를 좁히고, 체크박스로 선택한 뒤 학습지로 만드세요.</div>
-      </div>
-    </div>
-
     <!-- 학습지 모드: 필터 -->
-    <div class="filter-panel" id="filterPanel" style="display:none;">
-      <div class="filter-group">
-        <label>단원</label>
-        <select id="fltChapter">
-          <option value="">전체</option>
-          <option>공통수학Ⅰ</option><option>공통수학Ⅱ</option>
-          <option>대수</option><option>미적분Ⅰ</option><option>미적분Ⅱ</option>
-          <option>확률과 통계</option><option>기하</option>
-        </select>
-      </div>
+    <div class="filter-panel" id="filterPanel">
       <div class="filter-group">
         <label>난이도</label>
         <select id="fltDifficulty">
@@ -1699,7 +1681,7 @@
         </select>
       </div>
       <div class="filter-group">
-        <label>유형</label>
+        <label>문제 유형</label>
         <select id="fltType">
           <option value="">전체</option>
           <option value="multiple">객관식</option>
@@ -1714,10 +1696,14 @@
         <label>키워드 (지문)</label>
         <input type="text" id="fltKeyword" placeholder="예) 로그"/>
       </div>
+      <!-- 하위 호환: 기존 chapter 필터는 숨김 -->
+      <select id="fltChapter" style="display:none;">
+        <option value="">전체</option>
+      </select>
     </div>
 
     <!-- 학습지 모드: 선택 현황 -->
-    <div class="selection-bar" id="selectionBar" style="display:none;">
+    <div class="selection-bar" id="selectionBar">
       <div class="selection-info">
         선택된 문제 <strong id="selCount">0</strong>개
       </div>
@@ -1728,10 +1714,10 @@
       </div>
     </div>
 
-    <div id="problemList" style="display:none;"></div>
+    <div id="problemList"></div>
 
     <!-- 내 학습지 모드 헤더 -->
-    <div class="page-head" id="headMyws">
+    <div class="page-head" id="headMyws" style="display:none;">
       <div>
         <h2>📚 내 학습지</h2>
         <div class="desc" id="mywsDesc">저장된 학습지 목록</div>
@@ -1745,9 +1731,26 @@
         </select>
       </div>
     </div>
-    <div id="mywsList"></div>
+    <div id="mywsList" style="display:none;"></div>
 
   </main>
+</div>
+
+<!-- 문제 미리보기 모달 -->
+<div class="modal-backdrop" id="previewModal">
+  <div class="modal" style="max-width: 760px;">
+    <div class="modal-head">
+      <h3>👁 문제 자세히 보기</h3>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body" id="previewBody">
+      <!-- 내용 동적 생성 -->
+    </div>
+    <div class="modal-footer">
+      <button class="tool-btn" data-close>닫기</button>
+      <button class="tool-btn primary" id="btnSelectFromPreview">✔ 이 문제 선택</button>
+    </div>
+  </div>
 </div>
 
 <!-- 문제 추가 모달 -->
@@ -2101,7 +2104,7 @@
   /* ======================= 상태 ======================= */
   let problems = [];
   let currentChapter = '전체';
-  let currentMode = 'myws';          // 'browse' | 'worksheet' | 'myws'
+  let currentMode = 'worksheet';     // 'worksheet' | 'myws'
   let selectedIds = new Set();         // 선택된 문제 ID 집합
   let filters = { chapter:'', difficulty:'', type:'', source:'', keyword:'' };
 
@@ -2144,6 +2147,12 @@
   window.fbDeleteProblem = async (id) => {
     try { await deleteDoc(doc(db, 'problems', id)); return true;}
     catch(e) { console.error(e); showToast('삭제 실패: ' + e.message, 'error'); return false;}
+  };
+  window.fbUpdateProblem = async (id, problem) => {
+    try {
+      await updateDoc(doc(db, 'problems', id), {...problem, updatedAt: serverTimestamp()});
+      return true;
+    } catch(e) { console.error(e); showToast('수정 실패: ' + e.message, 'error'); return false;}
   };
 
   // ==================== 학습지 저장/불러오기 ====================
@@ -2301,11 +2310,7 @@
   }
 
   function getVisibleProblems(){
-    if (currentMode === 'worksheet') {
-      // 학습지 모드: 필터만 적용 (사이드바 단원 선택 무시)
-      return applyFilters(problems);
-    }
-    // 둘러보기 모드: 사이드바 단원/중단원/유형 필터
+    // 1. 사이드바 단원/중단원/유형 필터
     let filtered = currentChapter === '전체'
       ? problems
       : problems.filter(p => p.chapter === currentChapter);
@@ -2314,6 +2319,10 @@
     }
     if (currentTopic) {
       filtered = filtered.filter(p => p.topic === currentTopic);
+    }
+    // 2. 학습지 모드일 때만 상세 필터(난이도/유형/출처/키워드)도 추가
+    if (currentMode === 'worksheet') {
+      filtered = applyFilters(filtered);
     }
     return filtered;
   }
@@ -2382,6 +2391,7 @@
     const allLi = nav.querySelector('[data-chapter="전체"]');
     if (allLi) {
       allLi.addEventListener('click', () => {
+        ensureWorksheetMode();
         currentChapter = '전체';
         currentSubchapter = '';
         currentTopic = '';
@@ -2404,10 +2414,10 @@
           renderSidebar();
         } else {
           // 대단원 선택
+          ensureWorksheetMode();
           currentChapter = chapter;
           currentSubchapter = '';
           currentTopic = '';
-          // 자동 펼침
           expandedChapters.add(chapter);
           updateMainTitle();
           renderSidebar();
@@ -2429,6 +2439,7 @@
           else expandedSubchapters.add(key);
           renderSidebar();
         } else {
+          ensureWorksheetMode();
           currentChapter = chapter;
           currentSubchapter = subchapter;
           currentTopic = '';
@@ -2444,6 +2455,7 @@
     nav.querySelectorAll('.topic').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
+        ensureWorksheetMode();
         currentChapter = el.dataset.chapter;
         currentSubchapter = el.dataset.subchapter;
         currentTopic = el.dataset.topic;
@@ -2452,6 +2464,20 @@
         renderProblems();
       });
     });
+  }
+
+  /* 단원 클릭 시 학습지 만들기 모드로 자동 전환 */
+  function ensureWorksheetMode(){
+    if (currentMode === 'worksheet') return;
+    currentMode = 'worksheet';
+    document.querySelectorAll('#modeSwitch button').forEach(x => x.classList.remove('active'));
+    document.querySelector('#modeSwitch button[data-mode="worksheet"]').classList.add('active');
+    document.getElementById('headWorksheet').style.display = '';
+    document.getElementById('filterPanel').style.display = '';
+    document.getElementById('selectionBar').style.display = '';
+    document.getElementById('problemList').style.display = '';
+    document.getElementById('headMyws').style.display = 'none';
+    document.getElementById('mywsList').style.display = 'none';
   }
 
   function updateMainTitle(){
@@ -2506,60 +2532,32 @@
     const typeLabel = p.type === 'short' ? '주관식' : '객관식';
     const isSelected = selectedIds.has(p.id);
 
+    // 보기 영역 (객관식/주관식) - 간결하게 표시
     let answerBlock = '';
-    if (currentMode === 'browse') {
-      if (p.type === 'short') {
-        answerBlock = `
-          <div class="short-answer-wrap">
-            <input type="text" class="short-input" placeholder="정답을 입력하세요"/>
-          </div>`;
-      } else {
-        const marks = ['①','②','③','④','⑤'];
-        answerBlock = `
-          <ul class="choices">
-            ${(p.choices || []).map((c, i) => `
-              <li><span class="marker">${marks[i]}</span><span class="math">${escapeHtml(c)}</span></li>
-            `).join('')}
-          </ul>`;
-      }
+    if (p.type === 'short') {
+      answerBlock = `<div style="font-size:12px; color:var(--ink-faint); margin-bottom: 10px;">📌 주관식 · 정답: ${escapeHtml(String(p.answer))}</div>`;
     } else {
-      // 학습지 모드: 보기만 간결 표시 (선택용)
-      if (p.type === 'short') {
-        answerBlock = `<div style="font-size:12px; color:var(--ink-faint); margin-bottom: 10px;">📌 주관식 · 정답: ${escapeHtml(String(p.answer))}</div>`;
-      } else {
-        const marks = ['①','②','③','④','⑤'];
-        answerBlock = `
-          <div style="font-size:13px; color:var(--ink-soft); margin-bottom: 10px;">
-            ${(p.choices || []).map((c, i) => `
-              <span style="margin-right: 10px;"><strong>${marks[i]}</strong> <span class="math">${escapeHtml(c)}</span></span>
-            `).join('')}
-          </div>`;
-      }
+      const marks = ['①','②','③','④','⑤'];
+      answerBlock = `
+        <div style="font-size:13px; color:var(--ink-soft); margin-bottom: 10px;">
+          ${(p.choices || []).map((c, i) => `
+            <span style="margin-right: 10px;"><strong>${marks[i]}</strong> <span class="math">${escapeHtml(c)}</span></span>
+          `).join('')}
+        </div>`;
     }
-
-    const explanationBlock = (currentMode === 'browse' && p.explanation) ? `
-      <button class="explanation-toggle" data-toggle-explanation>💡 풀이 보기</button>
-      <div class="explanation"><strong>풀이.</strong> ${escapeHtml(p.explanation)}</div>
-    ` : '';
-
-    const actionsBlock = currentMode === 'browse' ? `
-      <div class="actions">
-        <button class="check-btn">정답 확인</button>
-        <div class="verdict"></div>
-      </div>
-      ${explanationBlock}
-    ` : '';
 
     return `
       <article class="problem ${isSelected ? 'selected' : ''}" data-id="${p.id}">
-        ${currentMode === 'browse' ? `
-          <div class="problem-actions">
-            <button class="icon-btn" data-delete="${p.id}" title="삭제">🗑</button>
-          </div>` : ''}
+        <div class="problem-actions">
+          <button class="icon-btn" data-preview="${p.id}" title="자세히 보기">👁</button>
+          <button class="icon-btn" data-edit="${p.id}" title="수정">✏️</button>
+          <button class="icon-btn" data-delete="${p.id}" title="삭제">🗑</button>
+        </div>
         <header class="problem-head">
           <div class="problem-num">
+            <input type="checkbox" class="problem-check" data-id="${p.id}" ${isSelected ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer; margin-right:8px;"/>
             <span class="badge">${displayNum}</span>
-            <span>${escapeHtml(p.topic || p.chapter)}</span>
+            <span>${escapeHtml(p.topic || p.subchapter || p.chapter)}</span>
           </div>
           <div class="labels">
             <span class="label tag-source">${escapeHtml(p.chapter)}</span>
@@ -2572,103 +2570,206 @@
         <div class="stem"><p>${escapeHtml(p.stem).replace(/\n/g, '<br>')}</p></div>
         ${p.graphImage ? `<div class="problem-graph" style="display: flex; justify-content: center; margin: 10px 0;"><img src="${p.graphImage}" style="max-width: 280px; max-height: 260px; border: 1px solid var(--line); border-radius: 6px;" alt="문제 그래프"/></div>` : (p.graphSvg ? `<div class="problem-graph" style="display: flex; justify-content: center; margin: 10px 0;">${p.graphSvg}</div>` : '')}
         ${answerBlock}
-        ${actionsBlock}
       </article>`;
   }
 
   function attachProblemHandlers(){
+    // 체크박스로 선택
+    document.querySelectorAll('.problem-check').forEach(cb => {
+      cb.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = cb.dataset.id;
+        if (cb.checked) selectedIds.add(id);
+        else selectedIds.delete(id);
+        const prob = cb.closest('.problem');
+        if (prob) prob.classList.toggle('selected', cb.checked);
+        updateSelectionBar();
+      });
+    });
+
+    // 카드 클릭으로 선택 토글 (체크박스, 버튼 제외)
     document.querySelectorAll('.problem').forEach(prob => {
-      const id = prob.dataset.id;
-      const problem = problems.find(p => p.id === id);
-      if (!problem) return;
+      prob.addEventListener('click', (e) => {
+        // 체크박스, 버튼 클릭은 무시
+        if (e.target.closest('.icon-btn') || e.target.closest('.problem-check')) return;
+        const id = prob.dataset.id;
+        if (selectedIds.has(id)) {
+          selectedIds.delete(id);
+          prob.classList.remove('selected');
+          const cb = prob.querySelector('.problem-check');
+          if (cb) cb.checked = false;
+        } else {
+          selectedIds.add(id);
+          prob.classList.add('selected');
+          const cb = prob.querySelector('.problem-check');
+          if (cb) cb.checked = true;
+        }
+        updateSelectionBar();
+      });
+    });
 
-      // 학습지 모드: 카드 클릭으로 선택 토글
-      if (currentMode === 'worksheet') {
-        prob.addEventListener('click', () => {
-          if (selectedIds.has(id)) selectedIds.delete(id);
-          else selectedIds.add(id);
-          updateSelectionBar();
-          renderProblems();
-        });
-        return; // 이하 이벤트는 둘러보기 모드에서만
-      }
+    // 미리보기 버튼
+    document.querySelectorAll('[data-preview]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.preview;
+        openPreviewModal(id);
+      });
+    });
 
-      // ---- 둘러보기 모드 ----
-      const btn = prob.querySelector('.check-btn');
-      const verdict = prob.querySelector('.verdict');
-      if (!btn) return;
+    // 수정 버튼
+    document.querySelectorAll('[data-edit]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.edit;
+        openEditModal(id);
+      });
+    });
 
-      if (problem.type === 'short') {
-        const input = prob.querySelector('.short-input');
-        btn.addEventListener('click', () => {
-          const val = (input.value || '').trim();
-          if (!val) { verdict.innerHTML = '보기를 먼저 입력하세요'; verdict.className = 'verdict show no'; return; }
-          if (String(val) === String(problem.answer).trim()) {
-            input.classList.add('correct');
-            verdict.innerHTML = '✓ 정답입니다! <span class="ans">잘했어요 🎉</span>';
-            verdict.className = 'verdict show ok';
-          } else {
-            input.classList.add('wrong');
-            verdict.innerHTML = `✗ 다시 풀어볼까요? <span class="ans">정답: ${escapeHtml(String(problem.answer))}</span>`;
-            verdict.className = 'verdict show no';
-          }
-          btn.disabled = true; btn.textContent = '확인 완료';
-        });
-      } else {
-        const choices = prob.querySelectorAll('.choices li');
-        const answer = problem.answer;
-        const marks = ['①','②','③','④','⑤'];
-        let selected = null;
-        choices.forEach((li, idx) => {
-          li.addEventListener('click', () => {
-            if (btn.disabled) return;
-            choices.forEach(x => x.classList.remove('selected'));
-            li.classList.add('selected');
-            selected = idx + 1;
-          });
-        });
-        btn.addEventListener('click', () => {
-          if (!selected) { verdict.innerHTML = '보기를 먼저 선택하세요'; verdict.className = 'verdict show no'; return; }
-          if (selected === answer) {
-            verdict.innerHTML = '✓ 정답입니다! <span class="ans">잘했어요 🎉</span>';
-            verdict.className = 'verdict show ok';
-            choices[answer-1].classList.add('correct');
-          } else {
-            verdict.innerHTML = `✗ 다시 풀어볼까요? <span class="ans">정답: ${marks[answer-1]}</span>`;
-            verdict.className = 'verdict show no';
-            choices[selected-1].classList.add('wrong');
-            choices[answer-1].classList.add('correct');
-          }
-          btn.disabled = true; btn.textContent = '확인 완료';
-        });
-      }
-
-      const toggle = prob.querySelector('[data-toggle-explanation]');
-      if (toggle) {
-        toggle.addEventListener('click', () => {
-          const exp = prob.querySelector('.explanation');
-          exp.classList.toggle('show');
-          toggle.textContent = exp.classList.contains('show') ? '💡 풀이 닫기' : '💡 풀이 보기';
-        });
-      }
-
-      const del = prob.querySelector('[data-delete]');
-      if (del) {
-        del.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          if (!confirm('이 문제를 삭제하시겠어요? (모든 기기에서 삭제됩니다)')) return;
-          const ok = await window.fbDeleteProblem(id);
-          if (ok) {
-            selectedIds.delete(id);
-            showToast('문제가 삭제되었습니다', 'success');
-          }
-        });
-      }
+    // 삭제 버튼
+    document.querySelectorAll('[data-delete]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.delete;
+        if (!confirm('이 문제를 삭제할까요?')) return;
+        try {
+          await window.fbDeleteProblem(id);
+          showToast('문제가 삭제됐어요', 'success');
+        } catch (err) {
+          showToast('삭제 실패: ' + err.message, 'error');
+        }
+      });
     });
   }
 
   function updateSelectionBar(){
     document.getElementById('selCount').textContent = selectedIds.size;
+  }
+
+  /* ======================= 미리보기 모달 ======================= */
+  let previewingId = null;
+  function openPreviewModal(id){
+    const p = problems.find(x => x.id === id);
+    if (!p) return;
+    previewingId = id;
+
+    const marks = ['①','②','③','④','⑤'];
+    let answerHtml = '';
+    if (p.type === 'short') {
+      answerHtml = `<div style="margin: 14px 0; padding: 12px; background: var(--bg); border-radius: 8px;">
+        <strong>📌 주관식 · 정답:</strong> <span class="math">${escapeHtml(String(p.answer))}</span>
+      </div>`;
+    } else {
+      answerHtml = `<ul class="choices" style="margin: 14px 0;">
+        ${(p.choices || []).map((c, i) => `
+          <li style="padding: 6px 0; ${p.answer === i+1 ? 'background:rgba(76,175,80,0.1); border-radius:6px; padding:6px 10px;' : ''}">
+            <span class="marker">${marks[i]}</span>
+            <span class="math" style="margin-left: 8px;">${escapeHtml(c)}</span>
+            ${p.answer === i+1 ? '<span style="color:var(--green); margin-left:8px; font-weight:700;">← 정답</span>' : ''}
+          </li>
+        `).join('')}
+      </ul>`;
+    }
+
+    const graphHtml = p.graphImage
+      ? `<div style="display:flex; justify-content:center; margin:14px 0;"><img src="${p.graphImage}" style="max-width:100%; max-height:320px; border:1px solid var(--line); border-radius:6px;" alt="그래프"/></div>`
+      : (p.graphSvg ? `<div style="display:flex; justify-content:center; margin:14px 0;">${p.graphSvg}</div>` : '');
+
+    const explanationHtml = p.explanation
+      ? `<div style="margin-top: 18px; padding: 14px; background: #fff7ed; border-left: 3px solid var(--primary); border-radius: 6px;">
+          <strong style="display:block; margin-bottom:6px;">💡 풀이</strong>
+          <div style="white-space: pre-wrap; line-height: 1.7;">${escapeHtml(p.explanation)}</div>
+        </div>`
+      : '';
+
+    const metaHtml = `
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 14px;">
+        <span class="label tag-source">${escapeHtml(p.chapter)}</span>
+        ${p.subchapter ? `<span class="label tag-source">${escapeHtml(p.subchapter)}</span>` : ''}
+        ${p.topic ? `<span class="label tag-source">${escapeHtml(p.topic)}</span>` : ''}
+        ${p.source ? `<span class="label tag-source">${escapeHtml(p.source)}</span>` : ''}
+        ${p.score ? `<span class="label tag-score">${escapeHtml(p.score)}</span>` : ''}
+        <span class="label ${p.difficulty === '상' ? 'tag-diff-hard' : p.difficulty === '하' ? 'tag-diff-easy' : 'tag-diff-mid'}">
+          ${p.difficulty === '상' ? '🔴' : p.difficulty === '하' ? '🟢' : '🟡'} ${p.difficulty || '중'}
+        </span>
+      </div>`;
+
+    document.getElementById('previewBody').innerHTML = `
+      ${metaHtml}
+      <div class="stem" style="font-size:15px; line-height:1.8;"><p>${escapeHtml(p.stem).replace(/\n/g, '<br>')}</p></div>
+      ${graphHtml}
+      ${answerHtml}
+      ${explanationHtml}
+    `;
+
+    document.getElementById('previewModal').classList.add('show');
+    setTimeout(() => renderMath(document.getElementById('previewBody')), 10);
+
+    // 선택 버튼 상태 반영
+    const selBtn = document.getElementById('btnSelectFromPreview');
+    if (selectedIds.has(id)) {
+      selBtn.textContent = '✖ 선택 해제';
+    } else {
+      selBtn.textContent = '✔ 이 문제 선택';
+    }
+  }
+
+  document.getElementById('btnSelectFromPreview').addEventListener('click', () => {
+    if (!previewingId) return;
+    if (selectedIds.has(previewingId)) selectedIds.delete(previewingId);
+    else selectedIds.add(previewingId);
+    updateSelectionBar();
+    renderProblems();
+    document.getElementById('previewModal').classList.remove('show');
+  });
+
+  /* ======================= 편집 모달 ======================= */
+  let editingId = null;
+  function openEditModal(id){
+    const p = problems.find(x => x.id === id);
+    if (!p) return;
+    editingId = id;
+    resetAddForm();
+
+    // 기존 값 채우기
+    formType = p.type || 'multiple';
+    document.getElementById('typeToggle').querySelectorAll('button').forEach(b => {
+      b.classList.toggle('active', b.dataset.type === formType);
+    });
+    document.getElementById('choiceFields').style.display = formType === 'multiple' ? '' : 'none';
+    document.getElementById('shortFields').style.display = formType === 'short' ? '' : 'none';
+
+    document.getElementById('fChapter').value = p.chapter || '대수';
+    updateSubchapterDropdown(p.chapter || '대수', p.subchapter || '');
+    updateTopicDropdown(p.chapter || '대수', p.subchapter || '', p.topic || '');
+    document.getElementById('fStem').value = p.stem || '';
+    document.getElementById('fGraphSvg').value = p.graphSvg || '';
+    document.getElementById('fGraphImage').value = p.graphImage || '';
+    if (p.graphImage) {
+      document.getElementById('fGraphImageThumb').src = p.graphImage;
+      document.getElementById('fGraphImagePreview').style.display = '';
+      document.getElementById('fGraphImageStatus').textContent = '✓ 기존 이미지';
+      document.getElementById('fGraphImageClear').style.display = '';
+    }
+    document.getElementById('fExplanation').value = p.explanation || '';
+    document.getElementById('fDifficulty').value = p.difficulty || '중';
+    document.getElementById('fScore').value = p.score || '3점';
+    document.getElementById('fSource').value = p.source || '';
+
+    if (p.type === 'multiple' && p.choices) {
+      document.querySelectorAll('.choice-input').forEach((inp, i) => {
+        inp.value = p.choices[i] || '';
+      });
+      const radio = document.querySelector(`[name="correctChoice"][value="${p.answer}"]`);
+      if (radio) radio.checked = true;
+    } else if (p.type === 'short') {
+      document.getElementById('fShortAnswer').value = p.answer || '';
+    }
+
+    // 모달 제목 변경
+    document.querySelector('#addModal .modal-head h3').textContent = '✏️ 문제 수정';
+    document.getElementById('btnSave').textContent = '💾 수정 저장';
+    document.getElementById('addModal').classList.add('show');
   }
 
   function renderAll(){
@@ -2865,14 +2966,14 @@
       b.classList.add('active');
       currentMode = b.dataset.mode;
 
-      // 각 모드별 표시/숨김
-      document.getElementById('headBrowse').style.display = currentMode === 'browse' ? '' : 'none';
-      document.getElementById('headWorksheet').style.display = currentMode === 'worksheet' ? '' : 'none';
-      document.getElementById('filterPanel').style.display = currentMode === 'worksheet' ? '' : 'none';
-      document.getElementById('selectionBar').style.display = currentMode === 'worksheet' ? '' : 'none';
-      document.getElementById('headMyws').style.display = currentMode === 'myws' ? '' : 'none';
-      document.getElementById('mywsList').style.display = currentMode === 'myws' ? '' : 'none';
-      document.getElementById('problemList').style.display = currentMode === 'myws' ? 'none' : '';
+      // 학습지 만들기 vs 내 학습지 두 가지
+      const isWorksheet = currentMode === 'worksheet';
+      document.getElementById('headWorksheet').style.display = isWorksheet ? '' : 'none';
+      document.getElementById('filterPanel').style.display = isWorksheet ? '' : 'none';
+      document.getElementById('selectionBar').style.display = isWorksheet ? '' : 'none';
+      document.getElementById('problemList').style.display = isWorksheet ? '' : 'none';
+      document.getElementById('headMyws').style.display = isWorksheet ? 'none' : '';
+      document.getElementById('mywsList').style.display = isWorksheet ? 'none' : '';
 
       if (currentMode === 'myws') {
         renderMyWorksheets();
@@ -2925,18 +3026,26 @@
   const addModal = document.getElementById('addModal');
   const importModal = document.getElementById('importModal');
   const worksheetModal = document.getElementById('worksheetModal');
+  const previewModal = document.getElementById('previewModal');
   let formType = 'multiple';
   function closeAllModals(){
     addModal.classList.remove('show');
     importModal.classList.remove('show');
     worksheetModal.classList.remove('show');
+    previewModal.classList.remove('show');
     // 편집 모드 해제
     editingWsId = null;
+    editingId = null;
     const btnSave = document.getElementById('btnSaveWorksheet');
     if (btnSave) btnSave.textContent = '💾 저장 후 인쇄';
+    // 문제 추가/편집 모달 제목 리셋
+    const addHead = document.querySelector('#addModal .modal-head h3');
+    if (addHead) addHead.textContent = '➕ 문제 추가';
+    const addSave = document.getElementById('btnSave');
+    if (addSave) addSave.textContent = '💾 저장';
   }
   document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeAllModals));
-  [addModal, importModal, worksheetModal].forEach(m => {
+  [addModal, importModal, worksheetModal, previewModal].forEach(m => {
     m.addEventListener('click', (e) => { if (e.target === m) closeAllModals(); });
   });
 
@@ -2991,6 +3100,9 @@
     });
   });
   function resetAddForm(){
+    editingId = null;
+    document.querySelector('#addModal .modal-head h3').textContent = '➕ 문제 추가';
+    document.getElementById('btnSave').textContent = '💾 저장';
     formType = 'multiple';
     document.getElementById('typeToggle').querySelectorAll('button').forEach((b, i) => b.classList.toggle('active', i === 0));
     document.getElementById('choiceFields').style.display = '';
@@ -3079,9 +3191,18 @@
 
     const btn = document.getElementById('btnSave');
     btn.disabled = true; btn.textContent = '저장 중...';
-    const ok = await window.fbAddProblem(problem);
-    btn.disabled = false; btn.textContent = '💾 저장';
-    if (ok) { closeAllModals(); showToast('✓ 저장됨 · 모든 기기에 동기화', 'success'); }
+    let ok;
+    if (editingId) {
+      ok = await window.fbUpdateProblem(editingId, problem);
+    } else {
+      ok = await window.fbAddProblem(problem);
+    }
+    btn.disabled = false; btn.textContent = editingId ? '💾 수정 저장' : '💾 저장';
+    if (ok) { 
+      closeAllModals(); 
+      showToast(editingId ? '✓ 수정됨 · 모든 기기에 동기화' : '✓ 저장됨 · 모든 기기에 동기화', 'success'); 
+      editingId = null;
+    }
   });
 
   /* ======================= 가져오기 ======================= */
