@@ -129,6 +129,12 @@
   .nav-list .subchapter-group.expanded {
     display: block;
   }
+  .nav-list .chapter-item {
+    cursor: pointer;
+  }
+  .nav-list .chapter-item:hover {
+    background: rgba(245, 158, 59, 0.04);
+  }
   .nav-list .subchapter {
     padding: 6px 10px 6px 24px;
     font-size: 13px;
@@ -1636,8 +1642,8 @@
     </div>
 
     <div class="mode-switch" id="modeSwitch">
-      <button class="active" data-mode="worksheet">📝 학습지 만들기</button>
-      <button data-mode="myws">📚 내 학습지</button>
+      <button data-mode="worksheet">📝 학습지 만들기</button>
+      <button class="active" data-mode="myws">📚 내 학습지</button>
     </div>
 
     <div class="nav-section">
@@ -1660,10 +1666,10 @@
 
   <main id="mainArea">
     <!-- 학습지 모드 헤더 -->
-    <div class="page-head" id="headWorksheet">
+    <div class="page-head" id="headWorksheet" style="display:none;">
       <div>
         <h2 id="chapterTitle">📝 학습지 만들기</h2>
-        <div class="desc" id="chapterDesc">사이드바에서 단원/유형을 선택하고, 문제를 체크해서 학습지를 만드세요.</div>
+        <div class="desc" id="chapterDesc">사이드바에서 유형을 선택하고, 문제를 체크해서 학습지를 만드세요.</div>
       </div>
       <div class="toolbar">
         <button class="tool-btn ghost-accent" id="btnImport">📥 AI 변형 가져오기</button>
@@ -1672,7 +1678,7 @@
     </div>
 
     <!-- 학습지 모드: 필터 -->
-    <div class="filter-panel" id="filterPanel">
+    <div class="filter-panel" id="filterPanel" style="display:none;">
       <div class="filter-group">
         <label>난이도</label>
         <select id="fltDifficulty">
@@ -1703,7 +1709,7 @@
     </div>
 
     <!-- 학습지 모드: 선택 현황 -->
-    <div class="selection-bar" id="selectionBar">
+    <div class="selection-bar" id="selectionBar" style="display:none;">
       <div class="selection-info">
         선택된 문제 <strong id="selCount">0</strong>개
       </div>
@@ -1714,10 +1720,10 @@
       </div>
     </div>
 
-    <div id="problemList"></div>
+    <div id="problemList" style="display:none;"></div>
 
     <!-- 내 학습지 모드 헤더 -->
-    <div class="page-head" id="headMyws" style="display:none;">
+    <div class="page-head" id="headMyws">
       <div>
         <h2>📚 내 학습지</h2>
         <div class="desc" id="mywsDesc">저장된 학습지 목록</div>
@@ -1731,7 +1737,7 @@
         </select>
       </div>
     </div>
-    <div id="mywsList" style="display:none;"></div>
+    <div id="mywsList"></div>
 
   </main>
 </div>
@@ -2104,7 +2110,7 @@
   /* ======================= 상태 ======================= */
   let problems = [];
   let currentChapter = '전체';
-  let currentMode = 'worksheet';     // 'worksheet' | 'myws'
+  let currentMode = 'myws';          // 'worksheet' | 'myws'
   let selectedIds = new Set();         // 선택된 문제 ID 집합
   let filters = { chapter:'', difficulty:'', type:'', source:'', keyword:'' };
 
@@ -2333,17 +2339,16 @@
     const total = problems.length;
     document.getElementById('totalCount').textContent = total;
 
-    let html = `<li class="${currentChapter === '전체' ? 'active' : ''}" data-chapter="전체" data-emoji="📚">📚 전체 <span class="count">${total}</span></li>`;
+    let html = `<li data-chapter="전체" data-emoji="📚" style="opacity:0.6; cursor:default;">📚 전체 <span class="count">${total}</span></li>`;
 
     Object.keys(CURRICULUM).forEach(chapter => {
       const info = CURRICULUM[chapter];
       const chapterProbs = problems.filter(p => p.chapter === chapter);
       const count = chapterProbs.length;
       const isExpanded = expandedChapters.has(chapter);
-      const isActive = currentChapter === chapter && !currentSubchapter;
 
       html += `
-        <li class="chapter-item ${isActive ? 'active' : ''} ${isExpanded ? 'expanded' : ''}" data-chapter="${chapter}">
+        <li class="chapter-item ${isExpanded ? 'expanded' : ''}" data-chapter="${chapter}">
           <span><span class="arrow">▶</span>${info.emoji} ${chapter}</span>
           <span class="count">${count}</span>
         </li>
@@ -2354,10 +2359,9 @@
         const subCount = subProbs.length;
         const subKey = `${chapter}::${subchapter}`;
         const isSubExpanded = expandedSubchapters.has(subKey);
-        const isSubActive = currentChapter === chapter && currentSubchapter === subchapter && !currentTopic;
 
         html += `
-          <div class="subchapter ${isSubActive ? 'active' : ''} ${isSubExpanded ? 'expanded' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}">
+          <div class="subchapter ${isSubExpanded ? 'expanded' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}">
             <span><span class="arrow">▶</span>${subchapter}</span>
             <span class="count">${subCount}</span>
           </div>
@@ -2387,71 +2391,41 @@
   function attachSidebarHandlers(){
     const nav = document.getElementById('chapterNav');
 
-    // 전체
+    // 전체 - 클릭 비활성 (유형 선택만 가능)
     const allLi = nav.querySelector('[data-chapter="전체"]');
     if (allLi) {
       allLi.addEventListener('click', () => {
-        ensureWorksheetMode();
-        currentChapter = '전체';
-        currentSubchapter = '';
-        currentTopic = '';
-        updateMainTitle();
-        renderSidebar();
-        renderProblems();
+        // 아무 동작 안 함 (또는 알림)
+        showToast('세부 유형을 선택하세요', 'info');
       });
     }
 
-    // 대단원 (chapter)
+    // 대단원 (chapter) - 클릭 시 펼침/접기만
     nav.querySelectorAll('.chapter-item').forEach(el => {
       el.addEventListener('click', (e) => {
         const chapter = el.dataset.chapter;
-
-        // 화살표 클릭 vs 대단원 이름 클릭 구분
-        if (e.target.classList.contains('arrow')) {
-          // 펼침/접기 토글
-          if (expandedChapters.has(chapter)) expandedChapters.delete(chapter);
-          else expandedChapters.add(chapter);
-          renderSidebar();
-        } else {
-          // 대단원 선택
-          ensureWorksheetMode();
-          currentChapter = chapter;
-          currentSubchapter = '';
-          currentTopic = '';
-          expandedChapters.add(chapter);
-          updateMainTitle();
-          renderSidebar();
-          renderProblems();
-        }
+        // 대단원 클릭은 항상 펼침/접기만
+        if (expandedChapters.has(chapter)) expandedChapters.delete(chapter);
+        else expandedChapters.add(chapter);
+        renderSidebar();
       });
     });
 
-    // 중단원 (subchapter)
+    // 중단원 (subchapter) - 클릭 시 펼침/접기만
     nav.querySelectorAll('.subchapter').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         const chapter = el.dataset.chapter;
         const subchapter = el.dataset.subchapter;
         const key = `${chapter}::${subchapter}`;
-
-        if (e.target.classList.contains('arrow')) {
-          if (expandedSubchapters.has(key)) expandedSubchapters.delete(key);
-          else expandedSubchapters.add(key);
-          renderSidebar();
-        } else {
-          ensureWorksheetMode();
-          currentChapter = chapter;
-          currentSubchapter = subchapter;
-          currentTopic = '';
-          expandedSubchapters.add(key);
-          updateMainTitle();
-          renderSidebar();
-          renderProblems();
-        }
+        // 중단원 클릭도 항상 펼침/접기만
+        if (expandedSubchapters.has(key)) expandedSubchapters.delete(key);
+        else expandedSubchapters.add(key);
+        renderSidebar();
       });
     });
 
-    // 유형 (topic)
+    // 유형 (topic) - 클릭 시에만 문제 필터링
     nav.querySelectorAll('.topic').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
