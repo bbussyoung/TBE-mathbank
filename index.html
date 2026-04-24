@@ -197,6 +197,20 @@
     font-size: 10px;
     padding: 1px 5px;
   }
+  /* 유형 앞의 점 표시 */
+  .nav-list .topic .topic-bullet {
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 9px;
+    color: var(--ink-faint);
+    width: 10px;
+    text-align: center;
+    opacity: 0.6;
+  }
+  .nav-list .topic.active .topic-bullet {
+    color: var(--primary);
+    opacity: 1;
+  }
 
   /* 소단원 (section) - 중단원과 유형 사이 */
   .nav-list .section-group {
@@ -2565,7 +2579,7 @@
 
               html += `
                 <div class="topic ${isTopicActive ? 'active' : ''}" style="padding-left: 40px;" data-chapter="${chapter}" data-subchapter="${subchapter}" data-section="${section}" data-topic="${topic}">
-                  <span>${topic}</span>
+                  <span><span class="topic-bullet">▸</span>${topic}</span>
                   <span class="count">${topicCount}</span>
                 </div>`;
             });
@@ -2580,7 +2594,7 @@
 
             html += `
               <div class="topic ${isTopicActive ? 'active' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}" data-topic="${topic}">
-                <span>${topic}</span>
+                <span><span class="topic-bullet">▸</span>${topic}</span>
                 <span class="count">${topicCount}</span>
               </div>`;
           });
