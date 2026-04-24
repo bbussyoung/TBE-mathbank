@@ -2339,16 +2339,18 @@
     const total = problems.length;
     document.getElementById('totalCount').textContent = total;
 
-    let html = `<li data-chapter="전체" data-emoji="📚" style="opacity:0.6; cursor:default;">📚 전체 <span class="count">${total}</span></li>`;
+    const isAllActive = (currentChapter === '전체' || !currentChapter);
+    let html = `<li class="${isAllActive ? 'active' : ''}" data-chapter="전체" data-emoji="📚">📚 전체 <span class="count">${total}</span></li>`;
 
     Object.keys(CURRICULUM).forEach(chapter => {
       const info = CURRICULUM[chapter];
       const chapterProbs = problems.filter(p => p.chapter === chapter);
       const count = chapterProbs.length;
       const isExpanded = expandedChapters.has(chapter);
+      const isChapterActive = currentChapter === chapter && !currentSubchapter && !currentTopic;
 
       html += `
-        <li class="chapter-item ${isExpanded ? 'expanded' : ''}" data-chapter="${chapter}">
+        <li class="chapter-item ${isChapterActive ? 'active' : ''} ${isExpanded ? 'expanded' : ''}" data-chapter="${chapter}">
           <span><span class="arrow">▶</span>${info.emoji} ${chapter}</span>
           <span class="count">${count}</span>
         </li>
@@ -2359,9 +2361,10 @@
         const subCount = subProbs.length;
         const subKey = `${chapter}::${subchapter}`;
         const isSubExpanded = expandedSubchapters.has(subKey);
+        const isSubActive = currentChapter === chapter && currentSubchapter === subchapter && !currentTopic;
 
         html += `
-          <div class="subchapter ${isSubExpanded ? 'expanded' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}">
+          <div class="subchapter ${isSubActive ? 'active' : ''} ${isSubExpanded ? 'expanded' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}">
             <span><span class="arrow">▶</span>${subchapter}</span>
             <span class="count">${subCount}</span>
           </div>
@@ -2391,51 +2394,90 @@
   function attachSidebarHandlers(){
     const nav = document.getElementById('chapterNav');
 
-    // 전체 - 클릭 비활성 (유형 선택만 가능)
+    // 전체 - 필터 해제 (모든 학습지 표시)
     const allLi = nav.querySelector('[data-chapter="전체"]');
     if (allLi) {
       allLi.addEventListener('click', () => {
-        // 아무 동작 안 함 (또는 알림)
-        showToast('세부 유형을 선택하세요', 'info');
+        currentChapter = '전체';
+        currentSubchapter = '';
+        currentTopic = '';
+        if (currentMode === 'myws') {
+          renderMyWorksheets();
+        } else {
+          renderProblems();
+        }
       });
     }
 
-    // 대단원 (chapter) - 클릭 시 펼침/접기만
+    // 대단원 (chapter) - 클릭 시 펼침/접기 + 내 학습지 모드면 필터링
     nav.querySelectorAll('.chapter-item').forEach(el => {
       el.addEventListener('click', (e) => {
         const chapter = el.dataset.chapter;
-        // 대단원 클릭은 항상 펼침/접기만
+        // 펼침/접기 토글
         if (expandedChapters.has(chapter)) expandedChapters.delete(chapter);
         else expandedChapters.add(chapter);
-        renderSidebar();
+
+        if (currentMode === 'myws') {
+          // 내 학습지 모드: 해당 단원 필터링
+          currentChapter = chapter;
+          currentSubchapter = '';
+          currentTopic = '';
+          renderSidebar();
+          renderMyWorksheets();
+        } else {
+          renderSidebar();
+        }
       });
     });
 
-    // 중단원 (subchapter) - 클릭 시 펼침/접기만
+    // 중단원 (subchapter) - 펼침/접기 + 내 학습지 모드면 필터링
     nav.querySelectorAll('.subchapter').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         const chapter = el.dataset.chapter;
         const subchapter = el.dataset.subchapter;
         const key = `${chapter}::${subchapter}`;
-        // 중단원 클릭도 항상 펼침/접기만
+        // 펼침/접기 토글
         if (expandedSubchapters.has(key)) expandedSubchapters.delete(key);
         else expandedSubchapters.add(key);
-        renderSidebar();
+
+        if (currentMode === 'myws') {
+          currentChapter = chapter;
+          currentSubchapter = subchapter;
+          currentTopic = '';
+          renderSidebar();
+          renderMyWorksheets();
+        } else {
+          renderSidebar();
+        }
       });
     });
 
-    // 유형 (topic) - 클릭 시에만 문제 필터링
+    // 유형 (topic) - 클릭 시 문제 또는 학습지 필터링
     nav.querySelectorAll('.topic').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
-        ensureWorksheetMode();
-        currentChapter = el.dataset.chapter;
-        currentSubchapter = el.dataset.subchapter;
-        currentTopic = el.dataset.topic;
-        updateMainTitle();
-        renderSidebar();
-        renderProblems();
+        const chapter = el.dataset.chapter;
+        const subchapter = el.dataset.subchapter;
+        const topic = el.dataset.topic;
+
+        if (currentMode === 'myws') {
+          // 내 학습지 모드: 해당 유형 학습지 필터링
+          currentChapter = chapter;
+          currentSubchapter = subchapter;
+          currentTopic = topic;
+          renderSidebar();
+          renderMyWorksheets();
+        } else {
+          // 학습지 만들기 모드: 문제 필터링
+          ensureWorksheetMode();
+          currentChapter = chapter;
+          currentSubchapter = subchapter;
+          currentTopic = topic;
+          updateMainTitle();
+          renderSidebar();
+          renderProblems();
+        }
       });
     });
   }
@@ -2761,6 +2803,32 @@
     const list = document.getElementById('mywsList');
     const desc = document.getElementById('mywsDesc');
     
+    // 사이드바 필터 적용
+    let filtered = worksheets;
+    if (currentChapter && currentChapter !== '전체') {
+      filtered = filtered.filter(ws => {
+        // 이 학습지의 문제들 중 하나라도 해당 단원이면 포함
+        return (ws.problemIds || []).some(pid => {
+          const p = problems.find(x => x.id === pid);
+          if (!p) return false;
+          if (p.chapter !== currentChapter) return false;
+          if (currentSubchapter && p.subchapter !== currentSubchapter) return false;
+          if (currentTopic && p.topic !== currentTopic) return false;
+          return true;
+        });
+      });
+    }
+
+    // 필터링 상태 표시
+    let filterLabel = '';
+    if (currentTopic) {
+      filterLabel = ` · 🎯 ${currentTopic}`;
+    } else if (currentSubchapter) {
+      filterLabel = ` · 📖 ${currentSubchapter}`;
+    } else if (currentChapter && currentChapter !== '전체') {
+      filterLabel = ` · 📚 ${currentChapter}`;
+    }
+
     if (worksheets.length === 0) {
       list.innerHTML = `
         <div class="ws-saved-empty">
@@ -2773,10 +2841,22 @@
       return;
     }
 
-    desc.textContent = `저장된 학습지 ${worksheets.length}개`;
+    if (filtered.length === 0) {
+      list.innerHTML = `
+        <div class="ws-saved-empty">
+          <div class="big-emoji">🔍</div>
+          <h3>이 단원의 학습지가 없습니다</h3>
+          <p>${escapeHtml(currentTopic || currentSubchapter || currentChapter)} 단원의 문제로 만든 학습지가 없어요.<br>다른 단원을 선택하거나 <strong>📚 전체</strong>를 눌러 모든 학습지를 확인하세요.</p>
+        </div>
+      `;
+      desc.textContent = `저장된 학습지 0개${filterLabel}`;
+      return;
+    }
+
+    desc.textContent = `저장된 학습지 ${filtered.length}개${filterLabel}`;
 
     // 검색/정렬 (나중에 구현 가능, 일단 최신순)
-    const sorted = [...worksheets].sort((a, b) => {
+    const sorted = [...filtered].sort((a, b) => {
       const aTime = a.createdAt?.toMillis?.() || 0;
       const bTime = b.createdAt?.toMillis?.() || 0;
       return bTime - aTime;
