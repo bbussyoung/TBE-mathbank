@@ -198,6 +198,44 @@
     padding: 1px 5px;
   }
 
+  /* 소단원 (section) - 중단원과 유형 사이 */
+  .nav-list .section-group {
+    display: none;
+    margin-left: 14px;
+  }
+  .nav-list .section-group.expanded {
+    display: block;
+  }
+  .nav-list .section {
+    padding: 5px 10px 5px 24px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-bottom: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .nav-list .section:hover {
+    background: rgba(245, 158, 59, 0.05);
+    color: var(--ink);
+  }
+  .nav-list .section.active {
+    background: rgba(245, 158, 59, 0.14);
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .nav-list .section.expanded > .arrow {
+    transform: rotate(90deg);
+  }
+  .nav-list .section .count {
+    font-size: 10.5px;
+    padding: 1px 5px;
+  }
+
   /* 펼침 화살표 */
   .nav-list .arrow {
     display: inline-block;
@@ -1789,6 +1827,14 @@
             <option value="">선택</option>
           </select>
         </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>소단원</label>
+          <select id="fSection">
+            <option value="">선택</option>
+          </select>
+        </div>
         <div class="form-group">
           <label>유형</label>
           <select id="fTopic">
@@ -2235,63 +2281,163 @@
     '공통수학Ⅱ': '도형의 방정식 · 집합과 명제 · 함수와 그래프'
   };
 
-  /* ======================= 교육과정 구조 (2022 개정) ======================= */
+  /* ======================= 교육과정 구조 (2022 개정) - 4단계 ======================= */
+  /* 구조: 대단원 > 중단원 > 소단원(section) > 유형(topic)
+   * 기존 구조(유형만 배열): middle[중단원] = [유형1, 유형2, ...]
+   * 새 구조(소단원 포함): middle[중단원] = { 소단원: [유형1, ...] }
+   */
   const CURRICULUM = {
     '공통수학Ⅰ': {
       emoji: '📔',
       middle: {
-        '다항식': ['다항식의 연산', '나머지정리', '인수분해'],
-        '방정식과 부등식': ['복소수와 이차방정식', '이차방정식과 이차함수', '여러 가지 방정식', '여러 가지 부등식'],
-        '경우의 수': ['경우의 수', '순열과 조합'],
-        '행렬': ['행렬의 뜻과 연산']
+        '다항식': {
+          '다항식의 연산': [
+            '유형01 다항식의 정리방법',
+            '유형02 다항식의 덧셈과 뺄셈',
+            '유형03 다항식의 전개식에서 계수 구하기',
+            '유형04 곱셈 공식을 이용한 다항식의 전개',
+            '유형05 공통부분이 있는 다항식의 전개',
+            '유형06 곱셈 공식의 변형(1) 문자가 2개',
+            '유형07 곱셈 공식의 변형(2) x±{1/x}의 꼴',
+            '유형08 곱셈 공식의 변형(3) 문자가 3개',
+            '유형09 곱셈 공식을 이용한 수의 계산',
+            '유형10 다항식의 나눗셈(1) 몫과 나머지',
+            '유형11 다항식의 나눗셈(2) A=BQ+R',
+            '유형12 몫과 나머지의 변형',
+            '유형13 곱셈 공식의 도형에의 활용',
+            '유형14 4차 이상의 식으로 변형한 식의 값'
+          ],
+          '나머지정리': [],
+          '인수분해': []
+        },
+        '방정식과 부등식': {
+          '복소수와 이차방정식': [],
+          '이차방정식과 이차함수': [],
+          '여러 가지 방정식': [],
+          '여러 가지 부등식': []
+        },
+        '경우의 수': {
+          '경우의 수': [],
+          '순열과 조합': []
+        },
+        '행렬': {
+          '행렬의 뜻과 연산': []
+        }
       }
     },
     '공통수학Ⅱ': {
       emoji: '📒',
       middle: {
-        '도형의 방정식': ['평면좌표', '직선의 방정식', '원의 방정식', '도형의 이동'],
-        '집합과 명제': ['집합', '명제'],
-        '함수와 그래프': ['함수', '유리함수와 무리함수']
+        '도형의 방정식': {
+          '평면좌표': [],
+          '직선의 방정식': [],
+          '원의 방정식': [],
+          '도형의 이동': []
+        },
+        '집합과 명제': {
+          '집합': [],
+          '명제': []
+        },
+        '함수와 그래프': {
+          '함수': [],
+          '유리함수와 무리함수': []
+        }
       }
     },
     '대수': {
       emoji: '📘',
       middle: {
-        '지수함수와 로그함수': ['지수', '로그', '지수함수의 뜻과 그래프', '로그함수의 뜻과 그래프', '지수함수와 로그함수의 활용'],
-        '삼각함수': ['삼각함수', '삼각함수의 그래프', '사인법칙과 코사인법칙'],
-        '수열': ['등차수열', '등비수열', '수열의 합', '수학적 귀납법']
+        '지수함수와 로그함수': {
+          '지수': [],
+          '로그': [],
+          '지수함수의 뜻과 그래프': [],
+          '로그함수의 뜻과 그래프': [],
+          '지수함수와 로그함수의 활용': []
+        },
+        '삼각함수': {
+          '삼각함수': [],
+          '삼각함수의 그래프': [],
+          '사인법칙과 코사인법칙': []
+        },
+        '수열': {
+          '등차수열': [],
+          '등비수열': [],
+          '수열의 합': [],
+          '수학적 귀납법': []
+        }
       }
     },
     '미적분Ⅰ': {
       emoji: '📗',
       middle: {
-        '함수의 극한과 연속': ['함수의 극한', '함수의 연속'],
-        '미분': ['미분계수와 도함수', '도함수의 활용'],
-        '적분': ['부정적분', '정적분', '정적분의 활용']
+        '함수의 극한과 연속': {
+          '함수의 극한': [],
+          '함수의 연속': []
+        },
+        '미분': {
+          '미분계수와 도함수': [],
+          '도함수의 활용': []
+        },
+        '적분': {
+          '부정적분': [],
+          '정적분': [],
+          '정적분의 활용': []
+        }
       }
     },
     '미적분Ⅱ': {
       emoji: '📕',
       middle: {
-        '수열의 극한': ['수열의 극한', '급수'],
-        '미분법': ['여러 가지 함수의 미분', '여러 가지 미분법', '도함수의 활용'],
-        '적분법': ['여러 가지 적분법', '정적분의 활용']
+        '수열의 극한': {
+          '수열의 극한': [],
+          '급수': []
+        },
+        '미분법': {
+          '여러 가지 함수의 미분': [],
+          '여러 가지 미분법': [],
+          '도함수의 활용': []
+        },
+        '적분법': {
+          '여러 가지 적분법': [],
+          '정적분의 활용': []
+        }
       }
     },
     '확률과 통계': {
       emoji: '📙',
       middle: {
-        '경우의 수': ['순열과 조합', '이항정리'],
-        '확률': ['확률의 뜻과 활용', '조건부확률'],
-        '통계': ['확률변수와 확률분포', '통계적 추정']
+        '경우의 수': {
+          '순열과 조합': [],
+          '이항정리': []
+        },
+        '확률': {
+          '확률의 뜻과 활용': [],
+          '조건부확률': []
+        },
+        '통계': {
+          '확률변수와 확률분포': [],
+          '통계적 추정': []
+        }
       }
     },
     '기하': {
       emoji: '📓',
       middle: {
-        '이차곡선': ['포물선', '타원', '쌍곡선'],
-        '공간도형과 공간좌표': ['공간도형', '공간좌표'],
-        '벡터': ['벡터의 연산', '평면벡터의 성분과 내적', '공간벡터', '직선과 평면의 방정식']
+        '이차곡선': {
+          '포물선': [],
+          '타원': [],
+          '쌍곡선': []
+        },
+        '공간도형과 공간좌표': {
+          '공간도형': [],
+          '공간좌표': []
+        },
+        '벡터': {
+          '벡터의 연산': [],
+          '평면벡터의 성분과 내적': [],
+          '공간벡터': [],
+          '직선과 평면의 방정식': []
+        }
       }
     }
   };
@@ -2299,8 +2445,10 @@
   /* 확장된 항목 추적 */
   const expandedChapters = new Set();
   const expandedSubchapters = new Set();
-  /* 현재 선택된 중단원, 유형 */
+  const expandedSections = new Set();     // 소단원 확장 추적
+  /* 현재 선택된 중단원, 소단원, 유형 */
   let currentSubchapter = '';
+  let currentSection = '';
   let currentTopic = '';
 
   /* ======================= 필터 ======================= */
@@ -2316,12 +2464,15 @@
   }
 
   function getVisibleProblems(){
-    // 1. 사이드바 단원/중단원/유형 필터
+    // 1. 사이드바 단원/중단원/소단원/유형 필터
     let filtered = currentChapter === '전체'
       ? problems
       : problems.filter(p => p.chapter === currentChapter);
     if (currentSubchapter) {
       filtered = filtered.filter(p => p.subchapter === currentSubchapter);
+    }
+    if (currentSection) {
+      filtered = filtered.filter(p => p.section === currentSection);
     }
     if (currentTopic) {
       filtered = filtered.filter(p => p.topic === currentTopic);
@@ -2347,7 +2498,7 @@
       const chapterProbs = problems.filter(p => p.chapter === chapter);
       const count = chapterProbs.length;
       const isExpanded = expandedChapters.has(chapter);
-      const isChapterActive = currentChapter === chapter && !currentSubchapter && !currentTopic;
+      const isChapterActive = currentChapter === chapter && !currentSubchapter && !currentSection && !currentTopic;
 
       html += `
         <li class="chapter-item ${isChapterActive ? 'active' : ''} ${isExpanded ? 'expanded' : ''}" data-chapter="${chapter}">
@@ -2357,29 +2508,65 @@
         <div class="subchapter-group ${isExpanded ? 'expanded' : ''}" data-parent="${chapter}">`;
 
       Object.keys(info.middle).forEach(subchapter => {
+        const subData = info.middle[subchapter];
+        // 새 구조(객체) vs 기존 구조(배열) 양쪽 지원
+        const isNewStructure = !Array.isArray(subData);
         const subProbs = chapterProbs.filter(p => p.subchapter === subchapter);
         const subCount = subProbs.length;
         const subKey = `${chapter}::${subchapter}`;
         const isSubExpanded = expandedSubchapters.has(subKey);
-        const isSubActive = currentChapter === chapter && currentSubchapter === subchapter && !currentTopic;
+        const isSubActive = currentChapter === chapter && currentSubchapter === subchapter && !currentSection && !currentTopic;
 
         html += `
           <div class="subchapter ${isSubActive ? 'active' : ''} ${isSubExpanded ? 'expanded' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}">
             <span><span class="arrow">▶</span>${subchapter}</span>
             <span class="count">${subCount}</span>
           </div>
-          <div class="topic-group ${isSubExpanded ? 'expanded' : ''}" data-parent="${subKey}">`;
+          <div class="section-group ${isSubExpanded ? 'expanded' : ''}" data-parent="${subKey}">`;
 
-        info.middle[subchapter].forEach(topic => {
-          const topicCount = subProbs.filter(p => p.topic === topic).length;
-          const isTopicActive = currentChapter === chapter && currentSubchapter === subchapter && currentTopic === topic;
+        if (isNewStructure) {
+          // 새 4단계 구조: 소단원 → 유형
+          Object.keys(subData).forEach(section => {
+            const topicsList = subData[section];
+            const sectionProbs = subProbs.filter(p => p.section === section);
+            const sectionCount = sectionProbs.length;
+            const secKey = `${chapter}::${subchapter}::${section}`;
+            const isSecExpanded = expandedSections.has(secKey);
+            const isSecActive = currentChapter === chapter && currentSubchapter === subchapter && currentSection === section && !currentTopic;
 
-          html += `
-            <div class="topic ${isTopicActive ? 'active' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}" data-topic="${topic}">
-              <span>${topic}</span>
-              <span class="count">${topicCount}</span>
-            </div>`;
-        });
+            html += `
+              <div class="section ${isSecActive ? 'active' : ''} ${isSecExpanded ? 'expanded' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}" data-section="${section}">
+                <span><span class="arrow">▶</span>${section}</span>
+                <span class="count">${sectionCount}</span>
+              </div>
+              <div class="topic-group ${isSecExpanded ? 'expanded' : ''}" data-parent="${secKey}">`;
+
+            topicsList.forEach(topic => {
+              const topicCount = sectionProbs.filter(p => p.topic === topic).length;
+              const isTopicActive = currentChapter === chapter && currentSubchapter === subchapter && currentSection === section && currentTopic === topic;
+
+              html += `
+                <div class="topic ${isTopicActive ? 'active' : ''}" style="padding-left: 40px;" data-chapter="${chapter}" data-subchapter="${subchapter}" data-section="${section}" data-topic="${topic}">
+                  <span>${topic}</span>
+                  <span class="count">${topicCount}</span>
+                </div>`;
+            });
+
+            html += `</div>`;
+          });
+        } else {
+          // 기존 3단계 구조: 유형만 배열
+          subData.forEach(topic => {
+            const topicCount = subProbs.filter(p => p.topic === topic).length;
+            const isTopicActive = currentChapter === chapter && currentSubchapter === subchapter && currentTopic === topic;
+
+            html += `
+              <div class="topic ${isTopicActive ? 'active' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}" data-topic="${topic}">
+                <span>${topic}</span>
+                <span class="count">${topicCount}</span>
+              </div>`;
+          });
+        }
 
         html += `</div>`;
       });
@@ -2400,27 +2587,28 @@
       allLi.addEventListener('click', () => {
         currentChapter = '전체';
         currentSubchapter = '';
+        currentSection = '';
         currentTopic = '';
         if (currentMode === 'myws') {
           renderMyWorksheets();
         } else {
           renderProblems();
         }
+        renderSidebar();
       });
     }
 
-    // 대단원 (chapter) - 클릭 시 펼침/접기 + 내 학습지 모드면 필터링
+    // 대단원 (chapter) - 클릭 시 펼침/접기
     nav.querySelectorAll('.chapter-item').forEach(el => {
       el.addEventListener('click', (e) => {
         const chapter = el.dataset.chapter;
-        // 펼침/접기 토글
         if (expandedChapters.has(chapter)) expandedChapters.delete(chapter);
         else expandedChapters.add(chapter);
 
         if (currentMode === 'myws') {
-          // 내 학습지 모드: 해당 단원 필터링
           currentChapter = chapter;
           currentSubchapter = '';
+          currentSection = '';
           currentTopic = '';
           renderSidebar();
           renderMyWorksheets();
@@ -2430,20 +2618,44 @@
       });
     });
 
-    // 중단원 (subchapter) - 펼침/접기 + 내 학습지 모드면 필터링
+    // 중단원 (subchapter) - 펼침/접기
     nav.querySelectorAll('.subchapter').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         const chapter = el.dataset.chapter;
         const subchapter = el.dataset.subchapter;
         const key = `${chapter}::${subchapter}`;
-        // 펼침/접기 토글
         if (expandedSubchapters.has(key)) expandedSubchapters.delete(key);
         else expandedSubchapters.add(key);
 
         if (currentMode === 'myws') {
           currentChapter = chapter;
           currentSubchapter = subchapter;
+          currentSection = '';
+          currentTopic = '';
+          renderSidebar();
+          renderMyWorksheets();
+        } else {
+          renderSidebar();
+        }
+      });
+    });
+
+    // 소단원 (section) - 펼침/접기 + 내 학습지 모드면 필터링
+    nav.querySelectorAll('.section').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const chapter = el.dataset.chapter;
+        const subchapter = el.dataset.subchapter;
+        const section = el.dataset.section;
+        const key = `${chapter}::${subchapter}::${section}`;
+        if (expandedSections.has(key)) expandedSections.delete(key);
+        else expandedSections.add(key);
+
+        if (currentMode === 'myws') {
+          currentChapter = chapter;
+          currentSubchapter = subchapter;
+          currentSection = section;
           currentTopic = '';
           renderSidebar();
           renderMyWorksheets();
@@ -2459,20 +2671,21 @@
         e.stopPropagation();
         const chapter = el.dataset.chapter;
         const subchapter = el.dataset.subchapter;
+        const section = el.dataset.section || '';
         const topic = el.dataset.topic;
 
         if (currentMode === 'myws') {
-          // 내 학습지 모드: 해당 유형 학습지 필터링
           currentChapter = chapter;
           currentSubchapter = subchapter;
+          currentSection = section;
           currentTopic = topic;
           renderSidebar();
           renderMyWorksheets();
         } else {
-          // 학습지 만들기 모드: 문제 필터링
           ensureWorksheetMode();
           currentChapter = chapter;
           currentSubchapter = subchapter;
+          currentSection = section;
           currentTopic = topic;
           updateMainTitle();
           renderSidebar();
@@ -2702,6 +2915,7 @@
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 14px;">
         <span class="label tag-source">${escapeHtml(p.chapter)}</span>
         ${p.subchapter ? `<span class="label tag-source">${escapeHtml(p.subchapter)}</span>` : ''}
+        ${p.section ? `<span class="label tag-source">${escapeHtml(p.section)}</span>` : ''}
         ${p.topic ? `<span class="label tag-source">${escapeHtml(p.topic)}</span>` : ''}
         ${p.source ? `<span class="label tag-source">${escapeHtml(p.source)}</span>` : ''}
         ${p.score ? `<span class="label tag-score">${escapeHtml(p.score)}</span>` : ''}
@@ -2757,7 +2971,8 @@
 
     document.getElementById('fChapter').value = p.chapter || '대수';
     updateSubchapterDropdown(p.chapter || '대수', p.subchapter || '');
-    updateTopicDropdown(p.chapter || '대수', p.subchapter || '', p.topic || '');
+    updateSectionDropdown(p.chapter || '대수', p.subchapter || '', p.section || '');
+    updateTopicDropdown(p.chapter || '대수', p.subchapter || '', p.section || '', p.topic || '');
     document.getElementById('fStem').value = p.stem || '';
     document.getElementById('fGraphSvg').value = p.graphSvg || '';
     document.getElementById('fGraphImage').value = p.graphImage || '';
@@ -2807,12 +3022,12 @@
     let filtered = worksheets;
     if (currentChapter && currentChapter !== '전체') {
       filtered = filtered.filter(ws => {
-        // 이 학습지의 문제들 중 하나라도 해당 단원이면 포함
         return (ws.problemIds || []).some(pid => {
           const p = problems.find(x => x.id === pid);
           if (!p) return false;
           if (p.chapter !== currentChapter) return false;
           if (currentSubchapter && p.subchapter !== currentSubchapter) return false;
+          if (currentSection && p.section !== currentSection) return false;
           if (currentTopic && p.topic !== currentTopic) return false;
           return true;
         });
@@ -2823,6 +3038,8 @@
     let filterLabel = '';
     if (currentTopic) {
       filterLabel = ` · 🎯 ${currentTopic}`;
+    } else if (currentSection) {
+      filterLabel = ` · 📂 ${currentSection}`;
     } else if (currentSubchapter) {
       filterLabel = ` · 📖 ${currentSubchapter}`;
     } else if (currentChapter && currentChapter !== '전체') {
@@ -2846,7 +3063,7 @@
         <div class="ws-saved-empty">
           <div class="big-emoji">🔍</div>
           <h3>이 단원의 학습지가 없습니다</h3>
-          <p>${escapeHtml(currentTopic || currentSubchapter || currentChapter)} 단원의 문제로 만든 학습지가 없어요.<br>다른 단원을 선택하거나 <strong>📚 전체</strong>를 눌러 모든 학습지를 확인하세요.</p>
+          <p>${escapeHtml(currentTopic || currentSection || currentSubchapter || currentChapter)} 단원의 문제로 만든 학습지가 없어요.<br>다른 단원을 선택하거나 <strong>📚 전체</strong>를 눌러 모든 학습지를 확인하세요.</p>
         </div>
       `;
       desc.textContent = `저장된 학습지 0개${filterLabel}`;
@@ -3164,7 +3381,8 @@
     const defaultChapter = currentChapter === '전체' ? '대수' : currentChapter;
     document.getElementById('fChapter').value = defaultChapter;
     updateSubchapterDropdown(defaultChapter, currentSubchapter || '');
-    updateTopicDropdown(defaultChapter, currentSubchapter || '', currentTopic || '');
+    updateSectionDropdown(defaultChapter, currentSubchapter || '', currentSection || '');
+    updateTopicDropdown(defaultChapter, currentSubchapter || '', currentSection || '', currentTopic || '');
     document.getElementById('fStem').value = '';
     document.getElementById('fGraphSvg').value = '';
     document.getElementById('fGraphImage').value = '';
@@ -3193,10 +3411,35 @@
     select.innerHTML = html;
   }
 
-  /* 중단원 선택 시 유형 드롭다운 업데이트 */
-  function updateTopicDropdown(chapter, subchapter, selectedValue = ''){
+  /* 중단원 선택 시 소단원 드롭다운 업데이트 */
+  function updateSectionDropdown(chapter, subchapter, selectedValue = ''){
+    const select = document.getElementById('fSection');
+    if (!select) return;
+    const subData = CURRICULUM[chapter]?.middle?.[subchapter];
+    let html = '<option value="">선택</option>';
+    if (subData && !Array.isArray(subData)) {
+      // 새 4단계 구조
+      Object.keys(subData).forEach(sec => {
+        html += `<option value="${sec}" ${selectedValue === sec ? 'selected' : ''}>${sec}</option>`;
+      });
+    }
+    select.innerHTML = html;
+  }
+
+  /* 소단원 선택 시 유형 드롭다운 업데이트 */
+  function updateTopicDropdown(chapter, subchapter, section = '', selectedValue = ''){
     const select = document.getElementById('fTopic');
-    const topics = CURRICULUM[chapter]?.middle?.[subchapter] || [];
+    const subData = CURRICULUM[chapter]?.middle?.[subchapter];
+    let topics = [];
+    if (subData) {
+      if (Array.isArray(subData)) {
+        // 기존 3단계 구조
+        topics = subData;
+      } else if (section && subData[section]) {
+        // 새 4단계 구조
+        topics = subData[section];
+      }
+    }
     let html = '<option value="">선택</option>';
     topics.forEach(t => {
       html += `<option value="${t}" ${selectedValue === t ? 'selected' : ''}>${t}</option>`;
@@ -3207,18 +3450,28 @@
   /* 대단원 변경 이벤트 */
   document.getElementById('fChapter').addEventListener('change', (e) => {
     updateSubchapterDropdown(e.target.value);
+    updateSectionDropdown(e.target.value, '');
     updateTopicDropdown(e.target.value, '');
   });
 
   /* 중단원 변경 이벤트 */
   document.getElementById('fSubchapter').addEventListener('change', (e) => {
     const chapter = document.getElementById('fChapter').value;
-    updateTopicDropdown(chapter, e.target.value);
+    updateSectionDropdown(chapter, e.target.value);
+    updateTopicDropdown(chapter, e.target.value, '');
+  });
+
+  /* 소단원 변경 이벤트 */
+  document.getElementById('fSection').addEventListener('change', (e) => {
+    const chapter = document.getElementById('fChapter').value;
+    const subchapter = document.getElementById('fSubchapter').value;
+    updateTopicDropdown(chapter, subchapter, e.target.value);
   });
 
   document.getElementById('btnSave').addEventListener('click', async () => {
     const chapter = document.getElementById('fChapter').value;
     const subchapter = document.getElementById('fSubchapter').value;
+    const section = document.getElementById('fSection')?.value || '';
     const topic = document.getElementById('fTopic').value;
     const stem = document.getElementById('fStem').value.trim();
     const graphSvg = document.getElementById('fGraphSvg').value.trim();
@@ -3229,7 +3482,7 @@
     const source = document.getElementById('fSource').value.trim();
     if (!stem) { showToast('문제 지문을 입력하세요', 'error'); return; }
 
-    const base = { chapter, subchapter, topic, stem, graphSvg, graphImage, explanation, difficulty, score, source, tags: [] };
+    const base = { chapter, subchapter, section, topic, stem, graphSvg, graphImage, explanation, difficulty, score, source, tags: [] };
     let problem;
     if (formType === 'multiple') {
       const choices = Array.from(document.querySelectorAll('.choice-input')).map(i => i.value.trim());
@@ -3285,6 +3538,7 @@
         validated.push({
           chapter: p.chapter || '대수',
           subchapter: p.subchapter || '',
+          section: p.section || '',
           topic: p.topic || '',
           type: p.type === 'short' ? 'short' : 'multiple',
           stem: p.stem, graphSvg: p.graphSvg || '', graphImage: p.graphImage || '', choices: p.choices || null, answer: p.answer,
