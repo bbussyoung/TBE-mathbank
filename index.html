@@ -717,10 +717,13 @@
   .problem-actions{
     position: absolute; top: 16px; right: 16px;
     display: flex; gap: 4px;
-    opacity: 0; transition: opacity .15s ease;
+    opacity: 0.4; transition: opacity .15s ease;
   }
   .problem:hover .problem-actions{ opacity: 1;}
-  .worksheet-mode .problem-actions{ display: none;}
+  /* 모바일: 항상 선명하게 표시 */
+  @media (max-width: 768px) {
+    .problem-actions{ opacity: 1;}
+  }
   .icon-btn{
     width: 30px; height: 30px;
     background: #fff; border: 1px solid var(--line);
