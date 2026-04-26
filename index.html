@@ -1950,6 +1950,7 @@
         <div class="desc" id="chapterDesc">단원/유형을 선택하면 문제 목록이 나옵니다.</div>
       </div>
       <div class="toolbar">
+        <button class="tool-btn ghost-accent" id="btnMigrate" title="옛 단원명을 새 교육과정으로 변환">🛠️ 데이터 정리</button>
         <button class="tool-btn ghost-accent" id="btnAIDifficulty" title="AI로 난이도 자동 분석">🤖 난이도 분석</button>
         <button class="tool-btn ghost-accent" id="btnImport">📥 AI 변형 가져오기</button>
         <button class="tool-btn primary" id="btnAdd">+ 문제 추가</button>
@@ -2067,6 +2068,38 @@
       <button class="tool-btn ghost-accent" id="btnAISimilar">🧠 비슷한 문제</button>
       <button class="tool-btn ghost-accent" id="btnAIVariant">✍️ 변형 만들기</button>
       <button class="tool-btn primary" id="btnSelectFromPreview">✔ 이 문제 선택</button>
+    </div>
+  </div>
+</div>
+
+<!-- 데이터 마이그레이션 모달 -->
+<div class="modal-backdrop" id="migrateModal">
+  <div class="modal" style="max-width: 700px;">
+    <div class="modal-head">
+      <h3>🛠️ 데이터 정리 도구</h3>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body" id="migrateBody">
+      <div style="font-size: 13px; color: var(--ink-soft); margin-bottom: 14px; padding: 12px; background: var(--bg); border-radius: 8px; border-left: 3px solid var(--primary);">
+        <strong>옛 단원명을 새 교육과정으로 자동 변환합니다.</strong><br>
+        모든 변경사항은 미리보기 후 확인을 거쳐 적용됩니다.
+      </div>
+
+      <h4 style="font-size: 14px; margin-bottom: 8px;">🔍 분석 결과</h4>
+      <div id="migrateAnalysis" style="background: #fafafa; border: 1px solid var(--line); border-radius: 8px; padding: 12px; font-size: 12px; max-height: 200px; overflow-y: auto;">
+        <div style="text-align: center; color: var(--ink-faint); padding: 20px;">분석 중...</div>
+      </div>
+
+      <h4 style="font-size: 14px; margin: 16px 0 8px 0;">📋 변환 계획</h4>
+      <div id="migratePlan" style="background: #fff7ed; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; font-size: 12px; max-height: 250px; overflow-y: auto;"></div>
+
+      <div style="margin-top: 14px; padding: 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; font-size: 12px; color: #b91c1c;">
+        ⚠️ <strong>주의</strong>: 적용 전에 Firebase 콘솔에서 백업하세요. 변경 사항은 즉시 모든 기기에 반영됩니다.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="tool-btn" data-close>취소</button>
+      <button class="tool-btn primary" id="btnApplyMigrate" style="background: var(--green);">✓ 변환 적용</button>
     </div>
   </div>
 </div>
@@ -3986,6 +4019,219 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     });
   }
 
+  /* ======================= 데이터 마이그레이션 ======================= */
+  const btnMigrate = document.getElementById('btnMigrate');
+  if (btnMigrate) {
+    btnMigrate.addEventListener('click', () => {
+      openMigrateModal();
+    });
+  }
+
+  /* 마이그레이션 매핑 규칙 */
+  const MIGRATION_RULES = {
+    chapter: {
+      '수학Ⅰ': '대수',
+      '수학1': '대수',
+      '수학 I': '대수',
+      '수학Ⅱ': '미적분Ⅰ',
+      '수학2': '미적분Ⅰ',
+      '수학 II': '미적분Ⅰ',
+      '미적분': '미적분Ⅱ'
+    }
+  };
+
+  /* 문제 지문/topic으로부터 자동으로 subchapter/topic 추정 */
+  function inferTopicFromContent(p){
+    const stem = (p.stem || '').toLowerCase();
+    const oldTopic = (p.topic || '').toLowerCase();
+    const subchapter = (p.subchapter || '').toLowerCase();
+    
+    // 지수함수 관련 키워드
+    const isExpFunc = 
+      stem.includes('지수함수') || stem.includes('y = 2^') || stem.includes('y = 2ˣ') ||
+      stem.includes('y=2^') || stem.includes('y=3^') || stem.includes('지수') ||
+      oldTopic.includes('지수') || subchapter.includes('지수') ||
+      stem.includes('a^') || stem.includes('2^') || stem.includes('3^') ||
+      stem.includes('25^') || stem.includes('5^');
+    
+    // 삼각함수 그래프 관련
+    const isTrigGraph = 
+      stem.includes('sin') || stem.includes('cos') || stem.includes('tan') ||
+      stem.includes('삼각함수') || stem.includes('a\\sin') || stem.includes('a\\cos') ||
+      stem.includes('asin') || stem.includes('acos') ||
+      oldTopic.includes('삼각') || subchapter.includes('삼각');
+
+    if (isExpFunc) {
+      return {
+        chapter: '대수',
+        subchapter: '지수함수와 로그함수',
+        section: '',  // 3단계 구조라 비움
+        topic: '지수함수의 뜻과 그래프'
+      };
+    }
+    if (isTrigGraph) {
+      return {
+        chapter: '대수',
+        subchapter: '삼각함수',
+        section: '',
+        topic: '삼각함수의 그래프'
+      };
+    }
+    return null;
+  }
+
+  /* 문제별 마이그레이션 계획 생성 */
+  function buildMigrationPlan(){
+    const changes = [];
+    const noChange = [];
+    
+    problems.forEach(p => {
+      const inferred = inferTopicFromContent(p);
+      const proposedChapter = MIGRATION_RULES.chapter[p.chapter] || (inferred?.chapter || p.chapter);
+      
+      let needsUpdate = false;
+      const updates = {};
+      
+      // 대단원 변환
+      if (p.chapter !== proposedChapter) {
+        updates.chapter = proposedChapter;
+        needsUpdate = true;
+      }
+      
+      // subchapter/topic이 비어있거나 옛 형식이면 추정
+      if (inferred) {
+        if (!p.subchapter || p.subchapter !== inferred.subchapter) {
+          updates.subchapter = inferred.subchapter;
+          needsUpdate = true;
+        }
+        if (!p.topic || p.topic !== inferred.topic) {
+          updates.topic = inferred.topic;
+          needsUpdate = true;
+        }
+        if (p.section === undefined) {
+          updates.section = inferred.section;
+          needsUpdate = true;
+        }
+      }
+      
+      if (needsUpdate) {
+        changes.push({ id: p.id, problem: p, updates });
+      } else {
+        noChange.push(p);
+      }
+    });
+    
+    return { changes, noChange };
+  }
+
+  function openMigrateModal(){
+    const modal = document.getElementById('migrateModal');
+    const analysis = document.getElementById('migrateAnalysis');
+    const plan = document.getElementById('migratePlan');
+    
+    if (problems.length === 0) {
+      showToast('등록된 문제가 없습니다', 'error');
+      return;
+    }
+    
+    // 분석
+    const oldChapters = {};
+    const noChapter = [];
+    const noSub = [];
+    const noTopic = [];
+    
+    problems.forEach(p => {
+      const ch = p.chapter || '(없음)';
+      oldChapters[ch] = (oldChapters[ch] || 0) + 1;
+      if (!p.chapter) noChapter.push(p);
+      if (!p.subchapter) noSub.push(p);
+      if (!p.topic) noTopic.push(p);
+    });
+    
+    let analysisHtml = `<div style="margin-bottom: 8px;"><strong>📊 전체 문제 ${problems.length}개</strong></div>`;
+    analysisHtml += `<div style="margin-bottom: 6px;">단원별 분포:</div>`;
+    Object.keys(oldChapters).sort().forEach(ch => {
+      const isOld = MIGRATION_RULES.chapter[ch];
+      analysisHtml += `<div style="margin-left: 10px; ${isOld ? 'color: #b91c1c; font-weight: 600;' : ''}">${isOld ? '⚠️' : '✓'} ${ch}: ${oldChapters[ch]}개${isOld ? ` → ${MIGRATION_RULES.chapter[ch]}로 변환 필요` : ''}</div>`;
+    });
+    analysisHtml += `<div style="margin-top: 10px; font-size: 11px; color: #666;">`;
+    if (noSub.length > 0) analysisHtml += `· 중단원 미지정: ${noSub.length}개<br>`;
+    if (noTopic.length > 0) analysisHtml += `· 유형 미지정: ${noTopic.length}개`;
+    analysisHtml += `</div>`;
+    analysis.innerHTML = analysisHtml;
+    
+    // 계획
+    const { changes, noChange } = buildMigrationPlan();
+    
+    if (changes.length === 0) {
+      plan.innerHTML = `<div style="text-align: center; padding: 16px; color: #16a34a;">✓ 모든 문제가 새 교육과정에 맞게 정리되어 있습니다!</div>`;
+      document.getElementById('btnApplyMigrate').style.display = 'none';
+    } else {
+      let planHtml = `<div style="margin-bottom: 10px;"><strong>${changes.length}개 문제를 변환합니다</strong> (${noChange.length}개 변경 없음)</div>`;
+      changes.slice(0, 15).forEach((c, idx) => {
+        const p = c.problem;
+        const u = c.updates;
+        const preview = (p.stem || '').slice(0, 50);
+        planHtml += `<div style="padding: 8px; background: white; border-radius: 4px; margin-bottom: 4px; font-size: 11px;">`;
+        planHtml += `<div style="font-weight: 600; margin-bottom: 4px;">${idx + 1}. ${escapeHtml(preview)}${p.stem.length > 50 ? '...' : ''}</div>`;
+        Object.keys(u).forEach(k => {
+          const oldVal = p[k] || '(없음)';
+          const newVal = u[k] || '(없음)';
+          const labels = { chapter: '대단원', subchapter: '중단원', section: '소단원', topic: '유형' };
+          planHtml += `<div style="margin-left: 8px; color: #666;">· ${labels[k] || k}: <span style="color: #b91c1c;">${escapeHtml(String(oldVal))}</span> → <span style="color: #16a34a;">${escapeHtml(String(newVal))}</span></div>`;
+        });
+        planHtml += `</div>`;
+      });
+      if (changes.length > 15) {
+        planHtml += `<div style="text-align: center; color: #888; padding: 8px;">... 외 ${changes.length - 15}개</div>`;
+      }
+      plan.innerHTML = planHtml;
+      document.getElementById('btnApplyMigrate').style.display = '';
+    }
+    
+    modal.classList.add('show');
+  }
+
+  /* 변환 적용 */
+  document.getElementById('btnApplyMigrate').addEventListener('click', async () => {
+    const { changes } = buildMigrationPlan();
+    if (changes.length === 0) {
+      showToast('변환할 문제가 없습니다', 'info');
+      return;
+    }
+    
+    if (!confirm(`정말 ${changes.length}개 문제를 변환하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다 (백업 권장).`)) {
+      return;
+    }
+    
+    const btn = document.getElementById('btnApplyMigrate');
+    btn.disabled = true;
+    btn.textContent = `변환 중... (0/${changes.length})`;
+    
+    let success = 0, failed = 0;
+    for (let i = 0; i < changes.length; i++) {
+      const c = changes[i];
+      const updatedProblem = { ...c.problem, ...c.updates };
+      // id, createdAt 제거 (updateProblem에 포함되지 않도록)
+      delete updatedProblem.id;
+      delete updatedProblem.createdAt;
+      
+      const ok = await window.fbUpdateProblem(c.id, updatedProblem);
+      if (ok) success++; else failed++;
+      btn.textContent = `변환 중... (${i + 1}/${changes.length})`;
+    }
+    
+    btn.disabled = false;
+    btn.textContent = '✓ 변환 적용';
+    closeAllModals();
+    
+    if (failed === 0) {
+      showToast(`✓ ${success}개 문제 변환 완료!`, 'success');
+    } else {
+      showToast(`${success}개 성공, ${failed}개 실패`, 'error');
+    }
+  });
+
   /* ======================= 편집 모달 ======================= */
   let editingId = null;
   function openEditModal(id){
@@ -4535,6 +4781,8 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
   const worksheetModal = document.getElementById('worksheetModal');
   const previewModal = document.getElementById('previewModal');
   const aiPromptModal = document.getElementById('aiPromptModal');
+  const shareModal = document.getElementById('shareModal');
+  const migrateModal = document.getElementById('migrateModal');
   let formType = 'multiple';
   function closeAllModals(){
     addModal.classList.remove('show');
@@ -4542,6 +4790,8 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     worksheetModal.classList.remove('show');
     previewModal.classList.remove('show');
     aiPromptModal.classList.remove('show');
+    shareModal.classList.remove('show');
+    migrateModal.classList.remove('show');
     // 편집 모드 해제
     editingWsId = null;
     editingId = null;
@@ -4554,7 +4804,7 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     if (addSave) addSave.textContent = '💾 저장';
   }
   document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeAllModals));
-  [addModal, importModal, worksheetModal, previewModal, aiPromptModal].forEach(m => {
+  [addModal, importModal, worksheetModal, previewModal, aiPromptModal, shareModal, migrateModal].forEach(m => {
     m.addEventListener('click', (e) => { if (e.target === m) closeAllModals(); });
   });
 
