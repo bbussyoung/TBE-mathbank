@@ -1963,6 +1963,7 @@
       <div class="search-bar">
         <input type="text" id="globalSearch" placeholder="🔍 문제 검색 (지문, 유형명, 출처 등)"/>
         <button class="tool-btn" id="btnClearSearch" style="display:none;">✖</button>
+        <button class="tool-btn ghost-accent" id="btnViewAll">📋 전체 문제 보기</button>
       </div>
 
       <!-- 검색 결과 표시 영역 -->
@@ -3374,8 +3375,8 @@
       title = currentSubchapter;
       desc = currentChapter;
     } else if (currentChapter === '전체') {
-      title = '📚 전체';
-      desc = chapterDescs['전체'];
+      title = '📋 전체 문제';
+      desc = `등록된 모든 문제 ${problems.length}개 (단원 분류 확인용)`;
     } else {
       title = (CURRICULUM[currentChapter]?.emoji || '') + ' ' + currentChapter;
       desc = chapterDescs[currentChapter] || '';
@@ -4752,6 +4753,20 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
       globalSearch.value = '';
       btnClearSearch.style.display = 'none';
       performGlobalSearch('');
+    });
+  }
+
+  /* === 전체 문제 보기 (단원 분류 무시하고 모든 문제 표시) === */
+  const btnViewAll = document.getElementById('btnViewAll');
+  if (btnViewAll) {
+    btnViewAll.addEventListener('click', () => {
+      // 모든 필터 해제
+      currentChapter = '전체';
+      currentSubchapter = '';
+      currentSection = '';
+      currentTopic = '';
+      // 문제 목록 표시
+      showProblemList();
     });
   }
 
