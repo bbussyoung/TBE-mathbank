@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
 <style>
   :root{
@@ -1949,6 +1950,7 @@
         <div class="desc" id="chapterDesc">단원/유형을 선택하면 문제 목록이 나옵니다.</div>
       </div>
       <div class="toolbar">
+        <button class="tool-btn ghost-accent" id="btnAIDifficulty" title="AI로 난이도 자동 분석">🤖 난이도 분석</button>
         <button class="tool-btn ghost-accent" id="btnImport">📥 AI 변형 가져오기</button>
         <button class="tool-btn primary" id="btnAdd">+ 문제 추가</button>
       </div>
@@ -2062,7 +2064,56 @@
     </div>
     <div class="modal-footer">
       <button class="tool-btn" data-close>닫기</button>
+      <button class="tool-btn ghost-accent" id="btnAISimilar">🧠 비슷한 문제</button>
+      <button class="tool-btn ghost-accent" id="btnAIVariant">✍️ 변형 만들기</button>
       <button class="tool-btn primary" id="btnSelectFromPreview">✔ 이 문제 선택</button>
+    </div>
+  </div>
+</div>
+
+<!-- 학습지 공유 모달 -->
+<div class="modal-backdrop" id="shareModal">
+  <div class="modal" style="max-width: 540px;">
+    <div class="modal-head">
+      <h3>🔗 학습지 공유</h3>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body">
+      <div id="shareModalBody">
+        <!-- 동적 생성 -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="tool-btn" data-close>닫기</button>
+      <button class="tool-btn primary" id="btnCopyShareLink">📋 링크 복사</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI 프롬프트 모달 -->
+<div class="modal-backdrop" id="aiPromptModal">
+  <div class="modal" style="max-width: 760px;">
+    <div class="modal-head">
+      <h3 id="aiPromptTitle">🤖 AI 프롬프트</h3>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body">
+      <div id="aiPromptDesc" style="font-size: 13px; color: var(--ink-soft); margin-bottom: 14px; padding: 12px; background: var(--bg); border-radius: 8px; border-left: 3px solid var(--primary);"></div>
+      
+      <label style="font-size: 12px; font-weight: 700; color: var(--ink-faint); margin-bottom: 6px; display: block;">생성된 프롬프트</label>
+      <textarea id="aiPromptText" style="width: 100%; min-height: 320px; padding: 14px; border: 1px solid var(--line); border-radius: 8px; font-family: monospace; font-size: 12px; line-height: 1.5; resize: vertical; background: #fafafa;"></textarea>
+      
+      <div style="margin-top: 14px; padding: 12px; background: #fff7ed; border-radius: 8px; font-size: 12px; color: var(--ink-soft); line-height: 1.7;">
+        <strong>💡 사용 방법:</strong><br>
+        1. <strong>📋 복사</strong> 버튼을 눌러 프롬프트 복사<br>
+        2. ChatGPT, Claude 등 AI 챗봇에 붙여넣기<br>
+        3. AI 응답의 JSON 부분 복사<br>
+        4. 앱의 <strong>📥 AI 변형 가져오기</strong>에 붙여넣기
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="tool-btn" data-close>닫기</button>
+      <button class="tool-btn primary" id="btnCopyPrompt">📋 클립보드에 복사</button>
     </div>
   </div>
 </div>
@@ -3445,6 +3496,388 @@
 
   /* ======================= 미리보기 모달 ======================= */
   let previewingId = null;
+  /* ======================= 학습지 공유 (학생용 링크) ======================= */
+  let currentShareWsId = null;
+  function openShareModal(wsId){
+    const ws = worksheets.find(w => w.id === wsId);
+    if (!ws) return;
+    currentShareWsId = wsId;
+    
+    // 학생용 링크 생성
+    const baseUrl = window.location.origin + window.location.pathname;
+    const studentUrl = `${baseUrl}?ws=${wsId}&mode=student`;
+    
+    const validProblems = ws.problemIds.filter(pid => problems.some(p => p.id === pid));
+    
+    const body = document.getElementById('shareModalBody');
+    body.innerHTML = `
+      <div style="margin-bottom: 18px;">
+        <strong style="font-size: 15px; display: block; margin-bottom: 4px;">${escapeHtml(ws.title)}</strong>
+        <div style="font-size: 12px; color: var(--ink-faint);">${validProblems.length}개 문제 · ${ws.subtitle ? escapeHtml(ws.subtitle) : ''}</div>
+      </div>
+      
+      <label style="font-size: 12px; font-weight: 700; color: var(--ink-faint); margin-bottom: 6px; display: block;">학생용 링크</label>
+      <input type="text" id="shareLinkInput" value="${studentUrl}" readonly style="width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-family: monospace; font-size: 12px; background: #fafafa; margin-bottom: 16px;"/>
+      
+      <div style="display: flex; gap: 18px; align-items: center; margin-bottom: 16px;">
+        <div style="background: white; padding: 10px; border: 1px solid var(--line); border-radius: 8px;">
+          <canvas id="qrcodeCanvas" width="160" height="160"></canvas>
+        </div>
+        <div style="flex: 1; font-size: 12px; line-height: 1.7; color: var(--ink-soft);">
+          <strong>📱 사용 방법:</strong><br>
+          1. 학생이 카메라/QR 앱으로 QR 코드 스캔<br>
+          2. 또는 링크 복사해서 카톡으로 전송<br>
+          3. 학생이 폰/PC에서 문제 풀이 가능<br>
+          4. (정답은 자동 채점되지 않음 — 학생이 보고 풀기용)
+        </div>
+      </div>
+      
+      <div style="padding: 12px; background: #fff7ed; border-radius: 8px; font-size: 12px; color: var(--ink-soft);">
+        ⚠️ <strong>주의</strong>: 학습지가 Firestore에 공개되어 있어 링크를 아는 사람은 누구나 접근 가능합니다. 민감한 내용이 있다면 공유 시 주의하세요.
+      </div>
+    `;
+    
+    document.getElementById('shareModal').classList.add('show');
+    
+    // QR 코드 생성
+    setTimeout(() => {
+      const canvas = document.getElementById('qrcodeCanvas');
+      if (canvas && typeof QRCode !== 'undefined') {
+        QRCode.toCanvas(canvas, studentUrl, {
+          width: 160,
+          margin: 1,
+          color: { dark: '#000', light: '#fff' }
+        }, (err) => {
+          if (err) console.error('QR 생성 오류:', err);
+        });
+      }
+    }, 100);
+  }
+
+  /* 공유 링크 복사 */
+  document.getElementById('btnCopyShareLink').addEventListener('click', () => {
+    const input = document.getElementById('shareLinkInput');
+    if (!input) return;
+    navigator.clipboard.writeText(input.value).then(() => {
+      showToast('✓ 학생용 링크가 복사됐습니다!', 'success');
+    }).catch(() => {
+      input.select();
+      document.execCommand('copy');
+      showToast('✓ 복사됨', 'success');
+    });
+  });
+
+  /* ======================= 학생용 페이지 (URL ?ws=xxx&mode=student) ======================= */
+  function checkStudentMode(){
+    const params = new URLSearchParams(window.location.search);
+    const wsId = params.get('ws');
+    const mode = params.get('mode');
+    
+    if (mode === 'student' && wsId) {
+      // 학생 모드 - 전체 화면 단순 UI
+      renderStudentPage(wsId);
+      return true;
+    }
+    return false;
+  }
+  
+  function renderStudentPage(wsId){
+    // 모든 일반 UI 숨김
+    document.body.innerHTML = `
+      <div style="max-width: 800px; margin: 0 auto; padding: 30px 20px; font-family: 'Pretendard', system-ui, sans-serif; background: #fdf8f3; min-height: 100vh;">
+        <div id="studentHeader" style="margin-bottom: 24px; padding: 20px; background: white; border-radius: 12px; border: 1px solid #f0e8da; text-align: center;">
+          <h1 style="margin: 0 0 6px 0; font-size: 22px;" id="studentTitle">📚 학습지 불러오는 중...</h1>
+          <div id="studentSubtitle" style="font-size: 13px; color: #888;"></div>
+        </div>
+        <div id="studentList"></div>
+        <div style="text-align: center; padding: 30px 0; font-size: 12px; color: #aaa;">
+          🎓 수학 문제은행 학생용 페이지
+        </div>
+      </div>
+    `;
+    
+    // KaTeX 다시 렌더링용
+    const renderMath = (el) => {
+      if (typeof renderMathInElement !== 'undefined') {
+        try {
+          renderMathInElement(el, {
+            delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+            ],
+            throwOnError: false
+          });
+        } catch(e) { console.warn('KaTeX 오류:', e); }
+      }
+    };
+    
+    // Firestore에서 직접 로드
+    setTimeout(async () => {
+      try {
+        const { getFirestore, collection, doc, getDoc, getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+        
+        const firebaseConfig = {
+          apiKey: "AIzaSyCyaLEhtn5eF0q1uWoeiThn34SikrOjpl4",
+          authDomain: "tnb-math-bank-126b1.firebaseapp.com",
+          projectId: "tnb-math-bank-126b1",
+          storageBucket: "tnb-math-bank-126b1.firebasestorage.app",
+          messagingSenderId: "311201443598",
+          appId: "1:311201443598:web:6f14fb3092a701e3c1715f"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        const wsRef = doc(db, 'worksheets', wsId);
+        const wsSnap = await getDoc(wsRef);
+        if (!wsSnap.exists()) {
+          document.getElementById('studentTitle').textContent = '❌ 학습지를 찾을 수 없습니다';
+          return;
+        }
+        const ws = wsSnap.data();
+        document.getElementById('studentTitle').textContent = ws.title || '학습지';
+        document.getElementById('studentSubtitle').textContent = ws.subtitle || '';
+        
+        const problemsSnap = await getDocs(collection(db, 'problems'));
+        const allProblems = {};
+        problemsSnap.forEach(d => allProblems[d.id] = d.data());
+        
+        const validProblems = (ws.problemIds || []).map(pid => allProblems[pid]).filter(Boolean);
+        
+        const list = document.getElementById('studentList');
+        list.innerHTML = validProblems.map((p, idx) => {
+          const marks = ['①','②','③','④','⑤'];
+          const choicesHtml = p.type === 'short' 
+            ? `<div style="margin-top: 12px; padding: 10px; background: #f5efe3; border-radius: 6px;"><input type="text" placeholder="답을 입력하세요" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;"/></div>`
+            : `<div style="margin-top: 12px;">
+                ${(p.choices || []).map((c, i) => `
+                  <label style="display: block; padding: 6px 10px; cursor: pointer; border-radius: 4px;">
+                    <input type="radio" name="q${idx}" value="${i+1}" style="margin-right: 8px;"/>
+                    <strong>${marks[i]}</strong> <span class="math">${c}</span>
+                  </label>
+                `).join('')}
+              </div>`;
+          
+          const graphHtml = p.graphImage 
+            ? `<div style="text-align: center; margin: 12px 0;"><img src="${p.graphImage}" style="max-width: 280px; max-height: 220px;"/></div>`
+            : (p.graphSvg ? `<div style="text-align: center; margin: 12px 0;">${p.graphSvg}</div>` : '');
+          
+          return `
+            <div style="background: white; border-radius: 10px; padding: 18px; margin-bottom: 12px; border: 1px solid #f0e8da;">
+              <div style="display: flex; gap: 10px; align-items: baseline; margin-bottom: 10px;">
+                <strong style="background: var(--primary, #f59e3b); color: white; padding: 2px 10px; border-radius: 4px; font-size: 13px;">${idx + 1}</strong>
+                <span style="font-size: 11px; color: #888;">${p.topic || p.subchapter || p.chapter}</span>
+              </div>
+              <div style="font-size: 14px; line-height: 1.7;">${p.stem}</div>
+              ${graphHtml}
+              ${choicesHtml}
+            </div>
+          `;
+        }).join('');
+        
+        // KaTeX 렌더링
+        renderMath(document.getElementById('studentList'));
+      } catch (err) {
+        console.error('학생 페이지 로드 오류:', err);
+        document.getElementById('studentTitle').textContent = '❌ 오류가 발생했습니다';
+        document.getElementById('studentSubtitle').textContent = err.message;
+      }
+    }, 100);
+  }
+
+  /* ======================= AI 프롬프트 함수 ======================= */
+  function openAIPromptModal(title, description, prompt){
+    document.getElementById('aiPromptTitle').textContent = title;
+    document.getElementById('aiPromptDesc').textContent = description;
+    document.getElementById('aiPromptText').value = prompt;
+    document.getElementById('aiPromptModal').classList.add('show');
+  }
+
+  /* AI 1: 비슷한 문제 추천 프롬프트 */
+  function generateSimilarPrompt(p){
+    const prompt = `[역할] 너는 10년 차 수학 전문 강사이자 교재 편집자야.
+
+[요청] 아래 문제와 비슷한 유형의 변형 문제 5개를 만들어줘.
+
+[원본 문제]
+- 단원: ${p.chapter}${p.subchapter ? ' > ' + p.subchapter : ''}${p.section ? ' > ' + p.section : ''}${p.topic ? ' > ' + p.topic : ''}
+- 난이도: ${p.difficulty || '중'}
+- 문제 유형: ${p.type === 'short' ? '주관식' : '객관식'}
+
+문제 지문:
+${p.stem}
+
+${p.choices ? '보기:\n' + p.choices.map((c, i) => `${['①','②','③','④','⑤'][i]} ${c}`).join('\n') : ''}
+
+정답: ${p.answer}
+
+${p.explanation ? '풀이:\n' + p.explanation : ''}
+
+[조건]
+1. 핵심 아이디어는 유지하되, 숫자나 조건을 변경해서 답이 깔끔하게 나오도록
+2. 난이도는 비슷하게 유지 (현재: ${p.difficulty || '중'})
+3. 그래프가 있다면 동일한 형태로 SVG 사용 (선생님 템플릿 따라)
+4. 수식은 LaTeX 사용 ($y = 2^x$ 형태)
+5. 각 문제의 풀이는 step-by-step으로 작성
+
+[출력 형식] 아래 JSON 배열로 출력. 다른 설명 없이 JSON만:
+
+[
+  {
+    "chapter": "${p.chapter}",
+    "subchapter": "${p.subchapter || ''}",
+    "section": "${p.section || ''}",
+    "topic": "${p.topic || ''}",
+    "type": "${p.type || 'multiple'}",
+    "difficulty": "${p.difficulty || '중'}",
+    "stem": "변형된 문제 지문 (LaTeX 수식 포함)",
+    ${p.type === 'multiple' ? '"choices": ["$보기1$", "$보기2$", "$보기3$", "$보기4$", "$보기5$"],\n    "answer": 1,' : '"answer": "정답",'}
+    "explanation": "Step 1: ...\\n\\nStep 2: ...\\n\\n빠른 답: ...",
+    "source": "변형 문제",
+    "score": "${p.score || '3점'}"
+  }
+]`;
+
+    openAIPromptModal(
+      '🧠 비슷한 문제 5개 추천',
+      `"${p.topic || p.subchapter || p.chapter}" 단원의 비슷한 변형 문제 5개를 만드는 프롬프트입니다. AI 챗봇에 붙여넣어 실행하세요.`,
+      prompt
+    );
+  }
+
+  /* AI 2: 난이도 자동 분석 프롬프트 */
+  function generateDifficultyPrompt(){
+    if (problems.length === 0) {
+      showToast('등록된 문제가 없습니다', 'error');
+      return;
+    }
+
+    // 난이도가 비어있는 문제 우선
+    const targetProbs = problems.filter(p => !p.difficulty || p.difficulty === '중').slice(0, 20);
+    
+    if (targetProbs.length === 0) {
+      showToast('분석할 문제가 없습니다 (이미 모두 분류됨)', 'info');
+      return;
+    }
+
+    const problemsList = targetProbs.map((p, idx) => 
+      `[${idx + 1}] ID: ${p.id}\n단원: ${p.chapter}${p.topic ? ' > ' + p.topic : ''}\n문제: ${p.stem}\n${p.type === 'multiple' && p.choices ? '보기: ' + p.choices.join(' / ') : ''}\n정답: ${p.answer}`
+    ).join('\n\n---\n\n');
+
+    const prompt = `[역할] 너는 10년 차 수학 전문 강사야.
+
+[요청] 아래 문제들의 난이도를 평가해서 "상", "중", "하"로 분류해줘.
+
+[기준]
+- 하: 기본 개념 적용 (1-2단계 풀이)
+- 중: 여러 개념 조합 또는 약간의 사고력 요구 (3-5단계)
+- 상: 복합적 사고 필요, 변형 문제, 킬러 문제급
+
+[분석할 문제들]
+
+${problemsList}
+
+[출력 형식] JSON 배열로만 출력 (다른 설명 X):
+
+[
+  {"id": "${targetProbs[0].id}", "difficulty": "중", "reason": "1-2줄 이유"},
+  ...
+]`;
+
+    openAIPromptModal(
+      '📈 난이도 자동 분석',
+      `${targetProbs.length}개 문제의 난이도를 AI가 분석합니다. AI 응답을 받아 직접 수정하셔야 합니다 (자동 적용 X).`,
+      prompt
+    );
+  }
+
+  /* AI 3: 변형 문제 생성 - 더 정교한 옵션 */
+  function generateVariantPrompt(p, count = 3){
+    const prompt = `[역할] 너는 10년 차 수학 전문 강사이자 교재 편집자야.
+
+[요청] 아래 문제의 '쌍둥이 변형 문제' ${count}개를 만들어줘.
+
+[원본]
+${p.chapter}${p.subchapter ? ' > ' + p.subchapter : ''}${p.section ? ' > ' + p.section : ''}${p.topic ? ' > ' + p.topic : ''}
+난이도: ${p.difficulty || '중'} | 유형: ${p.type === 'short' ? '주관식' : '객관식'}
+
+문제: ${p.stem}
+${p.choices ? '\n보기:\n' + p.choices.map((c, i) => `${['①','②','③','④','⑤'][i]} ${c}`).join('\n') : ''}
+정답: ${p.answer}
+${p.explanation ? '\n풀이: ' + p.explanation : ''}
+
+[조건]
+1. 핵심 아이디어(유형/개념)는 유지
+2. 숫자를 바꿔서 정답이 자연수나 깔끔한 분수가 나오도록
+3. 난이도 다양화: 1번은 약간 쉽게, 마지막은 약간 어렵게
+4. 수식은 LaTeX ($...$) 사용
+5. 그래프 필요시 다음 SVG 템플릿 그대로 사용 (path만 수학적으로 정확하게):
+
+\`\`\`svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240" width="100%" style="background-color:transparent;">
+  <style>
+    .math-italic { font-family: "Times New Roman", serif; font-size: 16px; font-style: italic; }
+    .math-normal { font-family: "Times New Roman", serif; font-size: 16px; }
+  </style>
+  <defs>
+    <marker id="mathArrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 2.5 L 10 5 L 0 7.5 Z" fill="#000"/>
+    </marker>
+  </defs>
+  <line x1="20" y1="120" x2="380" y2="120" stroke="#000" stroke-width="0.8" marker-end="url(#mathArrow)"/>
+  <line x1="80" y1="210" x2="80" y2="30" stroke="#000" stroke-width="0.8" marker-end="url(#mathArrow)"/>
+  <text x="372" y="138" class="math-italic">x</text>
+  <text x="70" y="32" class="math-italic">y</text>
+  <text x="65" y="135" class="math-normal">O</text>
+  <!-- 보조선, 곡선, 라벨 추가 -->
+</svg>
+\`\`\`
+
+6. 풀이는 Step 1, Step 2... 단계별 + "빠른 답" 마지막에
+
+[출력 형식] JSON 배열로만 (다른 설명 X):
+
+[
+  {
+    "chapter": "${p.chapter}",
+    "subchapter": "${p.subchapter || ''}",
+    "section": "${p.section || ''}",
+    "topic": "${p.topic || ''}",
+    "type": "${p.type || 'multiple'}",
+    "difficulty": "하/중/상",
+    "stem": "$수식$ 포함 문제 지문",
+    "graphSvg": "SVG 코드 (선택)",
+    ${p.type === 'multiple' ? '"choices": ["$①$", "$②$", "$③$", "$④$", "$⑤$"],\n    "answer": 정답번호,' : '"answer": "정답",'}
+    "explanation": "Step 1: ...\\n\\nStep 2: ...\\n\\n빠른 답: ...",
+    "source": "변형 ${count}개 생성",
+    "score": "${p.score || '3점'}"
+  }
+]`;
+
+    openAIPromptModal(
+      '✍️ 변형 문제 자동 생성',
+      `이 문제의 변형 ${count}개를 AI에게 요청하는 프롬프트입니다. AI 응답의 JSON을 "AI 변형 가져오기"에 붙여넣으세요.`,
+      prompt
+    );
+  }
+
+  /* 클립보드 복사 */
+  document.getElementById('btnCopyPrompt').addEventListener('click', () => {
+    const text = document.getElementById('aiPromptText').value;
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('✓ 프롬프트가 복사됐습니다!', 'success');
+    }).catch(() => {
+      // 폴백: 텍스트 선택
+      const ta = document.getElementById('aiPromptText');
+      ta.select();
+      document.execCommand('copy');
+      showToast('✓ 복사됨 (폴백)', 'success');
+    });
+  });
+
+  /* ======================= 미리보기 모달 ======================= */
   function openPreviewModal(id){
     const p = problems.find(x => x.id === id);
     if (!p) return;
@@ -3520,6 +3953,38 @@
     renderProblems();
     document.getElementById('previewModal').classList.remove('show');
   });
+
+  /* AI: 비슷한 문제 추천 */
+  document.getElementById('btnAISimilar').addEventListener('click', () => {
+    if (!previewingId) return;
+    const p = problems.find(x => x.id === previewingId);
+    if (!p) return;
+    document.getElementById('previewModal').classList.remove('show');
+    generateSimilarPrompt(p);
+  });
+
+  /* AI: 변형 만들기 */
+  document.getElementById('btnAIVariant').addEventListener('click', () => {
+    if (!previewingId) return;
+    const p = problems.find(x => x.id === previewingId);
+    if (!p) return;
+    const countStr = prompt('몇 개 변형을 만들까요? (1~10)', '3');
+    const count = parseInt(countStr) || 3;
+    if (count < 1 || count > 10) {
+      showToast('1~10 사이 숫자를 입력하세요', 'error');
+      return;
+    }
+    document.getElementById('previewModal').classList.remove('show');
+    generateVariantPrompt(p, count);
+  });
+
+  /* AI: 난이도 자동 분석 */
+  const btnAIDifficulty = document.getElementById('btnAIDifficulty');
+  if (btnAIDifficulty) {
+    btnAIDifficulty.addEventListener('click', () => {
+      generateDifficultyPrompt();
+    });
+  }
 
   /* ======================= 편집 모달 ======================= */
   let editingId = null;
@@ -3796,6 +4261,7 @@
           </div>
           <div class="ws-saved-actions">
             <button class="tool-btn" data-print-ws="${ws.id}" title="바로 인쇄">🖨</button>
+            <button class="tool-btn" data-share-ws="${ws.id}" title="학생과 공유">🔗</button>
             <button class="tool-btn" data-edit-ws="${ws.id}" title="편집">✏️</button>
             <button class="tool-btn" data-clone-ws="${ws.id}" title="복제">📋</button>
             <button class="tool-btn" data-delete-ws="${ws.id}" title="삭제">🗑</button>
@@ -3828,6 +4294,11 @@
         const ok = await window.fbSaveWorksheet(cloned);
         if (ok) showToast(`✓ "${newTitle}" 학습지로 복제됨`, 'success');
       });
+    });
+    
+    // 학습지 공유 (학생용 링크 + QR)
+    list.querySelectorAll('[data-share-ws]').forEach(btn => {
+      btn.addEventListener('click', () => openShareModal(btn.dataset.shareWs));
     });
     list.querySelectorAll('[data-delete-ws]').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -3866,7 +4337,8 @@
       font: ws.settings.font,
       divider: ws.settings.divider,
       density: ws.settings.density,
-      footerText: ws.settings.footerText
+      footerText: ws.settings.footerText,
+      wsId: ws.id  // QR 코드용
     });
 
     // 인쇄 영역에 KaTeX 수식 렌더링 적용
@@ -4062,12 +4534,14 @@
   const importModal = document.getElementById('importModal');
   const worksheetModal = document.getElementById('worksheetModal');
   const previewModal = document.getElementById('previewModal');
+  const aiPromptModal = document.getElementById('aiPromptModal');
   let formType = 'multiple';
   function closeAllModals(){
     addModal.classList.remove('show');
     importModal.classList.remove('show');
     worksheetModal.classList.remove('show');
     previewModal.classList.remove('show');
+    aiPromptModal.classList.remove('show');
     // 편집 모드 해제
     editingWsId = null;
     editingId = null;
@@ -4080,7 +4554,7 @@
     if (addSave) addSave.textContent = '💾 저장';
   }
   document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeAllModals));
-  [addModal, importModal, worksheetModal, previewModal].forEach(m => {
+  [addModal, importModal, worksheetModal, previewModal, aiPromptModal].forEach(m => {
     m.addEventListener('click', (e) => { if (e.target === m) closeAllModals(); });
   });
 
@@ -4502,7 +4976,7 @@
     editingWsId = null;
     document.getElementById('btnSaveWorksheet').textContent = '💾 저장 후 인쇄';
 
-    // 저장 성공 후 인쇄
+    // 저장 성공 후 인쇄 (저장 후엔 새 ID가 없어 QR은 이번 인쇄에선 생략 가능)
     let splitMode = layout;
     const printArea = document.getElementById('printArea');
     printArea.innerHTML = generateWorksheetHTML({
@@ -4510,7 +4984,8 @@
       includeAnswers, includeExplanations,
       template: selectedTemplate,
       color: selectedColor,
-      numStyle, font, divider, density, footerText
+      numStyle, font, divider, density, footerText,
+      wsId: editingWsId || null  // 편집 모드라면 ID 있음
     });
 
     setTimeout(() => {
@@ -4523,7 +4998,8 @@
     const {
       selected, title, subtitle, splitMode, fields,
       includeAnswers, includeExplanations,
-      template, color, numStyle, font, divider, density, footerText
+      template, color, numStyle, font, divider, density, footerText,
+      wsId  // 학생용 링크 QR 생성용 (선택)
     } = opts;
 
     const today = new Date();
@@ -4636,6 +5112,28 @@
       html += `<div class="ws-footer">${escapeHtml(footerText)}</div>`;
     }
 
+    // QR 코드 (학생용 링크) - wsId가 있을 때만
+    if (wsId) {
+      const studentUrl = `${window.location.origin}${window.location.pathname}?ws=${wsId}&mode=student`;
+      const qrId = 'ws-qr-' + Date.now();
+      html += `
+        <div class="ws-qr-box" style="position: fixed; bottom: 8mm; right: 8mm; text-align: center; font-size: 8pt; color: #888;">
+          <canvas id="${qrId}" width="60" height="60" style="background: white; padding: 2px; border: 0.5pt solid #ddd;"></canvas>
+          <div style="margin-top: 2px;">📱 디지털 보기</div>
+        </div>`;
+      // QR 생성 (DOM 추가 후 실행되도록 setTimeout)
+      setTimeout(() => {
+        const canvas = document.getElementById(qrId);
+        if (canvas && typeof QRCode !== 'undefined') {
+          QRCode.toCanvas(canvas, studentUrl, {
+            width: 60,
+            margin: 0,
+            color: { dark: '#000', light: '#fff' }
+          }, () => {});
+        }
+      }, 200);
+    }
+
     // 정답지
     if (includeAnswers) {
       html += `<div class="ws-answer-page">`;
@@ -4679,16 +5177,19 @@
   }
   window.showToast = showToast;
 
-  // 초기: 내 학습지 모드이므로 사이드바 nav 숨김
-  const initSidebarNav = document.querySelector('.nav-section');
-  if (initSidebarNav) initSidebarNav.style.display = 'none';
+  // 학생 모드 체크 (URL ?ws=xxx&mode=student)
+  if (!checkStudentMode()) {
+    // 일반 모드: 초기 사이드바 nav 숨김 + 로딩 표시
+    const initSidebarNav = document.querySelector('.nav-section');
+    if (initSidebarNav) initSidebarNav.style.display = 'none';
 
-  document.getElementById('problemList').innerHTML = `
-    <div class="loading-state">
-      <div class="spinner"></div>
-      <h3>Firebase에서 문제를 불러오는 중...</h3>
-      <p>잠시만 기다려주세요</p>
-    </div>`;
+    document.getElementById('problemList').innerHTML = `
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <h3>Firebase에서 문제를 불러오는 중...</h3>
+        <p>잠시만 기다려주세요</p>
+      </div>`;
+  }
 </script>
 
 </body>
