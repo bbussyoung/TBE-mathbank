@@ -368,6 +368,231 @@
     gap: 10px;
     align-items: end;
   }
+  
+  /* === 검색바 === */
+  .search-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .search-bar input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    background: #fff;
+    transition: border-color 0.15s;
+  }
+  .search-bar input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(245, 158, 59, 0.1);
+  }
+  
+  /* === 단원 트리 (메인 영역) === */
+  #curriculumTree {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .tree-chapter {
+    margin-bottom: 8px;
+    border-bottom: 1px solid #f3eee5;
+    padding-bottom: 8px;
+  }
+  .tree-chapter:last-child { border-bottom: none; }
+  .tree-chapter-head {
+    padding: 12px 14px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.15s;
+  }
+  .tree-chapter-head:hover { background: rgba(245, 158, 59, 0.05); }
+  .tree-chapter-head .arrow {
+    display: inline-block;
+    margin-right: 8px;
+    transition: transform 0.2s;
+  }
+  .tree-chapter-head.expanded .arrow { transform: rotate(90deg); }
+  .tree-chapter-body { display: none; padding: 4px 14px 4px 24px; }
+  .tree-chapter.expanded .tree-chapter-body { display: block; }
+
+  .tree-subchapter {
+    padding: 8px 12px;
+    margin: 2px 0;
+    cursor: pointer;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13.5px;
+    color: #444;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tree-subchapter:hover { background: rgba(245, 158, 59, 0.05); }
+  .tree-subchapter .arrow { transition: transform 0.2s; margin-right: 6px; font-size: 10px;}
+  .tree-subchapter.expanded .arrow { transform: rotate(90deg); }
+  .tree-subchapter-body { display: none; padding-left: 18px; padding-bottom: 6px; }
+  .tree-subchapter.expanded + .tree-subchapter-body { display: block; }
+
+  .tree-section {
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 12.5px;
+    color: #555;
+    font-weight: 500;
+    margin: 1px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tree-section:hover { background: rgba(245, 158, 59, 0.04); }
+  .tree-section .arrow { transition: transform 0.2s; margin-right: 6px; font-size: 9px;}
+  .tree-section.expanded .arrow { transform: rotate(90deg); }
+  .tree-section-body { display: none; padding-left: 14px; padding-top: 4px; padding-bottom: 8px; }
+  .tree-section.expanded + .tree-section-body { display: block; }
+
+  .tree-topics {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 4px;
+  }
+  .tree-topic {
+    padding: 7px 12px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 12.5px;
+    color: #555;
+    background: rgba(245, 158, 59, 0.04);
+    transition: all 0.15s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tree-topic:hover {
+    background: rgba(245, 158, 59, 0.18);
+    color: var(--primary);
+    transform: translateX(3px);
+  }
+  .tree-topic .topic-count {
+    font-size: 11px;
+    color: #aaa;
+    font-weight: 600;
+  }
+  .tree-topic:hover .topic-count { color: var(--primary); }
+  .tree-topic.empty {
+    opacity: 0.55;
+  }
+
+  /* === 통계 대시보드 === */
+  .dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .stat-card .stat-label {
+    font-size: 11px;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .stat-card .stat-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--primary);
+  }
+  .stat-card .stat-sub {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+
+  /* === 태그 필터 === */
+  .tag-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .tag-chip {
+    padding: 6px 12px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tag-chip:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .tag-chip.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+    font-weight: 600;
+  }
+
+  /* === 검색 결과 === */
+  #searchResults {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .search-result-section {
+    margin-bottom: 14px;
+  }
+  .search-result-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .search-result-item {
+    padding: 8px 12px;
+    background: rgba(245, 158, 59, 0.04);
+    border-radius: 6px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.15s;
+  }
+  .search-result-item:hover {
+    background: rgba(245, 158, 59, 0.15);
+  }
+  .search-result-item .result-meta {
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-top: 2px;
+  }
+  .search-result-empty {
+    text-align: center;
+    color: var(--ink-faint);
+    padding: 20px;
+  }
   .filter-group label{
     display: block;
     font-size: 11px;
@@ -1721,12 +1946,27 @@
     <div class="page-head" id="headWorksheet" style="display:none;">
       <div>
         <h2 id="chapterTitle">📝 학습지 만들기</h2>
-        <div class="desc" id="chapterDesc">사이드바에서 유형을 선택하고, 문제를 체크해서 학습지를 만드세요.</div>
+        <div class="desc" id="chapterDesc">단원/유형을 선택하면 문제 목록이 나옵니다.</div>
       </div>
       <div class="toolbar">
         <button class="tool-btn ghost-accent" id="btnImport">📥 AI 변형 가져오기</button>
         <button class="tool-btn primary" id="btnAdd">+ 문제 추가</button>
       </div>
+    </div>
+
+    <!-- 학습지 만들기: 단원 탐색 트리 (메인) -->
+    <div id="curriculumExplorer" style="display:none;">
+      <!-- 검색 바 -->
+      <div class="search-bar">
+        <input type="text" id="globalSearch" placeholder="🔍 문제 검색 (지문, 유형명, 출처 등)"/>
+        <button class="tool-btn" id="btnClearSearch" style="display:none;">✖</button>
+      </div>
+
+      <!-- 검색 결과 표시 영역 -->
+      <div id="searchResults" style="display:none;"></div>
+
+      <!-- 단원 트리 -->
+      <div id="curriculumTree"></div>
     </div>
 
     <!-- 학습지 모드: 필터 -->
@@ -1747,14 +1987,22 @@
         </select>
       </div>
       <div class="filter-group">
-        <label>출처 (일부 일치)</label>
+        <label>정렬</label>
+        <select id="fltSort">
+          <option value="default">기본</option>
+          <option value="difficulty-asc">난이도 ↑</option>
+          <option value="difficulty-desc">난이도 ↓</option>
+          <option value="newest">최신순</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>출처</label>
         <input type="text" id="fltSource" placeholder="예) 서천고"/>
       </div>
       <div class="filter-group">
-        <label>키워드 (지문)</label>
+        <label>키워드</label>
         <input type="text" id="fltKeyword" placeholder="예) 로그"/>
       </div>
-      <!-- 하위 호환: 기존 chapter 필터는 숨김 -->
       <select id="fltChapter" style="display:none;">
         <option value="">전체</option>
       </select>
@@ -1766,7 +2014,8 @@
         선택된 문제 <strong id="selCount">0</strong>개
       </div>
       <div class="selection-actions">
-        <button class="tool-btn" id="btnSelectAll">👁 보이는 문제 모두 선택</button>
+        <button class="tool-btn" id="btnBackToTree">← 단원으로</button>
+        <button class="tool-btn" id="btnSelectAll">👁 모두 선택</button>
         <button class="tool-btn" id="btnClearSel">✖ 선택 해제</button>
         <button class="tool-btn primary" id="btnMakeWorksheet">📄 학습지 만들기</button>
       </div>
@@ -1789,6 +2038,13 @@
         </select>
       </div>
     </div>
+
+    <!-- 내 학습지: 통계 대시보드 -->
+    <div id="dashboardStats" class="dashboard"></div>
+
+    <!-- 내 학습지: 태그 필터 -->
+    <div id="tagFilter" class="tag-filter"></div>
+
     <div id="mywsList"></div>
 
   </main>
@@ -2018,6 +2274,12 @@
           <input id="wsSubtitle" type="text" placeholder="예) 2학년 3반 · 지수와 로그"/>
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label>🏷️ 태그 (쉼표로 구분, 선택)</label>
+          <input id="wsTags" type="text" placeholder="예) 중간고사, 심화반, 2학기"/>
+        </div>
+      </div>
 
       <div class="form-row-3">
         <div class="form-group">
@@ -2172,7 +2434,7 @@
   let currentChapter = '전체';
   let currentMode = 'myws';          // 'worksheet' | 'myws'
   let selectedIds = new Set();         // 선택된 문제 ID 집합
-  let filters = { chapter:'', difficulty:'', type:'', source:'', keyword:'' };
+  let filters = { chapter:'', difficulty:'', type:'', source:'', keyword:'', sort:'default' };
 
   /* ======================= Firebase ======================= */
   const fbStatus = document.getElementById('fbStatus');
@@ -2485,7 +2747,7 @@
 
   /* ======================= 필터 ======================= */
   function applyFilters(list){
-    return list.filter(p => {
+    let filtered = list.filter(p => {
       if (filters.chapter && p.chapter !== filters.chapter) return false;
       if (filters.difficulty && p.difficulty !== filters.difficulty) return false;
       if (filters.type && p.type !== filters.type) return false;
@@ -2493,6 +2755,22 @@
       if (filters.keyword && !(p.stem || '').includes(filters.keyword)) return false;
       return true;
     });
+
+    // 정렬
+    const sortMode = filters.sort || 'default';
+    const diffOrder = { '하': 1, '중': 2, '상': 3 };
+    if (sortMode === 'difficulty-asc') {
+      filtered.sort((a, b) => (diffOrder[a.difficulty] || 2) - (diffOrder[b.difficulty] || 2));
+    } else if (sortMode === 'difficulty-desc') {
+      filtered.sort((a, b) => (diffOrder[b.difficulty] || 2) - (diffOrder[a.difficulty] || 2));
+    } else if (sortMode === 'newest') {
+      filtered.sort((a, b) => {
+        const aT = a.createdAt?.toMillis?.() || 0;
+        const bT = b.createdAt?.toMillis?.() || 0;
+        return bT - aT;
+      });
+    }
+    return filtered;
   }
 
   function getVisibleProblems(){
@@ -2608,6 +2886,264 @@
 
     nav.innerHTML = html;
     attachSidebarHandlers();
+  }
+
+  /* ======================= 학습지 만들기 메인 - 단원 트리 ======================= */
+  /* 메인 영역에 표시되는 큰 트리 (사이드바와 다름) */
+  function renderCurriculumTree(){
+    const tree = document.getElementById('curriculumTree');
+    if (!tree) return;
+
+    let html = '';
+    Object.keys(CURRICULUM).forEach(chapter => {
+      const info = CURRICULUM[chapter];
+      const chapterProbs = problems.filter(p => p.chapter === chapter);
+      const count = chapterProbs.length;
+      const isExpanded = expandedChapters.has(chapter);
+
+      html += `
+        <div class="tree-chapter ${isExpanded ? 'expanded' : ''}" data-chapter="${chapter}">
+          <div class="tree-chapter-head ${isExpanded ? 'expanded' : ''}">
+            <span><span class="arrow">▶</span>${info.emoji} ${chapter}</span>
+            <span style="font-size:12px; color:#888; font-weight:500;">${count}문제</span>
+          </div>
+          <div class="tree-chapter-body">`;
+
+      Object.keys(info.middle).forEach(subchapter => {
+        const subData = info.middle[subchapter];
+        const isNewStructure = !Array.isArray(subData);
+        const subProbs = chapterProbs.filter(p => p.subchapter === subchapter);
+        const subCount = subProbs.length;
+        const subKey = `${chapter}::${subchapter}`;
+        const isSubExpanded = expandedSubchapters.has(subKey);
+
+        html += `
+            <div class="tree-subchapter ${isSubExpanded ? 'expanded' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}">
+              <span><span class="arrow">▶</span>${subchapter}</span>
+              <span style="font-size:11px; color:#999;">${subCount}</span>
+            </div>
+            <div class="tree-subchapter-body">`;
+
+        if (isNewStructure) {
+          // 4단계 구조: 소단원 → 유형
+          Object.keys(subData).forEach(section => {
+            const topicsList = subData[section];
+            const sectionProbs = subProbs.filter(p => p.section === section);
+            const sectionCount = sectionProbs.length;
+            const secKey = `${chapter}::${subchapter}::${section}`;
+            const isSecExpanded = expandedSections.has(secKey);
+
+            html += `
+              <div class="tree-section ${isSecExpanded ? 'expanded' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}" data-section="${section}">
+                <span><span class="arrow">▶</span>${section}</span>
+                <span style="font-size:11px; color:#999;">${sectionCount}</span>
+              </div>
+              <div class="tree-section-body">
+                <div class="tree-topics">`;
+
+            topicsList.forEach(topic => {
+              const topicCount = sectionProbs.filter(p => p.topic === topic).length;
+              const isEmpty = topicCount === 0;
+
+              html += `
+                  <div class="tree-topic ${isEmpty ? 'empty' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}" data-section="${section}" data-topic="${topic}">
+                    <span>▸ ${topic}</span>
+                    <span class="topic-count">${topicCount}</span>
+                  </div>`;
+            });
+
+            html += `</div></div>`;
+          });
+        } else {
+          // 3단계 구조: 유형만 (배열)
+          html += `<div class="tree-topics">`;
+          subData.forEach(topic => {
+            const topicCount = subProbs.filter(p => p.topic === topic).length;
+            const isEmpty = topicCount === 0;
+            html += `
+              <div class="tree-topic ${isEmpty ? 'empty' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}" data-topic="${topic}">
+                <span>▸ ${topic}</span>
+                <span class="topic-count">${topicCount}</span>
+              </div>`;
+          });
+          html += `</div>`;
+        }
+
+        html += `</div>`;
+      });
+
+      html += `</div></div>`;
+    });
+
+    tree.innerHTML = html;
+    attachTreeHandlers();
+  }
+
+  function attachTreeHandlers(){
+    // 대단원 토글
+    document.querySelectorAll('.tree-chapter-head').forEach(el => {
+      el.addEventListener('click', () => {
+        const chapter = el.parentElement.dataset.chapter;
+        if (expandedChapters.has(chapter)) expandedChapters.delete(chapter);
+        else expandedChapters.add(chapter);
+        renderCurriculumTree();
+      });
+    });
+
+    // 중단원 토글
+    document.querySelectorAll('.tree-subchapter').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const chapter = el.dataset.chapter;
+        const subchapter = el.dataset.subchapter;
+        const key = `${chapter}::${subchapter}`;
+        if (expandedSubchapters.has(key)) expandedSubchapters.delete(key);
+        else expandedSubchapters.add(key);
+        renderCurriculumTree();
+      });
+    });
+
+    // 소단원 토글
+    document.querySelectorAll('.tree-section').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const chapter = el.dataset.chapter;
+        const subchapter = el.dataset.subchapter;
+        const section = el.dataset.section;
+        const key = `${chapter}::${subchapter}::${section}`;
+        if (expandedSections.has(key)) expandedSections.delete(key);
+        else expandedSections.add(key);
+        renderCurriculumTree();
+      });
+    });
+
+    // 유형 클릭 → 문제 목록으로 전환
+    document.querySelectorAll('.tree-topic').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentChapter = el.dataset.chapter;
+        currentSubchapter = el.dataset.subchapter;
+        currentSection = el.dataset.section || '';
+        currentTopic = el.dataset.topic;
+        showProblemList();
+      });
+    });
+  }
+
+  /* 단원 트리 ↔ 문제 목록 전환 */
+  function showProblemList(){
+    document.getElementById('curriculumExplorer').style.display = 'none';
+    document.getElementById('filterPanel').style.display = '';
+    document.getElementById('selectionBar').style.display = '';
+    document.getElementById('problemList').style.display = '';
+    updateMainTitle();
+    renderProblems();
+  }
+  function showCurriculumTree(){
+    document.getElementById('curriculumExplorer').style.display = '';
+    document.getElementById('filterPanel').style.display = 'none';
+    document.getElementById('selectionBar').style.display = 'none';
+    document.getElementById('problemList').style.display = 'none';
+    document.getElementById('chapterTitle').innerHTML = '📝 학습지 만들기';
+    document.getElementById('chapterDesc').textContent = '단원/유형을 선택하면 문제 목록이 나옵니다.';
+    renderCurriculumTree();
+  }
+
+  /* ======================= 검색 (전역) ======================= */
+  function performGlobalSearch(query){
+    const results = document.getElementById('searchResults');
+    const tree = document.getElementById('curriculumTree');
+    if (!query || query.trim().length < 2) {
+      results.style.display = 'none';
+      tree.style.display = '';
+      return;
+    }
+
+    const q = query.trim().toLowerCase();
+    
+    // 유형명 검색
+    const matchedTopics = [];
+    Object.keys(CURRICULUM).forEach(chapter => {
+      const info = CURRICULUM[chapter];
+      Object.keys(info.middle).forEach(subchapter => {
+        const subData = info.middle[subchapter];
+        if (Array.isArray(subData)) {
+          subData.forEach(topic => {
+            if (topic.toLowerCase().includes(q)) {
+              matchedTopics.push({ chapter, subchapter, section: '', topic });
+            }
+          });
+        } else {
+          Object.keys(subData).forEach(section => {
+            subData[section].forEach(topic => {
+              if (topic.toLowerCase().includes(q) || section.toLowerCase().includes(q)) {
+                matchedTopics.push({ chapter, subchapter, section, topic });
+              }
+            });
+          });
+        }
+      });
+    });
+
+    // 문제 검색 (지문, 출처)
+    const matchedProblems = problems.filter(p => 
+      (p.stem || '').toLowerCase().includes(q) ||
+      (p.source || '').toLowerCase().includes(q)
+    ).slice(0, 20);
+
+    let html = '';
+    if (matchedTopics.length > 0) {
+      html += `<div class="search-result-section">
+        <div class="search-result-title">📂 유형 ${matchedTopics.length}개</div>`;
+      matchedTopics.slice(0, 10).forEach(t => {
+        html += `
+          <div class="search-result-item" data-chapter="${t.chapter}" data-subchapter="${t.subchapter}" data-section="${t.section}" data-topic="${t.topic}">
+            <strong>${escapeHtml(t.topic)}</strong>
+            <div class="result-meta">${escapeHtml(t.chapter)} > ${escapeHtml(t.subchapter)}${t.section ? ' > ' + escapeHtml(t.section) : ''}</div>
+          </div>`;
+      });
+      html += `</div>`;
+    }
+
+    if (matchedProblems.length > 0) {
+      html += `<div class="search-result-section">
+        <div class="search-result-title">📝 문제 ${matchedProblems.length}개</div>`;
+      matchedProblems.forEach(p => {
+        const preview = (p.stem || '').slice(0, 60);
+        html += `
+          <div class="search-result-item" data-problem-id="${p.id}">
+            ${escapeHtml(preview)}${p.stem.length > 60 ? '...' : ''}
+            <div class="result-meta">${escapeHtml(p.chapter)} > ${escapeHtml(p.topic || p.subchapter || '')}${p.source ? ' · ' + escapeHtml(p.source) : ''}</div>
+          </div>`;
+      });
+      html += `</div>`;
+    }
+
+    if (matchedTopics.length === 0 && matchedProblems.length === 0) {
+      html = `<div class="search-result-empty">"${escapeHtml(query)}"에 대한 결과가 없습니다.</div>`;
+    }
+
+    results.innerHTML = html;
+    results.style.display = '';
+    tree.style.display = 'none';
+
+    // 결과 클릭 → 해당 위치로 이동
+    results.querySelectorAll('.search-result-item').forEach(el => {
+      el.addEventListener('click', () => {
+        if (el.dataset.problemId) {
+          openPreviewModal(el.dataset.problemId);
+        } else {
+          currentChapter = el.dataset.chapter;
+          currentSubchapter = el.dataset.subchapter;
+          currentSection = el.dataset.section || '';
+          currentTopic = el.dataset.topic;
+          // 검색창 초기화
+          document.getElementById('globalSearch').value = '';
+          document.getElementById('btnClearSearch').style.display = 'none';
+          showProblemList();
+        }
+      });
+    });
   }
 
   function attachSidebarHandlers(){
@@ -2734,11 +3270,11 @@
     document.querySelectorAll('#modeSwitch button').forEach(x => x.classList.remove('active'));
     document.querySelector('#modeSwitch button[data-mode="worksheet"]').classList.add('active');
     document.getElementById('headWorksheet').style.display = '';
-    document.getElementById('filterPanel').style.display = '';
-    document.getElementById('selectionBar').style.display = '';
-    document.getElementById('problemList').style.display = '';
     document.getElementById('headMyws').style.display = 'none';
     document.getElementById('mywsList').style.display = 'none';
+    document.getElementById('dashboardStats').style.display = 'none';
+    document.getElementById('tagFilter').style.display = 'none';
+    showCurriculumTree();
   }
 
   function updateMainTitle(){
@@ -3037,12 +3573,116 @@
 
   function renderAll(){
     renderSidebar();
+    
+    // 모드별 표시 조정
+    const isWorksheet = currentMode === 'worksheet';
+    const sidebarNav = document.querySelector('.nav-section');
+    if (sidebarNav) sidebarNav.style.display = isWorksheet ? 'none' : '';
+    
     if (currentMode === 'myws') {
       renderMyWorksheets();
+      renderDashboard();
+      renderTagFilter();
     } else {
-      renderProblems();
+      // 학습지 만들기: 트리 또는 문제 목록
+      const explorer = document.getElementById('curriculumExplorer');
+      const problemList = document.getElementById('problemList');
+      if (explorer && explorer.style.display !== 'none') {
+        renderCurriculumTree();
+      } else if (problemList && problemList.style.display !== 'none') {
+        renderProblems();
+      } else {
+        // 초기 상태
+        showCurriculumTree();
+      }
     }
     updateSelectionBar();
+  }
+
+  /* ======================= 통계 대시보드 ======================= */
+  function renderDashboard(){
+    const dash = document.getElementById('dashboardStats');
+    if (!dash) return;
+
+    const totalWs = worksheets.length;
+    const totalProb = problems.length;
+    
+    // 이번 달 만든 학습지
+    const now = new Date();
+    const thisMonth = now.getMonth();
+    const thisYear = now.getFullYear();
+    const monthlyWs = worksheets.filter(ws => {
+      const d = ws.createdAt?.toDate?.();
+      return d && d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+    }).length;
+
+    // 가장 많이 쓴 단원
+    const chapterCount = {};
+    worksheets.forEach(ws => {
+      (ws.problemIds || []).forEach(pid => {
+        const p = problems.find(x => x.id === pid);
+        if (p) chapterCount[p.chapter] = (chapterCount[p.chapter] || 0) + 1;
+      });
+    });
+    const topChapter = Object.keys(chapterCount).sort((a, b) => chapterCount[b] - chapterCount[a])[0] || '-';
+
+    // 평균 문제 수
+    const avgProb = totalWs > 0 
+      ? (worksheets.reduce((s, w) => s + (w.problemIds?.length || 0), 0) / totalWs).toFixed(1)
+      : 0;
+
+    dash.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-label">📚 전체 학습지</div>
+        <div class="stat-value">${totalWs}</div>
+        <div class="stat-sub">이번 달 ${monthlyWs}개 만듦</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">📝 등록된 문제</div>
+        <div class="stat-value">${totalProb}</div>
+        <div class="stat-sub">총 ${Object.keys(chapterCount).length}개 단원</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🏆 자주 쓴 단원</div>
+        <div class="stat-value" style="font-size:18px;">${topChapter}</div>
+        <div class="stat-sub">${chapterCount[topChapter] || 0}회 사용</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">📊 학습지당 문제</div>
+        <div class="stat-value">${avgProb}</div>
+        <div class="stat-sub">평균 문제 수</div>
+      </div>
+    `;
+  }
+
+  /* ======================= 태그 필터 ======================= */
+  let currentTagFilter = '';
+  function renderTagFilter(){
+    const filter = document.getElementById('tagFilter');
+    if (!filter) return;
+
+    // 모든 학습지에서 태그 수집
+    const tagSet = new Set();
+    worksheets.forEach(ws => (ws.tags || []).forEach(t => tagSet.add(t)));
+
+    if (tagSet.size === 0) {
+      filter.innerHTML = '';
+      return;
+    }
+
+    let html = `<span class="tag-chip ${currentTagFilter === '' ? 'active' : ''}" data-tag="">전체</span>`;
+    [...tagSet].sort().forEach(tag => {
+      html += `<span class="tag-chip ${currentTagFilter === tag ? 'active' : ''}" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</span>`;
+    });
+    filter.innerHTML = html;
+
+    filter.querySelectorAll('.tag-chip').forEach(el => {
+      el.addEventListener('click', () => {
+        currentTagFilter = el.dataset.tag;
+        renderTagFilter();
+        renderMyWorksheets();
+      });
+    });
   }
 
   /* ======================= 내 학습지 렌더링 ======================= */
@@ -3051,6 +3691,7 @@
     const desc = document.getElementById('mywsDesc');
     
     // 사이드바 필터 적용
+    // 1. 단원 필터
     let filtered = worksheets;
     if (currentChapter && currentChapter !== '전체') {
       filtered = filtered.filter(ws => {
@@ -3066,17 +3707,39 @@
       });
     }
 
+    // 2. 태그 필터
+    if (currentTagFilter) {
+      filtered = filtered.filter(ws => (ws.tags || []).includes(currentTagFilter));
+    }
+
+    // 3. 검색 (제목)
+    const searchInput = document.getElementById('mywsSearch');
+    const searchQ = searchInput?.value?.trim().toLowerCase() || '';
+    if (searchQ) {
+      filtered = filtered.filter(ws => 
+        (ws.title || '').toLowerCase().includes(searchQ) ||
+        (ws.subtitle || '').toLowerCase().includes(searchQ) ||
+        (ws.tags || []).some(t => t.toLowerCase().includes(searchQ))
+      );
+    }
+
+    // 4. 정렬
+    const sortValue = document.getElementById('mywsSort')?.value || 'new';
+    const sorted = [...filtered].sort((a, b) => {
+      if (sortValue === 'title') return (a.title || '').localeCompare(b.title || '');
+      const aTime = a.createdAt?.toMillis?.() || 0;
+      const bTime = b.createdAt?.toMillis?.() || 0;
+      return sortValue === 'old' ? aTime - bTime : bTime - aTime;
+    });
+
     // 필터링 상태 표시
     let filterLabel = '';
-    if (currentTopic) {
-      filterLabel = ` · 🎯 ${currentTopic}`;
-    } else if (currentSection) {
-      filterLabel = ` · 📂 ${currentSection}`;
-    } else if (currentSubchapter) {
-      filterLabel = ` · 📖 ${currentSubchapter}`;
-    } else if (currentChapter && currentChapter !== '전체') {
-      filterLabel = ` · 📚 ${currentChapter}`;
-    }
+    if (currentTopic) filterLabel = ` · 🎯 ${currentTopic}`;
+    else if (currentSection) filterLabel = ` · 📂 ${currentSection}`;
+    else if (currentSubchapter) filterLabel = ` · 📖 ${currentSubchapter}`;
+    else if (currentChapter && currentChapter !== '전체') filterLabel = ` · 📚 ${currentChapter}`;
+    if (currentTagFilter) filterLabel += ` · 🏷️ ${currentTagFilter}`;
+    if (searchQ) filterLabel += ` · 🔍 "${searchQ}"`;
 
     if (worksheets.length === 0) {
       list.innerHTML = `
@@ -3094,25 +3757,17 @@
       list.innerHTML = `
         <div class="ws-saved-empty">
           <div class="big-emoji">🔍</div>
-          <h3>이 단원의 학습지가 없습니다</h3>
-          <p>${escapeHtml(currentTopic || currentSection || currentSubchapter || currentChapter)} 단원의 문제로 만든 학습지가 없어요.<br>다른 단원을 선택하거나 <strong>📚 전체</strong>를 눌러 모든 학습지를 확인하세요.</p>
+          <h3>조건에 맞는 학습지가 없습니다</h3>
+          <p>다른 단원/태그/검색어로 시도해보세요.</p>
         </div>
       `;
       desc.textContent = `저장된 학습지 0개${filterLabel}`;
       return;
     }
 
-    desc.textContent = `저장된 학습지 ${filtered.length}개${filterLabel}`;
-
-    // 검색/정렬 (나중에 구현 가능, 일단 최신순)
-    const sorted = [...filtered].sort((a, b) => {
-      const aTime = a.createdAt?.toMillis?.() || 0;
-      const bTime = b.createdAt?.toMillis?.() || 0;
-      return bTime - aTime;
-    });
+    desc.textContent = `저장된 학습지 ${sorted.length}개${filterLabel}`;
 
     list.innerHTML = sorted.map(ws => {
-      // 삭제된 문제 확인
       const validProblems = ws.problemIds.filter(pid => problems.some(p => p.id === pid));
       const deletedCount = ws.problemIds.length - validProblems.length;
       const hasDeleted = deletedCount > 0;
@@ -3120,6 +3775,10 @@
       const dateStr = ws.createdAt?.toDate?.() 
         ? new Intl.DateTimeFormat('ko-KR', {month: 'long', day: 'numeric'}).format(ws.createdAt.toDate())
         : '날짜 미상';
+
+      const tagsHtml = (ws.tags || []).map(t => 
+        `<span class="tag" style="background:rgba(245,158,59,0.12); color:var(--primary); padding:2px 8px; border-radius:10px; font-size:11px;">🏷️ ${escapeHtml(t)}</span>`
+      ).join('');
 
       return `
         <div class="ws-saved-card ${hasDeleted ? 'warning' : ''}">
@@ -3132,11 +3791,13 @@
             <div class="ws-saved-meta">
               <span class="tag tag-count">${validProblems.length}문제${hasDeleted ? ` (${ws.problemIds.length} → ${validProblems.length})` : ''}</span>
               <span class="tag tag-date">📅 ${dateStr}</span>
+              ${tagsHtml}
             </div>
           </div>
           <div class="ws-saved-actions">
             <button class="tool-btn" data-print-ws="${ws.id}" title="바로 인쇄">🖨</button>
             <button class="tool-btn" data-edit-ws="${ws.id}" title="편집">✏️</button>
+            <button class="tool-btn" data-clone-ws="${ws.id}" title="복제">📋</button>
             <button class="tool-btn" data-delete-ws="${ws.id}" title="삭제">🗑</button>
           </div>
         </div>
@@ -3149,6 +3810,24 @@
     });
     list.querySelectorAll('[data-edit-ws]').forEach(btn => {
       btn.addEventListener('click', () => editWorksheet(btn.dataset.editWs));
+    });
+    list.querySelectorAll('[data-clone-ws]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.cloneWs;
+        const ws = worksheets.find(w => w.id === id);
+        if (!ws) return;
+        const newTitle = prompt('복제할 학습지의 제목을 입력하세요', `${ws.title} (복사본)`);
+        if (!newTitle || !newTitle.trim()) return;
+        const cloned = {
+          ...ws,
+          title: newTitle.trim()
+        };
+        delete cloned.id;
+        delete cloned.createdAt;
+        delete cloned.updatedAt;
+        const ok = await window.fbSaveWorksheet(cloned);
+        if (ok) showToast(`✓ "${newTitle}" 학습지로 복제됨`, 'success');
+      });
     });
     list.querySelectorAll('[data-delete-ws]').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -3222,6 +3901,7 @@
     setTimeout(() => {
       document.getElementById('wsTitle').value = ws.title || '';
       document.getElementById('wsSubtitle').value = ws.subtitle || '';
+      document.getElementById('wsTags').value = (ws.tags || []).join(', ');
       document.getElementById('wsLayout').value = ws.settings.layout || 'split4';
       document.getElementById('wsFields').value = ws.settings.fields || 'name-only';
       document.getElementById('wsIncludeAnswers').checked = !!ws.settings.includeAnswers;
@@ -3269,19 +3949,29 @@
       b.classList.add('active');
       currentMode = b.dataset.mode;
 
-      // 학습지 만들기 vs 내 학습지 두 가지
       const isWorksheet = currentMode === 'worksheet';
       document.getElementById('headWorksheet').style.display = isWorksheet ? '' : 'none';
-      document.getElementById('filterPanel').style.display = isWorksheet ? '' : 'none';
-      document.getElementById('selectionBar').style.display = isWorksheet ? '' : 'none';
-      document.getElementById('problemList').style.display = isWorksheet ? '' : 'none';
       document.getElementById('headMyws').style.display = isWorksheet ? 'none' : '';
       document.getElementById('mywsList').style.display = isWorksheet ? 'none' : '';
+      document.getElementById('dashboardStats').style.display = isWorksheet ? 'none' : '';
+      document.getElementById('tagFilter').style.display = isWorksheet ? 'none' : '';
+
+      // 사이드바 단원 영역 - 내 학습지에서는 숨김
+      const sidebarNav = document.querySelector('.nav-section');
+      if (sidebarNav) sidebarNav.style.display = isWorksheet ? 'none' : '';
 
       if (currentMode === 'myws') {
+        // 내 학습지 모드: 단원 트리 숨기기
+        document.getElementById('curriculumExplorer').style.display = 'none';
+        document.getElementById('filterPanel').style.display = 'none';
+        document.getElementById('selectionBar').style.display = 'none';
+        document.getElementById('problemList').style.display = 'none';
         renderMyWorksheets();
+        renderDashboard();
+        renderTagFilter();
       } else {
-        renderProblems();
+        // 학습지 만들기 모드: 단원 트리 표시
+        showCurriculumTree();
       }
     });
   });
@@ -3290,15 +3980,17 @@
   /* 사이드바는 renderSidebar에서 동적 생성하고 이벤트도 attachSidebarHandlers에서 처리 */
 
   /* ======================= 필터 핸들러 ======================= */
-  ['fltChapter','fltDifficulty','fltType','fltSource','fltKeyword'].forEach(id => {
+  ['fltChapter','fltDifficulty','fltType','fltSource','fltKeyword','fltSort'].forEach(id => {
     const el = document.getElementById(id);
+    if (!el) return;
     el.addEventListener('input', () => {
       filters = {
         chapter: document.getElementById('fltChapter').value,
         difficulty: document.getElementById('fltDifficulty').value,
         type: document.getElementById('fltType').value,
         source: document.getElementById('fltSource').value.trim(),
-        keyword: document.getElementById('fltKeyword').value.trim()
+        keyword: document.getElementById('fltKeyword').value.trim(),
+        sort: document.getElementById('fltSort')?.value || 'default'
       };
       renderProblems();
     });
@@ -3314,6 +4006,46 @@
     updateSelectionBar();
     renderProblems();
   });
+
+  /* === 단원 트리로 돌아가기 === */
+  const btnBackToTree = document.getElementById('btnBackToTree');
+  if (btnBackToTree) {
+    btnBackToTree.addEventListener('click', () => {
+      currentTopic = '';
+      currentSection = '';
+      showCurriculumTree();
+    });
+  }
+
+  /* === 글로벌 검색 (학습지 만들기 모드) === */
+  const globalSearch = document.getElementById('globalSearch');
+  const btnClearSearch = document.getElementById('btnClearSearch');
+  if (globalSearch) {
+    let searchTimer = null;
+    globalSearch.addEventListener('input', (e) => {
+      const val = e.target.value;
+      btnClearSearch.style.display = val ? '' : 'none';
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => performGlobalSearch(val), 200);
+    });
+  }
+  if (btnClearSearch) {
+    btnClearSearch.addEventListener('click', () => {
+      globalSearch.value = '';
+      btnClearSearch.style.display = 'none';
+      performGlobalSearch('');
+    });
+  }
+
+  /* === 내 학습지: 검색/정렬 이벤트 === */
+  const mywsSearch = document.getElementById('mywsSearch');
+  const mywsSort = document.getElementById('mywsSort');
+  if (mywsSearch) {
+    mywsSearch.addEventListener('input', () => renderMyWorksheets());
+  }
+  if (mywsSort) {
+    mywsSort.addEventListener('change', () => renderMyWorksheets());
+  }
 
   /* ======================= 햄버거 메뉴 ======================= */
   document.getElementById('menuToggle').addEventListener('click', () => {
@@ -3603,6 +4335,12 @@
   document.getElementById('btnMakeWorksheet').addEventListener('click', () => {
     if (selectedIds.size === 0) { showToast('문제를 먼저 선택하세요', 'error'); return; }
 
+    // 새 학습지: 태그 입력 필드 초기화 (편집 모드가 아닐 때만)
+    if (!editingWsId) {
+      const wsTagsInput = document.getElementById('wsTags');
+      if (wsTagsInput) wsTagsInput.value = '';
+    }
+
     // 오늘 날짜 자동 입력을 위한 안내
     const summary = document.getElementById('wsSelectedSummary');
     const selected = problems.filter(p => selectedIds.has(p.id));
@@ -3733,10 +4471,15 @@
       );
     }
 
+    // 태그 파싱 (쉼표/공백 구분)
+    const tagsRaw = document.getElementById('wsTags')?.value?.trim() || '';
+    const tags = tagsRaw ? tagsRaw.split(/[,，]/).map(t => t.trim()).filter(Boolean) : [];
+
     // Firestore에 저장 (또는 수정)
     const worksheet = {
       title,
       subtitle,
+      tags,
       problemIds: selected.map(p => p.id),
       settings: {
         layout, fields, includeAnswers, includeExplanations,
@@ -3935,6 +4678,10 @@
     setTimeout(() => t.classList.remove('show'), 2800);
   }
   window.showToast = showToast;
+
+  // 초기: 내 학습지 모드이므로 사이드바 nav 숨김
+  const initSidebarNav = document.querySelector('.nav-section');
+  if (initSidebarNav) initSidebarNav.style.display = 'none';
 
   document.getElementById('problemList').innerHTML = `
     <div class="loading-state">
