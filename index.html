@@ -2222,22 +2222,14 @@
           <label>중단원</label>
           <select id="fSubchapter"><option value="">선택</option></select>
         </div>
+      </div>
+      <div class="form-row">
         <div class="form-group">
           <label>소단원</label>
           <select id="fSection"><option value="">선택</option></select>
         </div>
-      </div>
-      <div class="form-row">
         <div class="form-group">
-          <label>주제유형</label>
-          <select id="fSubject"><option value="">선택</option></select>
-        </div>
-        <div class="form-group">
-          <label>세부유형</label>
-          <select id="fSubtype"><option value="">선택</option></select>
-        </div>
-        <div class="form-group">
-          <label>문제패턴</label>
+          <label>유형</label>
           <select id="fTopic"><option value="">선택</option></select>
         </div>
       </div>
@@ -2691,182 +2683,217 @@
    * 기존 구조(유형만 배열): middle[중단원] = [유형1, 유형2, ...]
    * 새 구조(소단원 포함): middle[중단원] = { 소단원: [유형1, ...] }
    */
-  /* ======================= 교육과정 구조 (2022 개정) - 6단계 ======================= */
-  /* 구조:
-   * chapter > subchapter > section > subject > subtype > pattern
-   * 대     > 중         > 소      > 주제유형 > 세부유형 > 문제패턴
+  /* ======================= 교육과정 구조 (2022 개정) - 4단계 ======================= */
+  /* 구조: chapter > subchapter > section > topic
+   * 대단원 > 중단원 > 소단원 > 유형
    *
    * 데이터 형태:
    * middle[중단원] = {
-   *   소단원1: {
-   *     주제유형1: {
-   *       세부유형1: [패턴1, 패턴2, ...],
-   *       세부유형2: [...]
-   *     }
-   *   }
+   *   소단원1: [유형1, 유형2, ...],
+   *   소단원2: [...]
    * }
-   *
-   * 하위 호환:
-   * - 배열이 바로 오면: 4단계 (옛 구조)에서 유형으로 처리
-   * - 객체가 오면: 다음 단계 존재
+   * 또는 배열 (3단계 호환):
+   * middle[중단원] = [유형1, 유형2, ...]
    */
   const CURRICULUM = {
     '공통수학Ⅰ': {
       emoji: '📔',
       middle: {
-        '다항식의 연산': {
-          '다항식의 사칙연산': {
-            '다항식의 정리방법': {
-              '다항식의 여러 가지 용어': [
-                '단항식의 차수와 계수 구하기',
-                '다항식의 상수항 구하기',
-                '다항식의 용어에 대한 설명으로 옳은 것(옳지 않은 것) 찾기',
-                '다항식의 항, 차수, 계수 구하기',
-                '다항식에 대한 설명(항, 차수, 계수)으로 옳은 것(옳지 않은 것) 찾기'
-              ],
-              '오름차순 또는 내림차순으로 정리': [],
-              '다항식의 정리(종합)': []
-            },
-            '다항식의 덧셈과 뺄셈': {},
-            '다항식의 전개식에서 계수 구하기': {},
-            '곱셈 공식을 이용한 다항식의 전개': {},
-            '공통부분이 있는 다항식의 전개': {},
-            '곱셈 공식의 변형(1) 문자가 2개': {},
-            '곱셈 공식의 변형(2) x±{1/x}의 꼴': {},
-            '곱셈 공식의 변형(3) 문자가 3개': {},
-            '곱셈 공식을 이용한 수의 계산': {},
-            '다항식의 나눗셈(1) 몫과 나머지': {},
-            '다항식의 나눗셈(2) A=BQ+R': {},
-            '몫과 나머지의 변형': {},
-            '곱셈 공식의 도형에의 활용': {},
-            '4차 이상의 식으로 변형한 식의 값': {}
-          }
-        },
-        '나머지정리': {},
-        '인수분해': {},
+        '다항식의 연산': [
+          '다항식의 정리방법',
+          '다항식의 덧셈과 뺄셈',
+          '다항식의 전개식에서 계수 구하기',
+          '곱셈 공식을 이용한 다항식의 전개',
+          '공통부분이 있는 다항식의 전개',
+          '곱셈 공식의 변형(1) 문자가 2개',
+          '곱셈 공식의 변형(2) x±{1/x}의 꼴',
+          '곱셈 공식의 변형(3) 문자가 3개',
+          '곱셈 공식을 이용한 수의 계산',
+          '다항식의 나눗셈(1) 몫과 나머지',
+          '다항식의 나눗셈(2) A=BQ+R',
+          '몫과 나머지의 변형',
+          '곱셈 공식의 도형에의 활용',
+          '4차 이상의 식으로 변형한 식의 값'
+        ],
+        '나머지정리': [
+          '항등식의 뜻과 성질',
+          '항등식에서 미정계수 구하기(1) 계수 비교법',
+          '항등식에서 미정계수 구하기(2) 수치 대입법',
+          '조건을 만족시키는 항등식',
+          '항등식에서 계수의 합 구하기',
+          '다항식의 나눗셈과 항등식',
+          '나머지정리(1) 일차식으로 나누었을 때의 나머지',
+          '나머지정리(2) 일차식으로 나누었을 때의 미정계수 구하기',
+          '나머지정리(3) 이차식으로 나누었을 때의 나머지',
+          '나머지정리(4) 삼차식으로 나누었을 때의 나머지',
+          'f(ax+b)를 x-α로 나누는 경우',
+          '몫을 x-α로 나누는 경우',
+          '나머지 정리를 활용한 수의 나눗셈',
+          '인수정리(1) 일차식으로 나누는 경우',
+          '인수정리(2) 이차식으로 나누는 경우',
+          '조립제법',
+          '조립제법을 이용하여 항등식의 미정계수 구하기'
+        ],
+        '인수분해': [
+          '인수분해(1) 공식을 이용한 인수분해',
+          '인수분해(2) 공통부분이 있는 식의 인수분해',
+          '인수분해(3) x⁴+ax²+b 꼴인 식의 인수분해',
+          '인수분해(4) 여러 개의 문자를 포함한 식의 인수분해',
+          '인수분해(5) 순환하는 꼴의 식의 인수분해',
+          '인수분해(6) 인수 정리를 이용한 식의 인수분해',
+          '인수분해(7) 계수가 대칭인 사차식의 인수분해',
+          '인수분해(8) 조건이 주어진 다항식의 인수분해',
+          '인수분해(9) 새로운 연산으로 정의된 식의 인수분해',
+          '인수분해의 활용(1) 삼각형의 모양 판단',
+          '인수분해의 활용(2) 수의 계산',
+          '인수분해의 활용(3) 식의 값 구하기',
+          '인수분해의 활용(4)'
+        ],
         '복소수와 이차방정식': {
-          '복소수의 뜻과 성질': {},
-          '이차방정식의 풀이': {},
-          '이차방정식의 근과 계수의 관계': {}
+          '복소수의 뜻과 성질': [
+            '복소수의 뜻과 분류',
+            '복소수의 사칙연산',
+            '복소수가 주어질 때의 식의 값',
+            '복소수가 실수 또는 순허수가 되는 조건',
+            '복소수가 서로 같을 조건',
+            '켤레복소수',
+            '켤레복소수의 성질',
+            '켤레복소수의 성질을 이용한 식의 값 구하기',
+            '조건을 만족시키는 복소수 구하기',
+            'i의 거듭제곱',
+            '복소수의 거듭제곱',
+            '주어진 복소수를 변형하여 고차식의 값 구하기',
+            '음수의 제곱근의 계산',
+            '음수의 제곱근의 성질'
+          ],
+          '이차방정식의 풀이': [
+            '특수한 일차방정식의 풀이',
+            '이차방정식의 풀이',
+            '한 근이 주어진 이차방정식',
+            '절댓값 기호를 포함한 이차방정식',
+            '가우스 기호를 포함한 이차방정식',
+            '이차방정식의 활용',
+            '이차방정식의 근의 판별',
+            '계수가 문자인 이차방정식의 근의 판별',
+            '이차식이 완전제곱식이 되는 조건',
+            '~의 관계없이 중근을 갖는 경우',
+            '이차식이 두 일차식의 곱으로 인수분해되는 경우',
+            '이차방정식의 판별식과 삼각형'
+          ],
+          '이차방정식의 근과 계수의 관계': [
+            '이차방정식의 근과 계수의 관계(1) 두 근의 합, 곱, 차 구하기',
+            '이차방정식의 근과 계수의 관계(2) 식의 값 구하기',
+            '미정계수의 결정(1) 근의 조건이 주어진 경우',
+            '미정계수의 결정(2) 근의 관계식이 주어진 경우',
+            '미정계수의 결정(3) 두 이차방정식이 주어진 경우',
+            '두 수를 근으로 하는 이차방정식',
+            '이차식의 인수분해',
+            '이차방정식 f(x)=0의 근을 이용하여 f(ax+b)=0의 근 구하기',
+            '잘못 보고 푼 이차방정식',
+            'f(α)=f(β)=k를 만족시키는 이차식 f(x) 구하기',
+            '이차방정식의 켤레근'
+          ]
         },
         '이차방정식과 이차함수': {
-          '이차방정식과 이차함수의 관계': {},
-          '이차함수의 그래프와 직선의 위치 관계': {},
-          '이차함수의 최대·최소': {}
+          '이차방정식과 이차함수의 관계': [],
+          '이차함수의 그래프와 직선의 위치 관계': [],
+          '이차함수의 최대·최소': []
         },
-        '여러 가지 방정식과 부등식': {},
-        '경우의 수': {},
-        '순열과 조합': {},
-        '행렬의 뜻과 연산': {}
+        '여러 가지 방정식과 부등식': [],
+        '경우의 수': [],
+        '순열과 조합': [],
+        '행렬의 뜻과 연산': []
       }
     },
     '공통수학Ⅱ': {
       emoji: '📒',
       middle: {
-        '평면좌표': {},
-        '직선의 방정식': {},
-        '원의 방정식': {},
-        '도형의 이동': {},
-        '집합': {},
-        '명제': {},
-        '함수': {},
-        '유리함수와 무리함수': {}
+        '평면좌표': [],
+        '직선의 방정식': [],
+        '원의 방정식': [],
+        '도형의 이동': [],
+        '집합': [],
+        '명제': [],
+        '함수': [],
+        '유리함수와 무리함수': []
       }
     },
     '대수': {
       emoji: '📘',
       middle: {
-        '지수': {},
-        '로그': {},
-        '지수함수의 뜻과 그래프': {},
-        '로그함수의 뜻과 그래프': {},
-        '지수함수와 로그함수의 활용': {},
-        '삼각함수': {},
-        '삼각함수의 그래프': {},
-        '사인법칙과 코사인법칙': {},
-        '등차수열': {},
-        '등비수열': {},
-        '수열의 합': {},
-        '수학적 귀납법': {}
+        '지수': [],
+        '로그': [],
+        '지수함수의 뜻과 그래프': [],
+        '로그함수의 뜻과 그래프': [],
+        '지수함수와 로그함수의 활용': [],
+        '삼각함수': [],
+        '삼각함수의 그래프': [],
+        '사인법칙과 코사인법칙': [],
+        '등차수열': [],
+        '등비수열': [],
+        '수열의 합': [],
+        '수학적 귀납법': []
       }
     },
     '미적분Ⅰ': {
       emoji: '📗',
       middle: {
-        '함수의 극한': {},
-        '함수의 연속': {},
-        '미분계수와 도함수': {},
-        '도함수의 활용': {},
-        '부정적분': {},
-        '정적분': {},
-        '정적분의 활용': {}
+        '함수의 극한': [],
+        '함수의 연속': [],
+        '미분계수와 도함수': [],
+        '도함수의 활용': [],
+        '부정적분': [],
+        '정적분': [],
+        '정적분의 활용': []
       }
     },
     '미적분Ⅱ': {
       emoji: '📕',
       middle: {
-        '수열의 극한': {},
-        '급수': {},
-        '여러 가지 함수의 미분': {},
-        '여러 가지 미분법': {},
-        '도함수의 활용': {},
-        '여러 가지 적분법': {},
-        '정적분의 활용': {}
+        '수열의 극한': [],
+        '급수': [],
+        '여러 가지 함수의 미분': [],
+        '여러 가지 미분법': [],
+        '도함수의 활용': [],
+        '여러 가지 적분법': [],
+        '정적분의 활용': []
       }
     },
     '확률과 통계': {
       emoji: '📙',
       middle: {
-        '순열과 조합': {},
-        '이항정리': {},
-        '확률의 뜻과 활용': {},
-        '조건부확률': {},
-        '확률변수와 확률분포': {},
-        '통계적 추정': {}
+        '순열과 조합': [],
+        '이항정리': [],
+        '확률의 뜻과 활용': [],
+        '조건부확률': [],
+        '확률변수와 확률분포': [],
+        '통계적 추정': []
       }
     },
     '기하': {
       emoji: '📓',
       middle: {
-        '포물선': {},
-        '타원': {},
-        '쌍곡선': {},
-        '공간도형': {},
-        '공간좌표': {},
-        '벡터의 연산': {},
-        '평면벡터의 성분과 내적': {},
-        '공간벡터': {},
-        '직선과 평면의 방정식': {}
+        '포물선': [],
+        '타원': [],
+        '쌍곡선': [],
+        '공간도형': [],
+        '공간좌표': [],
+        '벡터의 연산': [],
+        '평면벡터의 성분과 내적': [],
+        '공간벡터': [],
+        '직선과 평면의 방정식': []
       }
     }
   };
 
-  /* CURRICULUM 헬퍼 - 노드 타입 판별 */
-  function curriculumNodeType(node){
-    if (Array.isArray(node)) return 'array';        // 패턴 리스트 또는 옛 유형
-    if (node && typeof node === 'object') return 'object';  // 더 깊은 단계
-    return 'empty';
-  }
-  /* 6단계 데이터를 평탄화하여 배열로 받기 */
-  function getAllPatterns(chapter, subchapter, section, subject, subtype){
-    try {
-      const node = CURRICULUM[chapter]?.middle?.[subchapter]?.[section]?.[subject]?.[subtype];
-      return Array.isArray(node) ? node : [];
-    } catch(e) { return []; }
-  }
-
-  /* 확장된 항목 추적 (6단계) */
+  /* 확장된 항목 추적 (4단계) */
   const expandedChapters = new Set();
   const expandedSubchapters = new Set();
   const expandedSections = new Set();
-  const expandedSubjects = new Set();   // 주제유형
-  const expandedSubtypes = new Set();   // 세부유형
-  /* 현재 선택 (6단계) */
+  /* 현재 선택 (4단계) */
   let currentSubchapter = '';
   let currentSection = '';
-  let currentSubject = '';   // 주제유형
-  let currentSubtype = '';   // 세부유형
-  let currentTopic = '';     // 문제패턴 (기존 topic 그대로 활용)
+  let currentTopic = '';
 
   /* ======================= 필터 ======================= */
   function applyFilters(list){
@@ -2902,8 +2929,6 @@
       : problems.filter(p => p.chapter === currentChapter);
     if (currentSubchapter) filtered = filtered.filter(p => p.subchapter === currentSubchapter);
     if (currentSection) filtered = filtered.filter(p => p.section === currentSection);
-    if (currentSubject) filtered = filtered.filter(p => p.subject === currentSubject);
-    if (currentSubtype) filtered = filtered.filter(p => p.subtype === currentSubtype);
     if (currentTopic) filtered = filtered.filter(p => p.topic === currentTopic);
     if (currentMode === 'worksheet') {
       filtered = applyFilters(filtered);
@@ -2940,91 +2965,7 @@
 
   /* ======================= 학습지 만들기 메인 - 단원 트리 ======================= */
   /* 메인 영역에 표시되는 큰 트리 (사이드바와 다름) */
-  /* ======================= 학습지 만들기 메인 - 단원 트리 (6단계) ======================= */
-  
-  /* 트리 노드 재귀 렌더링
-   * level: 'subchapter' | 'section' | 'subject' | 'subtype'
-   * path: { chapter, subchapter, section, subject, subtype }
-   */
-  function renderTreeNode(node, level, path, problemsAtThisLevel){
-    const levels = {
-      subchapter: { className: 'tree-subchapter', body: 'tree-subchapter-body', next: 'section' },
-      section:    { className: 'tree-section',    body: 'tree-section-body',    next: 'subject' },
-      subject:    { className: 'tree-subject',    body: 'tree-subject-body',    next: 'subtype' },
-      subtype:    { className: 'tree-subtype',    body: 'tree-subtype-body',    next: 'pattern' }
-    };
-    const cfg = levels[level];
-    let html = '';
-
-    Object.keys(node).forEach(key => {
-      const child = node[key];
-      const newPath = { ...path, [level]: key };
-      const filtered = problemsAtThisLevel.filter(p => p[level] === key);
-      const childCount = filtered.length;
-
-      // 확장 키 (모든 상위 경로 결합)
-      const expandKey = Object.values(newPath).filter(Boolean).join('::');
-      const expandSet = level === 'subchapter' ? expandedSubchapters
-                      : level === 'section' ? expandedSections
-                      : level === 'subject' ? expandedSubjects
-                      : expandedSubtypes;
-      const isExpanded = expandSet.has(expandKey);
-
-      // 자식이 배열이면 패턴 리스트 (말단), 객체면 더 깊은 단계
-      const childIsArray = Array.isArray(child);
-      const childIsObject = !childIsArray && child && typeof child === 'object' && Object.keys(child).length > 0;
-      const isLeaf = !childIsArray && !childIsObject; // 빈 객체도 leaf
-
-      // 현재 노드 헤더
-      html += `
-        <div class="${cfg.className} ${isExpanded ? 'expanded' : ''}"
-          data-chapter="${path.chapter}"
-          data-subchapter="${newPath.subchapter || ''}"
-          data-section="${newPath.section || ''}"
-          data-subject="${newPath.subject || ''}"
-          data-subtype="${newPath.subtype || ''}"
-          data-level="${level}">
-          <span><span class="arrow">▶</span>${escapeHtml(key)}</span>
-          <span class="tree-count">${childCount}</span>
-        </div>`;
-
-      // 자식 영역
-      html += `<div class="${cfg.body}">`;
-
-      if (childIsArray) {
-        // 패턴 리스트 (말단)
-        html += `<div class="tree-topics">`;
-        child.forEach(pattern => {
-          const patternProbs = filtered.filter(p => p.topic === pattern);
-          const patternCount = patternProbs.length;
-          const isEmpty = patternCount === 0;
-          html += `
-            <div class="tree-topic ${isEmpty ? 'empty' : ''}"
-              data-chapter="${path.chapter}"
-              data-subchapter="${newPath.subchapter || ''}"
-              data-section="${newPath.section || ''}"
-              data-subject="${newPath.subject || ''}"
-              data-subtype="${newPath.subtype || ''}"
-              data-topic="${escapeHtml(pattern)}">
-              <span>▸ ${escapeHtml(pattern)}</span>
-              <span class="topic-count">${patternCount}</span>
-            </div>`;
-        });
-        html += `</div>`;
-      } else if (childIsObject) {
-        // 더 깊은 단계 - 재귀
-        html += renderTreeNode(child, cfg.next, newPath, filtered);
-      } else {
-        // 빈 객체 - 등록된 패턴 없음
-        html += `<div style="padding: 6px 12px; font-size: 12px; color: #aaa; font-style: italic;">아직 등록된 유형이 없어요</div>`;
-      }
-
-      html += `</div>`;
-    });
-
-    return html;
-  }
-
+  /* ======================= 학습지 만들기 메인 - 단원 트리 (4단계) ======================= */
   function renderCurriculumTree(){
     const tree = document.getElementById('curriculumTree');
     if (!tree) return;
@@ -3044,9 +2985,67 @@
           </div>
           <div class="tree-chapter-body">`;
 
-      if (info.middle && Object.keys(info.middle).length > 0) {
-        html += renderTreeNode(info.middle, 'subchapter', { chapter }, chapterProbs);
-      }
+      Object.keys(info.middle).forEach(subchapter => {
+        const subData = info.middle[subchapter];
+        const isObject = !Array.isArray(subData) && typeof subData === 'object';
+        const subProbs = chapterProbs.filter(p => p.subchapter === subchapter);
+        const subCount = subProbs.length;
+        const subKey = `${chapter}::${subchapter}`;
+        const isSubExpanded = expandedSubchapters.has(subKey);
+
+        html += `
+            <div class="tree-subchapter ${isSubExpanded ? 'expanded' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}">
+              <span><span class="arrow">▶</span>${subchapter}</span>
+              <span style="font-size:11px; color:#999;">${subCount}</span>
+            </div>
+            <div class="tree-subchapter-body">`;
+
+        if (isObject) {
+          // 4단계: 소단원 → 유형
+          Object.keys(subData).forEach(section => {
+            const topicsList = subData[section];
+            const sectionProbs = subProbs.filter(p => p.section === section);
+            const sectionCount = sectionProbs.length;
+            const secKey = `${chapter}::${subchapter}::${section}`;
+            const isSecExpanded = expandedSections.has(secKey);
+
+            html += `
+              <div class="tree-section ${isSecExpanded ? 'expanded' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}" data-section="${section}">
+                <span><span class="arrow">▶</span>${section}</span>
+                <span style="font-size:11px; color:#999;">${sectionCount}</span>
+              </div>
+              <div class="tree-section-body">
+                <div class="tree-topics">`;
+
+            (Array.isArray(topicsList) ? topicsList : []).forEach(topic => {
+              const topicCount = sectionProbs.filter(p => p.topic === topic).length;
+              const isEmpty = topicCount === 0;
+              html += `
+                  <div class="tree-topic ${isEmpty ? 'empty' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}" data-section="${section}" data-topic="${topic}">
+                    <span>▸ ${topic}</span>
+                    <span class="topic-count">${topicCount}</span>
+                  </div>`;
+            });
+
+            html += `</div></div>`;
+          });
+        } else if (Array.isArray(subData)) {
+          // 3단계: 유형만 (배열)
+          html += `<div class="tree-topics">`;
+          subData.forEach(topic => {
+            const topicCount = subProbs.filter(p => p.topic === topic).length;
+            const isEmpty = topicCount === 0;
+            html += `
+              <div class="tree-topic ${isEmpty ? 'empty' : ''}" data-chapter="${chapter}" data-subchapter="${subchapter}" data-topic="${topic}">
+                <span>▸ ${topic}</span>
+                <span class="topic-count">${topicCount}</span>
+              </div>`;
+          });
+          html += `</div>`;
+        }
+
+        html += `</div>`;
+      });
 
       html += `</div></div>`;
     });
@@ -3066,40 +3065,40 @@
       });
     });
 
-    // 중단원/소단원/주제유형/세부유형 토글 (공통)
-    const levelClasses = ['tree-subchapter', 'tree-section', 'tree-subject', 'tree-subtype'];
-    levelClasses.forEach(cls => {
-      document.querySelectorAll('.' + cls).forEach(el => {
-        el.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const path = [
-            el.dataset.chapter,
-            el.dataset.subchapter,
-            el.dataset.section,
-            el.dataset.subject,
-            el.dataset.subtype
-          ].filter(Boolean);
-          const key = path.join('::');
-          const set = cls === 'tree-subchapter' ? expandedSubchapters
-                    : cls === 'tree-section' ? expandedSections
-                    : cls === 'tree-subject' ? expandedSubjects
-                    : expandedSubtypes;
-          if (set.has(key)) set.delete(key);
-          else set.add(key);
-          renderCurriculumTree();
-        });
+    // 중단원 토글
+    document.querySelectorAll('.tree-subchapter').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const chapter = el.dataset.chapter;
+        const subchapter = el.dataset.subchapter;
+        const key = `${chapter}::${subchapter}`;
+        if (expandedSubchapters.has(key)) expandedSubchapters.delete(key);
+        else expandedSubchapters.add(key);
+        renderCurriculumTree();
       });
     });
 
-    // 유형(말단 패턴) 클릭 → 문제 목록으로 전환
+    // 소단원 토글
+    document.querySelectorAll('.tree-section').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const chapter = el.dataset.chapter;
+        const subchapter = el.dataset.subchapter;
+        const section = el.dataset.section;
+        const key = `${chapter}::${subchapter}::${section}`;
+        if (expandedSections.has(key)) expandedSections.delete(key);
+        else expandedSections.add(key);
+        renderCurriculumTree();
+      });
+    });
+
+    // 유형(말단) 클릭 → 문제 목록으로 전환
     document.querySelectorAll('.tree-topic').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         currentChapter = el.dataset.chapter;
         currentSubchapter = el.dataset.subchapter || '';
         currentSection = el.dataset.section || '';
-        currentSubject = el.dataset.subject || '';
-        currentSubtype = el.dataset.subtype || '';
         currentTopic = el.dataset.topic;
         showProblemList();
       });
@@ -3116,11 +3115,9 @@
     renderProblems();
   }
   function showCurriculumTree(){
-    // 6단계 모든 선택 상태 초기화
+    // 4단계 모든 선택 상태 초기화
     currentSubchapter = '';
     currentSection = '';
-    currentSubject = '';
-    currentSubtype = '';
     currentTopic = '';
     document.getElementById('curriculumExplorer').style.display = '';
     document.getElementById('filterPanel').style.display = 'none';
@@ -3238,8 +3235,6 @@
         currentChapter = '전체';
         currentSubchapter = '';
         currentSection = '';
-        currentSubject = '';
-        currentSubtype = '';
         currentTopic = '';
         if (currentMode === 'myws') renderMyWorksheets();
         else renderProblems();
@@ -3254,13 +3249,10 @@
         currentChapter = chapter;
         currentSubchapter = '';
         currentSection = '';
-        currentSubject = '';
-        currentSubtype = '';
         currentTopic = '';
         renderSidebar();
         if (currentMode === 'myws') renderMyWorksheets();
         else {
-          // 학습지 만들기 모드면 메인 트리도 업데이트
           if (typeof renderCurriculumTree === 'function') renderCurriculumTree();
           renderProblems();
         }
@@ -3290,15 +3282,8 @@
     let title, desc;
     if (currentTopic) {
       title = currentTopic;
-      // 6단계 경로 표시
-      const path = [currentChapter, currentSubchapter, currentSection, currentSubject, currentSubtype].filter(Boolean);
+      const path = [currentChapter, currentSubchapter, currentSection].filter(Boolean);
       desc = path.join(' > ');
-    } else if (currentSubtype) {
-      title = currentSubtype;
-      desc = [currentChapter, currentSubchapter, currentSection, currentSubject].filter(Boolean).join(' > ');
-    } else if (currentSubject) {
-      title = currentSubject;
-      desc = [currentChapter, currentSubchapter, currentSection].filter(Boolean).join(' > ');
     } else if (currentSection) {
       title = currentSection;
       desc = [currentChapter, currentSubchapter].filter(Boolean).join(' > ');
@@ -3370,7 +3355,7 @@
           <div class="problem-num">
             <input type="checkbox" class="problem-check" data-id="${p.id}" ${isSelected ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer; margin-right:8px;"/>
             <span class="badge">${displayNum}</span>
-            <span>${escapeHtml(p.topic || p.subtype || p.subject || p.section || p.subchapter || p.chapter)}</span>
+            <span>${escapeHtml(p.topic || p.section || p.subchapter || p.chapter)}</span>
           </div>
           <div class="labels">
             <span class="label tag-source">${escapeHtml(p.chapter)}</span>
@@ -3882,8 +3867,6 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
         <span class="label tag-source">${escapeHtml(p.chapter)}</span>
         ${p.subchapter ? `<span class="label tag-source">${escapeHtml(p.subchapter)}</span>` : ''}
         ${p.section ? `<span class="label tag-source">${escapeHtml(p.section)}</span>` : ''}
-        ${p.subject ? `<span class="label tag-source">${escapeHtml(p.subject)}</span>` : ''}
-        ${p.subtype ? `<span class="label tag-source">${escapeHtml(p.subtype)}</span>` : ''}
         ${p.topic ? `<span class="label tag-source">${escapeHtml(p.topic)}</span>` : ''}
         ${p.source ? `<span class="label tag-source">${escapeHtml(p.source)}</span>` : ''}
         ${p.score ? `<span class="label tag-score">${escapeHtml(p.score)}</span>` : ''}
@@ -4185,9 +4168,7 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     document.getElementById('fChapter').value = p.chapter || '대수';
     updateSubchapterDropdown(p.chapter || '대수', p.subchapter || '');
     updateSectionDropdown(p.chapter || '대수', p.subchapter || '', p.section || '');
-    updateSubjectDropdown(p.chapter || '대수', p.subchapter || '', p.section || '', p.subject || '');
-    updateSubtypeDropdown(p.chapter || '대수', p.subchapter || '', p.section || '', p.subject || '', p.subtype || '');
-    updateTopicDropdown(p.chapter || '대수', p.subchapter || '', p.section || '', p.subject || '', p.subtype || '', p.topic || '');
+    updateTopicDropdown(p.chapter || '대수', p.subchapter || '', p.section || '', p.topic || '');
     document.getElementById('fStem').value = p.stem || '';
     document.getElementById('fGraphSvg').value = p.graphSvg || '';
     document.getElementById('fGraphImage').value = p.graphImage || '';
@@ -4348,8 +4329,6 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
           if (p.chapter !== currentChapter) return false;
           if (currentSubchapter && p.subchapter !== currentSubchapter) return false;
           if (currentSection && p.section !== currentSection) return false;
-          if (currentSubject && p.subject !== currentSubject) return false;
-          if (currentSubtype && p.subtype !== currentSubtype) return false;
           if (currentTopic && p.topic !== currentTopic) return false;
           return true;
         });
@@ -4822,9 +4801,7 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     document.getElementById('fChapter').value = defaultChapter;
     updateSubchapterDropdown(defaultChapter, currentSubchapter || '');
     updateSectionDropdown(defaultChapter, currentSubchapter || '', currentSection || '');
-    updateSubjectDropdown(defaultChapter, currentSubchapter || '', currentSection || '', currentSubject || '');
-    updateSubtypeDropdown(defaultChapter, currentSubchapter || '', currentSection || '', currentSubject || '', currentSubtype || '');
-    updateTopicDropdown(defaultChapter, currentSubchapter || '', currentSection || '', currentSubject || '', currentSubtype || '', currentTopic || '');
+    updateTopicDropdown(defaultChapter, currentSubchapter || '', currentSection || '', currentTopic || '');
     document.getElementById('fStem').value = '';
     document.getElementById('fGraphSvg').value = '';
     document.getElementById('fGraphImage').value = '';
@@ -4842,7 +4819,7 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     document.getElementById('fSource').value = '';
   }
 
-  /* 6단계 드롭다운 업데이트 - 다음 단계 옵션 채우기 */
+  /* 4단계 드롭다운 */
   function fillDropdown(selectId, options, selectedValue = ''){
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -4853,7 +4830,6 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     select.innerHTML = html;
   }
 
-  /* 노드에서 키 목록 가져오기 (배열이면 [], 객체면 keys) */
   function getKeys(node){
     if (!node) return [];
     if (Array.isArray(node)) return node;
@@ -4868,77 +4844,47 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
 
   function updateSectionDropdown(chapter, subchapter, selectedValue = ''){
     const node = CURRICULUM[chapter]?.middle?.[subchapter];
-    fillDropdown('fSection', getKeys(node), selectedValue);
+    // 객체면 key들이 소단원, 배열이면 빈 (소단원 없음)
+    const keys = (node && !Array.isArray(node) && typeof node === 'object') ? Object.keys(node) : [];
+    fillDropdown('fSection', keys, selectedValue);
   }
 
-  function updateSubjectDropdown(chapter, subchapter, section, selectedValue = ''){
-    const node = CURRICULUM[chapter]?.middle?.[subchapter]?.[section];
-    fillDropdown('fSubject', getKeys(node), selectedValue);
+  function updateTopicDropdown(chapter, subchapter, section, selectedValue = ''){
+    let topics = [];
+    const subData = CURRICULUM[chapter]?.middle?.[subchapter];
+    if (Array.isArray(subData)) {
+      // 3단계 구조: 중단원 바로 아래 유형 배열
+      topics = subData;
+    } else if (subData && section) {
+      // 4단계 구조
+      const sectionData = subData[section];
+      if (Array.isArray(sectionData)) topics = sectionData;
+    }
+    fillDropdown('fTopic', topics, selectedValue);
   }
 
-  function updateSubtypeDropdown(chapter, subchapter, section, subject, selectedValue = ''){
-    const node = CURRICULUM[chapter]?.middle?.[subchapter]?.[section]?.[subject];
-    fillDropdown('fSubtype', getKeys(node), selectedValue);
-  }
-
-  function updateTopicDropdown(chapter, subchapter, section, subject, subtype, selectedValue = ''){
-    const node = CURRICULUM[chapter]?.middle?.[subchapter]?.[section]?.[subject]?.[subtype];
-    fillDropdown('fTopic', getKeys(node), selectedValue);
-  }
-
-  /* 대단원 변경 → 모든 하위 초기화 */
   document.getElementById('fChapter').addEventListener('change', (e) => {
     updateSubchapterDropdown(e.target.value);
     updateSectionDropdown(e.target.value, '');
-    updateSubjectDropdown(e.target.value, '', '');
-    updateSubtypeDropdown(e.target.value, '', '', '');
-    updateTopicDropdown(e.target.value, '', '', '', '');
+    updateTopicDropdown(e.target.value, '', '');
   });
 
   document.getElementById('fSubchapter').addEventListener('change', (e) => {
     const chapter = document.getElementById('fChapter').value;
     updateSectionDropdown(chapter, e.target.value);
-    updateSubjectDropdown(chapter, e.target.value, '');
-    updateSubtypeDropdown(chapter, e.target.value, '', '');
-    updateTopicDropdown(chapter, e.target.value, '', '', '');
+    updateTopicDropdown(chapter, e.target.value, '');
   });
 
   document.getElementById('fSection').addEventListener('change', (e) => {
     const chapter = document.getElementById('fChapter').value;
     const subchapter = document.getElementById('fSubchapter').value;
-    updateSubjectDropdown(chapter, subchapter, e.target.value);
-    updateSubtypeDropdown(chapter, subchapter, e.target.value, '');
-    updateTopicDropdown(chapter, subchapter, e.target.value, '', '');
+    updateTopicDropdown(chapter, subchapter, e.target.value);
   });
-
-  const fSubjectEl = document.getElementById('fSubject');
-  if (fSubjectEl) {
-    fSubjectEl.addEventListener('change', (e) => {
-      const chapter = document.getElementById('fChapter').value;
-      const subchapter = document.getElementById('fSubchapter').value;
-      const section = document.getElementById('fSection').value;
-      updateSubtypeDropdown(chapter, subchapter, section, e.target.value);
-      updateTopicDropdown(chapter, subchapter, section, e.target.value, '');
-    });
-  }
-
-  const fSubtypeEl = document.getElementById('fSubtype');
-  if (fSubtypeEl) {
-    fSubtypeEl.addEventListener('change', (e) => {
-      const chapter = document.getElementById('fChapter').value;
-      const subchapter = document.getElementById('fSubchapter').value;
-      const section = document.getElementById('fSection').value;
-      const subject = document.getElementById('fSubject').value;
-      updateTopicDropdown(chapter, subchapter, section, subject, e.target.value);
-    });
-  }
 
   document.getElementById('btnSave').addEventListener('click', async () => {
     const chapter = document.getElementById('fChapter').value;
     const subchapter = document.getElementById('fSubchapter').value;
     const section = document.getElementById('fSection')?.value || '';
-    const subject = document.getElementById('fSubject')?.value || '';
-    const subtype = document.getElementById('fSubtype')?.value || '';
     const topic = document.getElementById('fTopic').value;
     const stem = document.getElementById('fStem').value.trim();
     const graphSvg = document.getElementById('fGraphSvg').value.trim();
@@ -4949,7 +4895,7 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     const source = document.getElementById('fSource').value.trim();
     if (!stem) { showToast('문제 지문을 입력하세요', 'error'); return; }
 
-    const base = { chapter, subchapter, section, subject, subtype, topic, stem, graphSvg, graphImage, explanation, difficulty, score, source, tags: [] };
+    const base = { chapter, subchapter, section, topic, stem, graphSvg, graphImage, explanation, difficulty, score, source, tags: [] };
     let problem;
     if (formType === 'multiple') {
       const choices = Array.from(document.querySelectorAll('.choice-input')).map(i => i.value.trim());
@@ -5006,8 +4952,6 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
           chapter: p.chapter || '대수',
           subchapter: p.subchapter || '',
           section: p.section || '',
-          subject: p.subject || '',
-          subtype: p.subtype || '',
           topic: p.topic || '',
           type: p.type === 'short' ? 'short' : 'multiple',
           stem: p.stem, graphSvg: p.graphSvg || '', graphImage: p.graphImage || '', choices: p.choices || null, answer: p.answer,
