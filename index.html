@@ -2169,6 +2169,22 @@
   </div>
 </div>
 
+<!-- 제출 결과 보기 모달 -->
+<div class="modal-backdrop" id="submissionsModal">
+  <div class="modal" style="max-width: 900px;">
+    <div class="modal-head">
+      <h3 id="submissionsTitle">📊 제출 결과</h3>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body" id="submissionsBody">
+      <!-- 동적 생성 -->
+    </div>
+    <div class="modal-footer">
+      <button class="tool-btn" data-close>닫기</button>
+    </div>
+  </div>
+</div>
+
 <!-- 오답 학습지 모달 -->
 <div class="modal-backdrop" id="wrongAnswerModal">
   <div class="modal" style="max-width: 720px;">
@@ -2692,6 +2708,31 @@
       showToast('학습지 삭제 완료', 'success');
       return true;
     } catch(e) { console.error(e); showToast('삭제 실패: ' + e.message, 'error'); return false;}
+  };
+
+  /* 학습지의 제출 결과 조회 */
+  window.fbGetSubmissions = async (worksheetId) => {
+    try {
+      const submissionsRef = collection(db, 'submissions');
+      const q = query(submissionsRef, orderBy('submittedAt', 'desc'));
+      const snap = await new Promise((resolve, reject) => {
+        const unsub = onSnapshot(q, (s) => {
+          unsub();
+          resolve(s);
+        }, reject);
+      });
+      const result = [];
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.worksheetId === worksheetId) {
+          result.push({ id: d.id, ...data });
+        }
+      });
+      return result;
+    } catch(e) {
+      console.error('제출 결과 조회 오류:', e);
+      throw e;
+    }
   };
 
   /* ======================= 유틸 ======================= */
@@ -3519,6 +3560,134 @@
 
   /* ======================= 미리보기 모달 ======================= */
   let previewingId = null;
+  /* ======================= 제출 결과 보기 ======================= */
+  async function openSubmissionsModal(wsId){
+    const ws = worksheets.find(w => w.id === wsId);
+    if (!ws) return;
+
+    document.getElementById('submissionsTitle').textContent = `📊 ${ws.title} - 제출 결과`;
+    const body = document.getElementById('submissionsBody');
+    body.innerHTML = `<div style="text-align:center; padding:40px; color:#888;">
+      <div class="spinner" style="display:inline-block; width:24px; height:24px; border:3px solid #f59e3b; border-top-color:transparent; border-radius:50%; animation: spin 0.8s linear infinite;"></div>
+      <div style="margin-top:12px;">제출 결과 불러오는 중...</div>
+    </div>`;
+    document.getElementById('submissionsModal').classList.add('show');
+
+    // Firestore에서 submissions 가져오기
+    try {
+      const submissions = await window.fbGetSubmissions(wsId);
+      
+      if (!submissions || submissions.length === 0) {
+        body.innerHTML = `
+          <div style="text-align:center; padding:40px;">
+            <div style="font-size:48px; margin-bottom:12px;">📭</div>
+            <h3 style="margin:0 0 6px 0; font-size:16px;">아직 제출이 없습니다</h3>
+            <p style="font-size:13px; color:#888;">학생들에게 🔗 공유 링크를 보내고 풀게 해보세요.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // 통계 계산
+      const totalStudents = submissions.length;
+      const avgScore = Math.round(submissions.reduce((s, x) => s + (x.score || 0), 0) / totalStudents);
+      const highScore = Math.max(...submissions.map(s => s.score || 0));
+      const lowScore = Math.min(...submissions.map(s => s.score || 0));
+
+      // 문제별 정답률 계산
+      const validProblems = (ws.problemIds || [])
+        .map(pid => problems.find(p => p.id === pid))
+        .filter(Boolean);
+      
+      const problemStats = validProblems.map(p => {
+        let correctCount = 0;
+        submissions.forEach(sub => {
+          if (sub.results && sub.results[p.id] && sub.results[p.id].correct) correctCount++;
+        });
+        const rate = totalStudents > 0 ? Math.round((correctCount / totalStudents) * 100) : 0;
+        return { p, correctCount, rate };
+      });
+
+      const html = `
+        <!-- 통계 카드 -->
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:20px;">
+          <div style="background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px; text-align:center;">
+            <div style="font-size:11px; color:#888;">제출 학생</div>
+            <div style="font-size:22px; font-weight:800; color:var(--primary); margin-top:4px;">${totalStudents}명</div>
+          </div>
+          <div style="background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px; text-align:center;">
+            <div style="font-size:11px; color:#888;">평균 점수</div>
+            <div style="font-size:22px; font-weight:800; color:var(--primary); margin-top:4px;">${avgScore}점</div>
+          </div>
+          <div style="background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px; text-align:center;">
+            <div style="font-size:11px; color:#888;">최고 점수</div>
+            <div style="font-size:22px; font-weight:800; color:#10b981; margin-top:4px;">${highScore}점</div>
+          </div>
+          <div style="background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px; text-align:center;">
+            <div style="font-size:11px; color:#888;">최저 점수</div>
+            <div style="font-size:22px; font-weight:800; color:#ef4444; margin-top:4px;">${lowScore}점</div>
+          </div>
+        </div>
+
+        <!-- 학생별 점수 -->
+        <h4 style="font-size:14px; margin: 0 0 10px 0;">👥 학생별 결과</h4>
+        <div style="background:#fafafa; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin-bottom:20px;">
+          <div style="display:grid; grid-template-columns:1fr 100px 100px 140px; padding:10px 14px; background:#f0f0f0; font-size:12px; font-weight:700; color:#555;">
+            <div>이름</div>
+            <div style="text-align:center;">점수</div>
+            <div style="text-align:center;">정답</div>
+            <div style="text-align:right;">제출 시각</div>
+          </div>
+          ${submissions.sort((a, b) => (b.score || 0) - (a.score || 0)).map(s => {
+            const dateStr = s.submittedAt?.toDate?.() 
+              ? new Intl.DateTimeFormat('ko-KR', {month:'numeric', day:'numeric', hour:'numeric', minute:'numeric'}).format(s.submittedAt.toDate())
+              : '-';
+            const scoreColor = s.score >= 80 ? '#10b981' : s.score >= 60 ? '#f59e3b' : '#ef4444';
+            return `
+              <div style="display:grid; grid-template-columns:1fr 100px 100px 140px; padding:10px 14px; border-top:1px solid var(--line); font-size:13px; align-items:center;">
+                <div><strong>${escapeHtml(s.studentName || '익명')}</strong></div>
+                <div style="text-align:center; color:${scoreColor}; font-weight:700;">${s.score || 0}점</div>
+                <div style="text-align:center; color:#666;">${s.correct || 0}/${s.total || 0}</div>
+                <div style="text-align:right; font-size:11px; color:#888;">${dateStr}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <!-- 문제별 정답률 -->
+        <h4 style="font-size:14px; margin: 0 0 10px 0;">📈 문제별 정답률</h4>
+        <div style="background:#fafafa; border:1px solid var(--line); border-radius:8px; padding:12px;">
+          ${problemStats.map((s, idx) => {
+            const rate = s.rate;
+            const barColor = rate >= 70 ? '#10b981' : rate >= 40 ? '#f59e3b' : '#ef4444';
+            const preview = (s.p.stem || '').slice(0, 60);
+            return `
+              <div style="margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                  <span><strong>${idx + 1}번</strong> · ${escapeHtml(preview)}${s.p.stem.length > 60 ? '...' : ''}</span>
+                  <span style="color:${barColor}; font-weight:700;">${rate}% (${s.correctCount}/${totalStudents})</span>
+                </div>
+                <div style="background:#e0e0e0; height:6px; border-radius:3px; overflow:hidden;">
+                  <div style="background:${barColor}; height:100%; width:${rate}%; transition: width 0.3s;"></div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+
+      body.innerHTML = html;
+    } catch (err) {
+      console.error('제출 결과 로드 오류:', err);
+      body.innerHTML = `
+        <div style="text-align:center; padding:40px; color:#ef4444;">
+          ❌ 제출 결과를 불러오지 못했습니다<br>
+          <small style="color:#888;">${escapeHtml(err.message || '')}</small>
+        </div>
+      `;
+    }
+  }
+
   /* ======================= 오답 학습지 만들기 ======================= */
   let currentWrongWsId = null;
   function openWrongAnswerModal(wsId){
@@ -3702,21 +3871,50 @@
   }
   
   function renderStudentPage(wsId){
-    // 모든 일반 UI 숨김
+    // 모든 일반 UI 숨김 + 학생용 페이지 구조
     document.body.innerHTML = `
-      <div style="max-width: 800px; margin: 0 auto; padding: 30px 20px; font-family: 'Pretendard', system-ui, sans-serif; background: #fdf8f3; min-height: 100vh;">
-        <div id="studentHeader" style="margin-bottom: 24px; padding: 20px; background: white; border-radius: 12px; border: 1px solid #f0e8da; text-align: center;">
-          <h1 style="margin: 0 0 6px 0; font-size: 22px;" id="studentTitle">📚 학습지 불러오는 중...</h1>
-          <div id="studentSubtitle" style="font-size: 13px; color: #888;"></div>
-        </div>
-        <div id="studentList"></div>
+      <style>
+        body { background: #fdf8f3; margin: 0; }
+        .student-container { max-width: 800px; margin: 0 auto; padding: 24px 16px; font-family: 'Pretendard', system-ui, sans-serif; }
+        .student-header { margin-bottom: 20px; padding: 20px; background: white; border-radius: 12px; border: 1px solid #f0e8da; text-align: center; }
+        .student-header h1 { margin: 0 0 6px 0; font-size: 22px; }
+        .student-header .sub { font-size: 13px; color: #888; }
+        .student-card { background: white; border-radius: 10px; padding: 18px; margin-bottom: 12px; border: 1px solid #f0e8da; }
+        .student-card .qnum { background: #f59e3b; color: white; padding: 2px 10px; border-radius: 4px; font-size: 13px; font-weight: 700; }
+        .student-card .qmeta { font-size: 11px; color: #888; margin-left: 8px; }
+        .student-card .qstem { font-size: 14px; line-height: 1.7; margin: 10px 0; }
+        .student-choice { display: block; padding: 8px 12px; margin-bottom: 4px; cursor: pointer; border-radius: 6px; border: 1px solid transparent; transition: all 0.15s; }
+        .student-choice:hover { background: rgba(245,158,59,0.05); border-color: rgba(245,158,59,0.3); }
+        .student-choice input[type="radio"] { margin-right: 10px; cursor: pointer; }
+        .student-choice.selected { background: rgba(245,158,59,0.1); border-color: #f59e3b; }
+        .student-short-input { width: 100%; padding: 10px 12px; border: 1.5px solid #ccc; border-radius: 6px; font-size: 14px; font-family: inherit; }
+        .student-short-input:focus { outline: none; border-color: #f59e3b; }
+        .student-result-correct { background: #d1fae5 !important; border-color: #10b981 !important; }
+        .student-result-wrong { background: #fee2e2 !important; border-color: #ef4444 !important; }
+        .student-correct-mark { color: #10b981; font-weight: 700; font-size: 13px; }
+        .student-wrong-mark { color: #ef4444; font-weight: 700; font-size: 13px; }
+        .student-btn { padding: 12px 24px; background: #f59e3b; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .student-btn:hover { background: #ea8a1c; }
+        .student-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .student-btn-secondary { background: white; color: #555; border: 1px solid #ccc; }
+        .student-btn-secondary:hover { background: #f5f5f5; }
+        .student-score-card { background: white; border-radius: 12px; padding: 28px; text-align: center; border: 2px solid #f59e3b; margin-bottom: 16px; }
+        .student-score-card .big-score { font-size: 56px; font-weight: 800; color: #f59e3b; line-height: 1; margin: 12px 0; }
+        .student-score-card .label { font-size: 13px; color: #888; }
+        .student-score-card .breakdown { display: flex; gap: 20px; justify-content: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0e8da; }
+        .student-score-card .breakdown .item { font-size: 14px; }
+        .student-score-card .breakdown .item strong { color: #333; }
+        .student-name-input { width: 100%; padding: 14px; border: 1.5px solid #ccc; border-radius: 8px; font-size: 16px; font-family: inherit; margin-bottom: 12px; box-sizing: border-box; }
+        .student-name-input:focus { outline: none; border-color: #f59e3b; }
+      </style>
+      <div class="student-container">
+        <div id="studentApp"></div>
         <div style="text-align: center; padding: 30px 0; font-size: 12px; color: #aaa;">
           🎓 수학 문제은행 학생용 페이지
         </div>
       </div>
     `;
     
-    // KaTeX 다시 렌더링용
     const renderMath = (el) => {
       if (typeof renderMathInElement !== 'undefined') {
         try {
@@ -3732,11 +3930,23 @@
         } catch(e) { console.warn('KaTeX 오류:', e); }
       }
     };
-    
-    // Firestore에서 직접 로드
-    setTimeout(async () => {
+
+    // 학생 앱 상태
+    const studentState = {
+      stage: 'loading',  // loading, name, solving, submitted
+      ws: null,
+      problems: [],
+      studentName: '',
+      answers: {},  // { problemId: 'value' }
+      results: null,
+      db: null
+    };
+
+    // 1단계: Firestore에서 학습지 + 문제 로드
+    (async () => {
       try {
-        const { getFirestore, collection, doc, getDoc, getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+        const { getFirestore, collection, doc, getDoc, getDocs, addDoc, serverTimestamp } = 
+          await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
         const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
         
         const firebaseConfig = {
@@ -3748,63 +3958,306 @@
           appId: "1:311201443598:web:6f14fb3092a701e3c1715f"
         };
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        
-        const wsRef = doc(db, 'worksheets', wsId);
+        studentState.db = getFirestore(app);
+        studentState.firestore = { collection, doc, getDoc, getDocs, addDoc, serverTimestamp };
+
+        const wsRef = doc(studentState.db, 'worksheets', wsId);
         const wsSnap = await getDoc(wsRef);
         if (!wsSnap.exists()) {
-          document.getElementById('studentTitle').textContent = '❌ 학습지를 찾을 수 없습니다';
+          document.getElementById('studentApp').innerHTML = `
+            <div class="student-header">
+              <h1>❌ 학습지를 찾을 수 없습니다</h1>
+              <div class="sub">링크가 만료되었거나 잘못된 주소입니다.</div>
+            </div>`;
           return;
         }
-        const ws = wsSnap.data();
-        document.getElementById('studentTitle').textContent = ws.title || '학습지';
-        document.getElementById('studentSubtitle').textContent = ws.subtitle || '';
-        
-        const problemsSnap = await getDocs(collection(db, 'problems'));
+        studentState.ws = { id: wsId, ...wsSnap.data() };
+
+        const problemsSnap = await getDocs(collection(studentState.db, 'problems'));
         const allProblems = {};
-        problemsSnap.forEach(d => allProblems[d.id] = d.data());
-        
-        const validProblems = (ws.problemIds || []).map(pid => allProblems[pid]).filter(Boolean);
-        
-        const list = document.getElementById('studentList');
-        list.innerHTML = validProblems.map((p, idx) => {
-          const marks = ['①','②','③','④','⑤'];
-          const choicesHtml = p.type === 'short' 
-            ? `<div style="margin-top: 12px; padding: 10px; background: #f5efe3; border-radius: 6px;"><input type="text" placeholder="답을 입력하세요" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;"/></div>`
-            : `<div style="margin-top: 12px;">
-                ${(p.choices || []).map((c, i) => `
-                  <label style="display: block; padding: 6px 10px; cursor: pointer; border-radius: 4px;">
-                    <input type="radio" name="q${idx}" value="${i+1}" style="margin-right: 8px;"/>
-                    <strong>${marks[i]}</strong> <span class="math">${c}</span>
-                  </label>
-                `).join('')}
-              </div>`;
-          
-          const graphHtml = p.graphImage 
-            ? `<div style="text-align: center; margin: 12px 0;"><img src="${p.graphImage}" style="max-width: 280px; max-height: 220px;"/></div>`
-            : (p.graphSvg ? `<div style="text-align: center; margin: 12px 0;">${p.graphSvg}</div>` : '');
-          
-          return `
-            <div style="background: white; border-radius: 10px; padding: 18px; margin-bottom: 12px; border: 1px solid #f0e8da;">
-              <div style="display: flex; gap: 10px; align-items: baseline; margin-bottom: 10px;">
-                <strong style="background: var(--primary, #f59e3b); color: white; padding: 2px 10px; border-radius: 4px; font-size: 13px;">${idx + 1}</strong>
-                <span style="font-size: 11px; color: #888;">${p.topic || p.subchapter || p.chapter}</span>
-              </div>
-              <div style="font-size: 14px; line-height: 1.7;">${p.stem}</div>
-              ${graphHtml}
-              ${choicesHtml}
-            </div>
-          `;
-        }).join('');
-        
-        // KaTeX 렌더링
-        renderMath(document.getElementById('studentList'));
+        problemsSnap.forEach(d => allProblems[d.id] = { id: d.id, ...d.data() });
+        studentState.problems = (studentState.ws.problemIds || [])
+          .map(pid => allProblems[pid])
+          .filter(Boolean);
+
+        if (studentState.problems.length === 0) {
+          document.getElementById('studentApp').innerHTML = `
+            <div class="student-header">
+              <h1>📭 문제가 없습니다</h1>
+              <div class="sub">선생님께 문의하세요.</div>
+            </div>`;
+          return;
+        }
+
+        // 이름 입력 단계로
+        studentState.stage = 'name';
+        renderNameStage();
       } catch (err) {
         console.error('학생 페이지 로드 오류:', err);
-        document.getElementById('studentTitle').textContent = '❌ 오류가 발생했습니다';
-        document.getElementById('studentSubtitle').textContent = err.message;
+        document.getElementById('studentApp').innerHTML = `
+          <div class="student-header">
+            <h1>❌ 오류가 발생했습니다</h1>
+            <div class="sub">${err.message}</div>
+          </div>`;
       }
-    }, 100);
+    })();
+
+    function renderNameStage(){
+      document.getElementById('studentApp').innerHTML = `
+        <div class="student-header">
+          <h1>${escapeHtmlS(studentState.ws.title || '학습지')}</h1>
+          <div class="sub">${escapeHtmlS(studentState.ws.subtitle || '')}</div>
+          <div class="sub" style="margin-top:8px;">📝 총 ${studentState.problems.length}문제</div>
+        </div>
+        <div style="background: white; border-radius: 12px; padding: 28px 24px; border: 1px solid #f0e8da; text-align: center;">
+          <div style="font-size: 48px; margin-bottom: 12px;">👋</div>
+          <h2 style="margin: 0 0 8px 0; font-size: 18px;">먼저 이름을 알려주세요</h2>
+          <div style="font-size: 13px; color: #888; margin-bottom: 20px;">
+            제출 결과는 선생님께 자동 전송됩니다
+          </div>
+          <input type="text" class="student-name-input" id="nameInput" placeholder="홍길동" maxlength="20"/>
+          <button class="student-btn" id="btnStartSolving" style="width:100%;">
+            🚀 시작하기
+          </button>
+        </div>
+      `;
+      const nameInput = document.getElementById('nameInput');
+      nameInput.focus();
+      nameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') document.getElementById('btnStartSolving').click();
+      });
+      document.getElementById('btnStartSolving').addEventListener('click', () => {
+        const name = nameInput.value.trim();
+        if (!name) {
+          alert('이름을 입력해주세요');
+          return;
+        }
+        studentState.studentName = name;
+        studentState.stage = 'solving';
+        renderSolvingStage();
+      });
+    }
+
+    function renderSolvingStage(){
+      const marks = ['①','②','③','④','⑤'];
+      const html = `
+        <div class="student-header">
+          <h1>${escapeHtmlS(studentState.ws.title)}</h1>
+          <div class="sub">👤 ${escapeHtmlS(studentState.studentName)} · 📝 ${studentState.problems.length}문제</div>
+        </div>
+        ${studentState.problems.map((p, idx) => {
+          const graphHtml = p.graphImage 
+            ? `<div style="text-align:center; margin:12px 0;"><img src="${p.graphImage}" style="max-width:280px; max-height:220px;"/></div>`
+            : (p.graphSvg ? `<div style="text-align:center; margin:12px 0;">${p.graphSvg}</div>` : '');
+          
+          const inputHtml = p.type === 'short'
+            ? `<input type="text" class="student-short-input" data-pid="${p.id}" placeholder="답을 입력하세요" autocomplete="off"/>`
+            : `<div>${(p.choices || []).map((c, i) => `
+                <label class="student-choice" data-pid="${p.id}" data-val="${i+1}">
+                  <input type="radio" name="q_${p.id}" value="${i+1}"/>
+                  <strong>${marks[i]}</strong> ${c}
+                </label>
+              `).join('')}</div>`;
+
+          return `
+            <div class="student-card">
+              <div>
+                <span class="qnum">${idx + 1}</span>
+                <span class="qmeta">${escapeHtmlS(p.topic || p.subchapter || p.chapter)}</span>
+              </div>
+              <div class="qstem">${p.stem}</div>
+              ${graphHtml}
+              ${inputHtml}
+            </div>
+          `;
+        }).join('')}
+        <div style="display:flex; gap:10px; justify-content:center; margin-top:24px;">
+          <button class="student-btn" id="btnSubmit" style="min-width:200px; font-size:16px; padding:16px 32px;">
+            ✓ 제출하기
+          </button>
+        </div>
+      `;
+      document.getElementById('studentApp').innerHTML = html;
+      renderMath(document.getElementById('studentApp'));
+
+      // 객관식 클릭 - 시각 효과
+      document.querySelectorAll('.student-choice').forEach(label => {
+        label.addEventListener('click', () => {
+          const pid = label.dataset.pid;
+          // 같은 문제의 다른 라디오 해제
+          document.querySelectorAll(`.student-choice[data-pid="${pid}"]`).forEach(l => l.classList.remove('selected'));
+          label.classList.add('selected');
+        });
+      });
+
+      // 주관식 입력 - 답안 저장
+      document.querySelectorAll('.student-short-input').forEach(input => {
+        input.addEventListener('input', () => {
+          studentState.answers[input.dataset.pid] = input.value.trim();
+        });
+      });
+
+      // 객관식 - 답안 저장
+      document.querySelectorAll('input[type="radio"][name^="q_"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          const name = radio.name; // q_<pid>
+          const pid = name.substring(2);
+          studentState.answers[pid] = radio.value;
+        });
+      });
+
+      // 제출 버튼
+      document.getElementById('btnSubmit').addEventListener('click', () => {
+        const unanswered = studentState.problems.filter(p => !studentState.answers[p.id]);
+        if (unanswered.length > 0) {
+          if (!confirm(`아직 답하지 않은 문제가 ${unanswered.length}개 있어요.\n그래도 제출하시겠어요?`)) {
+            return;
+          }
+        }
+        submitAndGrade();
+      });
+    }
+
+    async function submitAndGrade(){
+      // 자동 채점
+      const results = {};
+      let correct = 0;
+      studentState.problems.forEach(p => {
+        const given = studentState.answers[p.id];
+        let isCorrect = false;
+        if (p.type === 'multiple') {
+          isCorrect = given && parseInt(given) === parseInt(p.answer);
+        } else {
+          // 주관식: 정규화 후 비교
+          const norm = (s) => String(s || '').replace(/\s/g, '').toLowerCase();
+          isCorrect = given && norm(given) === norm(p.answer);
+        }
+        if (isCorrect) correct++;
+        results[p.id] = {
+          given: given || '',
+          answer: p.answer,
+          correct: isCorrect
+        };
+      });
+
+      const total = studentState.problems.length;
+      const score = total > 0 ? Math.round((correct / total) * 100) : 0;
+      
+      studentState.results = { results, total, correct, score };
+
+      // Firestore에 저장
+      try {
+        const { addDoc, collection, serverTimestamp } = studentState.firestore;
+        await addDoc(collection(studentState.db, 'submissions'), {
+          worksheetId: wsId,
+          worksheetTitle: studentState.ws.title || '',
+          studentName: studentState.studentName,
+          answers: studentState.answers,
+          results,
+          total,
+          correct,
+          score,
+          submittedAt: serverTimestamp()
+        });
+      } catch (err) {
+        console.error('제출 저장 오류:', err);
+        alert('제출 결과가 서버에 저장되지 않았습니다. 인터넷 연결을 확인해주세요.\n그래도 채점 결과는 보여드릴게요.');
+      }
+
+      studentState.stage = 'submitted';
+      renderResultStage();
+    }
+
+    function renderResultStage(){
+      const { results, total, correct, score } = studentState.results;
+      const marks = ['①','②','③','④','⑤'];
+      
+      let scoreColor = '#10b981';  // 초록
+      let emoji = '🎉';
+      if (score < 60) { scoreColor = '#ef4444'; emoji = '💪'; }
+      else if (score < 80) { scoreColor = '#f59e3b'; emoji = '👍'; }
+
+      const html = `
+        <div class="student-header">
+          <h1>${escapeHtmlS(studentState.ws.title)}</h1>
+          <div class="sub">👤 ${escapeHtmlS(studentState.studentName)} · 제출 완료!</div>
+        </div>
+        
+        <div class="student-score-card" style="border-color: ${scoreColor};">
+          <div style="font-size:32px;">${emoji}</div>
+          <div class="big-score" style="color: ${scoreColor};">${score}점</div>
+          <div class="label">${total}문제 중 ${correct}개 정답</div>
+          <div class="breakdown">
+            <div class="item"><strong style="color:#10b981;">${correct}</strong> 정답</div>
+            <div class="item"><strong style="color:#ef4444;">${total - correct}</strong> 오답</div>
+            <div class="item"><strong>${total}</strong> 전체</div>
+          </div>
+        </div>
+
+        <h2 style="font-size:16px; margin: 24px 0 12px 0;">📋 채점 결과</h2>
+        ${studentState.problems.map((p, idx) => {
+          const r = results[p.id];
+          const correctMark = r.correct ? '✓ 정답' : '✗ 오답';
+          const correctClass = r.correct ? 'student-correct-mark' : 'student-wrong-mark';
+          
+          // 보기 표시 (객관식)
+          const choicesHtml = p.type === 'multiple' && p.choices
+            ? `<div>${p.choices.map((c, i) => {
+                const num = i + 1;
+                const isMyAnswer = parseInt(r.given) === num;
+                const isCorrectAnswer = parseInt(p.answer) === num;
+                let extraClass = '';
+                if (isCorrectAnswer) extraClass = ' student-result-correct';
+                if (isMyAnswer && !r.correct) extraClass = ' student-result-wrong';
+                
+                return `
+                  <div class="student-choice${extraClass}" style="cursor:default;">
+                    ${isMyAnswer ? '👉 ' : ''}${marks[i]} ${c}
+                    ${isCorrectAnswer ? '<span class="student-correct-mark" style="float:right;">정답</span>' : ''}
+                  </div>`;
+              }).join('')}</div>`
+            : `<div style="background:#f5f5f5; padding:10px; border-radius:6px; margin-top:8px;">
+                <div style="font-size:13px; color:#666;">내 답: <strong>${escapeHtmlS(r.given || '(미답)')}</strong></div>
+                <div style="font-size:13px; color:#666; margin-top:4px;">정답: <strong style="color:${r.correct ? '#10b981' : '#ef4444'};">${escapeHtmlS(String(p.answer))}</strong></div>
+              </div>`;
+
+          const graphHtml = p.graphImage 
+            ? `<div style="text-align:center; margin:12px 0;"><img src="${p.graphImage}" style="max-width:280px; max-height:220px;"/></div>`
+            : (p.graphSvg ? `<div style="text-align:center; margin:12px 0;">${p.graphSvg}</div>` : '');
+
+          return `
+            <div class="student-card" style="border-left: 4px solid ${r.correct ? '#10b981' : '#ef4444'};">
+              <div>
+                <span class="qnum" style="background: ${r.correct ? '#10b981' : '#ef4444'};">${idx + 1}</span>
+                <span class="qmeta">${escapeHtmlS(p.topic || p.subchapter || p.chapter)}</span>
+                <span class="${correctClass}" style="float:right;">${correctMark}</span>
+              </div>
+              <div class="qstem">${p.stem}</div>
+              ${graphHtml}
+              ${choicesHtml}
+              ${p.explanation && !r.correct ? `
+                <div style="margin-top:12px; padding:12px; background:#fef3c7; border-radius:8px; border-left:3px solid #f59e3b;">
+                  <strong style="font-size:12px; color:#92400e;">💡 풀이</strong>
+                  <div style="font-size:13px; line-height:1.7; color:#78350f; margin-top:6px; white-space:pre-wrap;">${escapeHtmlS(p.explanation)}</div>
+                </div>` : ''}
+            </div>
+          `;
+        }).join('')}
+
+        <div style="text-align:center; padding:20px 0;">
+          <button class="student-btn student-btn-secondary" onclick="window.location.reload()" style="font-size:13px;">
+            🔄 다시 풀기
+          </button>
+        </div>
+      `;
+      document.getElementById('studentApp').innerHTML = html;
+      renderMath(document.getElementById('studentApp'));
+    }
+
+    function escapeHtmlS(s){
+      if (s === null || s === undefined) return '';
+      return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
   }
 
   /* ======================= AI 프롬프트 함수 ======================= */
@@ -4601,6 +5054,7 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
           <div class="ws-saved-actions">
             <button class="tool-btn" data-print-ws="${ws.id}" title="바로 인쇄">🖨</button>
             <button class="tool-btn" data-share-ws="${ws.id}" title="학생과 공유">🔗</button>
+            <button class="tool-btn" data-submissions-ws="${ws.id}" title="제출 결과 보기">📊</button>
             <button class="tool-btn" data-edit-ws="${ws.id}" title="편집">✏️</button>
             <button class="tool-btn" data-clone-ws="${ws.id}" title="복제">📋</button>
             <button class="tool-btn" data-wrong-ws="${ws.id}" title="오답 학습지 만들기">🔄</button>
@@ -4667,6 +5121,10 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     // 학습지 공유 (학생용 링크 + QR)
     list.querySelectorAll('[data-share-ws]').forEach(btn => {
       btn.addEventListener('click', () => openShareModal(btn.dataset.shareWs));
+    });
+    // 제출 결과 보기
+    list.querySelectorAll('[data-submissions-ws]').forEach(btn => {
+      btn.addEventListener('click', () => openSubmissionsModal(btn.dataset.submissionsWs));
     });
     // 오답 학습지 만들기
     list.querySelectorAll('[data-wrong-ws]').forEach(btn => {
@@ -5015,6 +5473,7 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
   const shareModal = document.getElementById('shareModal');
   const migrateModal = document.getElementById('migrateModal');
   const wrongAnswerModal = document.getElementById('wrongAnswerModal');
+  const submissionsModal = document.getElementById('submissionsModal');
   let formType = 'multiple';
   function closeAllModals(){
     addModal.classList.remove('show');
@@ -5025,6 +5484,7 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     shareModal.classList.remove('show');
     migrateModal.classList.remove('show');
     wrongAnswerModal.classList.remove('show');
+    submissionsModal.classList.remove('show');
     // 편집 모드 해제
     editingWsId = null;
     editingId = null;
@@ -5037,7 +5497,7 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     if (addSave) addSave.textContent = '💾 저장';
   }
   document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeAllModals));
-  [addModal, importModal, worksheetModal, previewModal, aiPromptModal, shareModal, migrateModal, wrongAnswerModal].forEach(m => {
+  [addModal, importModal, worksheetModal, previewModal, aiPromptModal, shareModal, migrateModal, wrongAnswerModal, submissionsModal].forEach(m => {
     m.addEventListener('click', (e) => { if (e.target === m) closeAllModals(); });
   });
 
