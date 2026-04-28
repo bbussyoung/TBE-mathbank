@@ -1832,6 +1832,13 @@
     gap: 14px;
     transition: all .15s ease;
   }
+  .ws-saved-card.merge-selected {
+    border-color: var(--primary);
+    background: rgba(245, 158, 59, 0.06);
+    box-shadow: 0 2px 8px rgba(245, 158, 59, 0.15);
+  }
+  #mergeBar { display: flex; }
+  #mergeBar[style*="display:none"] { display: none !important; }
   .ws-saved-card:hover{
     border-color: var(--primary);
     box-shadow: var(--shadow);
@@ -2036,8 +2043,11 @@
         <label>정렬</label>
         <select id="fltSort">
           <option value="default">기본</option>
+          <option value="topic-asc">유형 오름차순</option>
           <option value="difficulty-asc">난이도 ↑</option>
           <option value="difficulty-desc">난이도 ↓</option>
+          <option value="multiple-first">객관식 상단</option>
+          <option value="random">무작위</option>
           <option value="newest">최신순</option>
         </select>
       </div>
@@ -2082,6 +2092,18 @@
           <option value="old">오래된순</option>
           <option value="title">제목순</option>
         </select>
+        <button class="tool-btn ghost-accent" id="btnMergeMode" title="여러 학습지 합치기">📑 학습지 병합</button>
+      </div>
+    </div>
+
+    <!-- 병합 모드 액션 바 -->
+    <div id="mergeBar" style="display:none; background: rgba(245, 158, 59, 0.08); border: 1px solid var(--primary); border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; align-items: center; justify-content: space-between;">
+      <div style="font-size: 13px;">
+        <strong>📑 병합 모드</strong> · 합칠 학습지를 <span id="mergeCount" style="color:var(--primary);font-weight:700;">0</span>개 선택했어요
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="tool-btn" id="btnMergeCancel">취소</button>
+        <button class="tool-btn primary" id="btnMergeConfirm">✓ 병합하기</button>
       </div>
     </div>
 
@@ -2143,6 +2165,23 @@
     <div class="modal-footer">
       <button class="tool-btn" data-close>취소</button>
       <button class="tool-btn primary" id="btnApplyMigrate" style="background: var(--green);">✓ 변환 적용</button>
+    </div>
+  </div>
+</div>
+
+<!-- 오답 학습지 모달 -->
+<div class="modal-backdrop" id="wrongAnswerModal">
+  <div class="modal" style="max-width: 720px;">
+    <div class="modal-head">
+      <h3>🔄 오답 학습지 만들기</h3>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body" id="wrongAnswerBody">
+      <!-- 동적 생성 -->
+    </div>
+    <div class="modal-footer">
+      <button class="tool-btn" data-close>취소</button>
+      <button class="tool-btn primary" id="btnCreateWrong">✓ 오답 학습지 만들기</button>
     </div>
   </div>
 </div>
@@ -2399,6 +2438,23 @@
         <div class="form-group" style="flex:1;">
           <label>🏷️ 태그 (쉼표로 구분, 선택)</label>
           <input id="wsTags" type="text" placeholder="예) 중간고사, 심화반, 2학기"/>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label>💡 개념 페이지 (선택, LaTeX 사용 가능)</label>
+          <textarea id="wsConcept" placeholder="예) 곱셈 공식&#10;&#10;1. $(a+b)^2 = a^2 + 2ab + b^2$&#10;2. $(a-b)^2 = a^2 - 2ab + b^2$&#10;3. $(a+b)(a-b) = a^2 - b^2$" style="width:100%; min-height:80px; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-family:inherit; font-size:13px; resize:vertical;"></textarea>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label>📍 개념 배치</label>
+          <select id="wsConceptPosition">
+            <option value="none">개념 없음</option>
+            <option value="top">학습지 맨 앞</option>
+            <option value="top-with-border">학습지 맨 앞 (테두리 있음)</option>
+          </select>
         </div>
       </div>
 
@@ -2909,10 +2965,27 @@
     // 정렬
     const sortMode = filters.sort || 'default';
     const diffOrder = { '하': 1, '중': 2, '상': 3 };
-    if (sortMode === 'difficulty-asc') {
+    if (sortMode === 'topic-asc') {
+      // 유형 오름차순 (한글 가나다순)
+      filtered.sort((a, b) => (a.topic || '').localeCompare(b.topic || '', 'ko'));
+    } else if (sortMode === 'difficulty-asc') {
       filtered.sort((a, b) => (diffOrder[a.difficulty] || 2) - (diffOrder[b.difficulty] || 2));
     } else if (sortMode === 'difficulty-desc') {
       filtered.sort((a, b) => (diffOrder[b.difficulty] || 2) - (diffOrder[a.difficulty] || 2));
+    } else if (sortMode === 'multiple-first') {
+      // 객관식 먼저, 그 안에서 난이도 순
+      filtered.sort((a, b) => {
+        const aIsMultiple = a.type === 'multiple' ? 0 : 1;
+        const bIsMultiple = b.type === 'multiple' ? 0 : 1;
+        if (aIsMultiple !== bIsMultiple) return aIsMultiple - bIsMultiple;
+        return (diffOrder[a.difficulty] || 2) - (diffOrder[b.difficulty] || 2);
+      });
+    } else if (sortMode === 'random') {
+      // Fisher-Yates shuffle
+      for (let i = filtered.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [filtered[i], filtered[j]] = [filtered[j], filtered[i]];
+      }
     } else if (sortMode === 'newest') {
       filtered.sort((a, b) => {
         const aT = a.createdAt?.toMillis?.() || 0;
@@ -3446,6 +3519,103 @@
 
   /* ======================= 미리보기 모달 ======================= */
   let previewingId = null;
+  /* ======================= 오답 학습지 만들기 ======================= */
+  let currentWrongWsId = null;
+  function openWrongAnswerModal(wsId){
+    const ws = worksheets.find(w => w.id === wsId);
+    if (!ws) return;
+    currentWrongWsId = wsId;
+
+    const validProblems = (ws.problemIds || [])
+      .map(pid => problems.find(p => p.id === pid))
+      .filter(Boolean);
+
+    if (validProblems.length === 0) {
+      showToast('이 학습지에 문제가 없습니다', 'error');
+      return;
+    }
+
+    const body = document.getElementById('wrongAnswerBody');
+    body.innerHTML = `
+      <div style="background: var(--bg); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; font-size: 13px; color: var(--ink-soft); border-left: 3px solid var(--primary);">
+        <strong>"${escapeHtml(ws.title)}"</strong>에서 <strong>학생이 틀린 문제</strong>를 선택하세요.<br>
+        선택한 문제로 새 오답 학습지가 만들어집니다.
+      </div>
+
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <button class="tool-btn" id="btnWrongAll" type="button">✓ 전체 선택</button>
+        <button class="tool-btn" id="btnWrongClear" type="button">✖ 선택 해제</button>
+      </div>
+
+      <div id="wrongProblemsList" style="max-height: 360px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; padding: 8px;">
+        ${validProblems.map((p, idx) => {
+          const preview = (p.stem || '').slice(0, 80);
+          return `
+            <label style="display:flex; gap:10px; padding: 8px 10px; cursor:pointer; border-radius:6px; transition: background 0.15s;" 
+                   onmouseover="this.style.background='rgba(245,158,59,0.05)'" 
+                   onmouseout="this.style.background=''">
+              <input type="checkbox" class="wrong-prob-check" data-pid="${p.id}" style="width:18px; height:18px; cursor:pointer; flex-shrink:0; margin-top:2px;"/>
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:12px; color:#888; margin-bottom:3px;">${idx + 1}번 · ${escapeHtml(p.topic || p.subchapter || p.chapter)} · ${p.difficulty || '중'}</div>
+                <div style="font-size:13px; color:#333; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(preview)}${p.stem.length > 80 ? '...' : ''}</div>
+              </div>
+            </label>
+          `;
+        }).join('')}
+      </div>
+
+      <div style="margin-top:14px; padding:12px; background:#fef3c7; border-radius:8px; font-size:12px; color:#92400e;">
+        💡 <strong>팁</strong>: 학생이 틀린 문제를 일일이 체크하기보다, 
+        <strong>학생용 링크</strong>로 풀게 한 후 다음 업데이트에서 자동 채점 결과 연동 예정이에요.
+      </div>
+    `;
+
+    // 전체 선택/해제 버튼
+    setTimeout(() => {
+      document.getElementById('btnWrongAll').addEventListener('click', () => {
+        document.querySelectorAll('.wrong-prob-check').forEach(cb => cb.checked = true);
+      });
+      document.getElementById('btnWrongClear').addEventListener('click', () => {
+        document.querySelectorAll('.wrong-prob-check').forEach(cb => cb.checked = false);
+      });
+    }, 50);
+
+    document.getElementById('wrongAnswerModal').classList.add('show');
+  }
+
+  document.getElementById('btnCreateWrong').addEventListener('click', async () => {
+    const ws = worksheets.find(w => w.id === currentWrongWsId);
+    if (!ws) return;
+
+    const selectedPids = [...document.querySelectorAll('.wrong-prob-check:checked')].map(cb => cb.dataset.pid);
+    if (selectedPids.length === 0) {
+      showToast('틀린 문제를 1개 이상 선택하세요', 'error');
+      return;
+    }
+
+    const newTitle = prompt(
+      `"${ws.title}"의 오답 학습지를 만듭니다.\n새 학습지 제목:`,
+      `${ws.title} (오답)`
+    );
+    if (!newTitle || !newTitle.trim()) return;
+
+    const wrongWs = {
+      title: newTitle.trim(),
+      subtitle: `${ws.title}에서 틀린 ${selectedPids.length}문제`,
+      tags: [...(ws.tags || []), '오답'],
+      problemIds: selectedPids,
+      settings: ws.settings || {},
+      concept: ws.concept || '',
+      conceptPosition: ws.conceptPosition || 'none'
+    };
+
+    const ok = await window.fbSaveWorksheet(wrongWs);
+    if (ok) {
+      showToast(`✓ 오답 학습지 "${newTitle}" 생성됨 (${selectedPids.length}문제)`, 'success');
+      closeAllModals();
+    }
+  });
+
   /* ======================= 학습지 공유 (학생용 링크) ======================= */
   let currentShareWsId = null;
   function openShareModal(wsId){
@@ -4314,6 +4484,10 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
   }
 
   /* ======================= 내 학습지 렌더링 ======================= */
+  /* 병합 모드 상태 */
+  let mergeMode = false;
+  const mergeSelected = new Set();
+
   function renderMyWorksheets(){
     const list = document.getElementById('mywsList');
     const desc = document.getElementById('mywsDesc');
@@ -4409,7 +4583,8 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
       ).join('');
 
       return `
-        <div class="ws-saved-card ${hasDeleted ? 'warning' : ''}">
+        <div class="ws-saved-card ${hasDeleted ? 'warning' : ''} ${mergeMode && mergeSelected.has(ws.id) ? 'merge-selected' : ''}" data-ws-id="${ws.id}">
+          ${mergeMode ? `<input type="checkbox" class="ws-merge-check" data-merge-ws="${ws.id}" ${mergeSelected.has(ws.id) ? 'checked' : ''} style="width:20px; height:20px; margin-right:14px; cursor:pointer;"/>` : ''}
           <div class="ws-saved-left">
             <div class="ws-saved-title">
               ${escapeHtml(ws.title)}
@@ -4422,16 +4597,46 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
               ${tagsHtml}
             </div>
           </div>
+          ${!mergeMode ? `
           <div class="ws-saved-actions">
             <button class="tool-btn" data-print-ws="${ws.id}" title="바로 인쇄">🖨</button>
             <button class="tool-btn" data-share-ws="${ws.id}" title="학생과 공유">🔗</button>
             <button class="tool-btn" data-edit-ws="${ws.id}" title="편집">✏️</button>
             <button class="tool-btn" data-clone-ws="${ws.id}" title="복제">📋</button>
+            <button class="tool-btn" data-wrong-ws="${ws.id}" title="오답 학습지 만들기">🔄</button>
             <button class="tool-btn" data-delete-ws="${ws.id}" title="삭제">🗑</button>
-          </div>
+          </div>` : ''}
         </div>
       `;
     }).join('');
+
+    // 병합 체크박스 이벤트
+    if (mergeMode) {
+      list.querySelectorAll('.ws-merge-check').forEach(cb => {
+        cb.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = cb.dataset.mergeWs;
+          if (cb.checked) mergeSelected.add(id);
+          else mergeSelected.delete(id);
+          document.getElementById('mergeCount').textContent = mergeSelected.size;
+          // 카드 시각 효과
+          const card = cb.closest('.ws-saved-card');
+          if (cb.checked) card.classList.add('merge-selected');
+          else card.classList.remove('merge-selected');
+        });
+      });
+      // 카드 전체 클릭으로 체크
+      list.querySelectorAll('.ws-saved-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+          if (e.target.classList.contains('ws-merge-check')) return;
+          const cb = card.querySelector('.ws-merge-check');
+          if (cb) {
+            cb.checked = !cb.checked;
+            cb.dispatchEvent(new Event('click', { bubbles: false }));
+          }
+        });
+      });
+    }
 
     // 이벤트 리스너
     list.querySelectorAll('[data-print-ws]').forEach(btn => {
@@ -4462,6 +4667,10 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     // 학습지 공유 (학생용 링크 + QR)
     list.querySelectorAll('[data-share-ws]').forEach(btn => {
       btn.addEventListener('click', () => openShareModal(btn.dataset.shareWs));
+    });
+    // 오답 학습지 만들기
+    list.querySelectorAll('[data-wrong-ws]').forEach(btn => {
+      btn.addEventListener('click', () => openWrongAnswerModal(btn.dataset.wrongWs));
     });
     list.querySelectorAll('[data-delete-ws]').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -4501,7 +4710,9 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
       divider: ws.settings.divider,
       density: ws.settings.density,
       footerText: ws.settings.footerText,
-      wsId: ws.id  // QR 코드용
+      wsId: ws.id,  // QR 코드용
+      concept: ws.concept || '',
+      conceptPosition: ws.conceptPosition || 'none'
     });
 
     // 인쇄 영역에 KaTeX 수식 렌더링 적용
@@ -4537,6 +4748,8 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
       document.getElementById('wsTitle').value = ws.title || '';
       document.getElementById('wsSubtitle').value = ws.subtitle || '';
       document.getElementById('wsTags').value = (ws.tags || []).join(', ');
+      document.getElementById('wsConcept').value = ws.concept || '';
+      document.getElementById('wsConceptPosition').value = ws.conceptPosition || 'none';
       document.getElementById('wsLayout').value = ws.settings.layout || 'split4';
       document.getElementById('wsFields').value = ws.settings.fields || 'name-only';
       document.getElementById('wsIncludeAnswers').checked = !!ws.settings.includeAnswers;
@@ -4696,6 +4909,93 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     mywsSort.addEventListener('change', () => renderMyWorksheets());
   }
 
+  /* === 학습지 병합 모드 === */
+  const btnMergeMode = document.getElementById('btnMergeMode');
+  const btnMergeCancel = document.getElementById('btnMergeCancel');
+  const btnMergeConfirm = document.getElementById('btnMergeConfirm');
+  const mergeBar = document.getElementById('mergeBar');
+
+  if (btnMergeMode) {
+    btnMergeMode.addEventListener('click', () => {
+      mergeMode = true;
+      mergeSelected.clear();
+      mergeBar.style.display = 'flex';
+      btnMergeMode.style.display = 'none';
+      document.getElementById('mergeCount').textContent = '0';
+      renderMyWorksheets();
+    });
+  }
+
+  if (btnMergeCancel) {
+    btnMergeCancel.addEventListener('click', () => {
+      mergeMode = false;
+      mergeSelected.clear();
+      mergeBar.style.display = 'none';
+      btnMergeMode.style.display = '';
+      renderMyWorksheets();
+    });
+  }
+
+  if (btnMergeConfirm) {
+    btnMergeConfirm.addEventListener('click', async () => {
+      if (mergeSelected.size < 2) {
+        showToast('2개 이상의 학습지를 선택하세요', 'error');
+        return;
+      }
+
+      const newTitle = prompt(
+        `${mergeSelected.size}개 학습지를 병합합니다.\n새 학습지 제목을 입력하세요:`,
+        '병합 학습지'
+      );
+      if (!newTitle || !newTitle.trim()) return;
+
+      // 선택된 학습지들을 합침 (만들어진 순서)
+      const selectedWs = [...mergeSelected]
+        .map(id => worksheets.find(w => w.id === id))
+        .filter(Boolean)
+        .sort((a, b) => {
+          const aT = a.createdAt?.toMillis?.() || 0;
+          const bT = b.createdAt?.toMillis?.() || 0;
+          return aT - bT;
+        });
+
+      // 모든 problemIds 합치기 (중복 제거)
+      const mergedIds = [];
+      const seenIds = new Set();
+      selectedWs.forEach(ws => {
+        (ws.problemIds || []).forEach(pid => {
+          if (!seenIds.has(pid)) {
+            seenIds.add(pid);
+            mergedIds.push(pid);
+          }
+        });
+      });
+
+      // 첫 번째 학습지의 설정 사용 (디자인 등)
+      const baseSettings = selectedWs[0]?.settings || {};
+      
+      // 모든 태그 합치기
+      const mergedTags = [...new Set(selectedWs.flatMap(w => w.tags || []))];
+
+      const merged = {
+        title: newTitle.trim(),
+        subtitle: `${selectedWs.length}개 학습지 병합 (${selectedWs.map(w => w.title).join(', ').slice(0, 60)}${selectedWs.map(w => w.title).join(', ').length > 60 ? '...' : ''})`,
+        tags: mergedTags,
+        problemIds: mergedIds,
+        settings: baseSettings
+      };
+
+      const ok = await window.fbSaveWorksheet(merged);
+      if (ok) {
+        showToast(`✓ ${selectedWs.length}개 학습지를 병합했습니다 (총 ${mergedIds.length}문제)`, 'success');
+        mergeMode = false;
+        mergeSelected.clear();
+        mergeBar.style.display = 'none';
+        btnMergeMode.style.display = '';
+      }
+    });
+  }
+
   /* ======================= 햄버거 메뉴 ======================= */
   document.getElementById('menuToggle').addEventListener('click', () => {
     document.getElementById('sidebar').classList.add('open');
@@ -4714,6 +5014,7 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
   const aiPromptModal = document.getElementById('aiPromptModal');
   const shareModal = document.getElementById('shareModal');
   const migrateModal = document.getElementById('migrateModal');
+  const wrongAnswerModal = document.getElementById('wrongAnswerModal');
   let formType = 'multiple';
   function closeAllModals(){
     addModal.classList.remove('show');
@@ -4723,6 +5024,7 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     aiPromptModal.classList.remove('show');
     shareModal.classList.remove('show');
     migrateModal.classList.remove('show');
+    wrongAnswerModal.classList.remove('show');
     // 편집 모드 해제
     editingWsId = null;
     editingId = null;
@@ -4735,7 +5037,7 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     if (addSave) addSave.textContent = '💾 저장';
   }
   document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeAllModals));
-  [addModal, importModal, worksheetModal, previewModal, aiPromptModal, shareModal, migrateModal].forEach(m => {
+  [addModal, importModal, worksheetModal, previewModal, aiPromptModal, shareModal, migrateModal, wrongAnswerModal].forEach(m => {
     m.addEventListener('click', (e) => { if (e.target === m) closeAllModals(); });
   });
 
@@ -4988,6 +5290,10 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     if (!editingWsId) {
       const wsTagsInput = document.getElementById('wsTags');
       if (wsTagsInput) wsTagsInput.value = '';
+      const wsConceptInput = document.getElementById('wsConcept');
+      if (wsConceptInput) wsConceptInput.value = '';
+      const wsConceptPos = document.getElementById('wsConceptPosition');
+      if (wsConceptPos) wsConceptPos.value = 'none';
     }
 
     // 오늘 날짜 자동 입력을 위한 안내
@@ -5124,11 +5430,17 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     const tagsRaw = document.getElementById('wsTags')?.value?.trim() || '';
     const tags = tagsRaw ? tagsRaw.split(/[,，]/).map(t => t.trim()).filter(Boolean) : [];
 
+    // 개념
+    const concept = document.getElementById('wsConcept')?.value?.trim() || '';
+    const conceptPosition = document.getElementById('wsConceptPosition')?.value || 'none';
+
     // Firestore에 저장 (또는 수정)
     const worksheet = {
       title,
       subtitle,
       tags,
+      concept,
+      conceptPosition,
       problemIds: selected.map(p => p.id),
       settings: {
         layout, fields, includeAnswers, includeExplanations,
@@ -5160,7 +5472,9 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
       template: selectedTemplate,
       color: selectedColor,
       numStyle, font, divider, density, footerText,
-      wsId: editingWsId || null  // 편집 모드라면 ID 있음
+      wsId: editingWsId || null,  // 편집 모드라면 ID 있음
+      concept: concept || '',
+      conceptPosition: conceptPosition || 'none'
     });
 
     setTimeout(() => {
@@ -5174,7 +5488,8 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
       selected, title, subtitle, splitMode, fields,
       includeAnswers, includeExplanations,
       template, color, numStyle, font, divider, density, footerText,
-      wsId  // 학생용 링크 QR 생성용 (선택)
+      wsId,  // 학생용 링크 QR 생성용 (선택)
+      concept, conceptPosition  // 개념 페이지 (선택)
     } = opts;
 
     const today = new Date();
@@ -5250,6 +5565,22 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
       q += `</div>`;
       return q;
     };
+
+    // ==== 개념 페이지 삽입 (학습지 맨 앞) ====
+    if (concept && concept.trim() && conceptPosition && conceptPosition !== 'none') {
+      const hasBorder = conceptPosition === 'top-with-border';
+      html += `<div class="ws-concept ${hasBorder ? 'with-border' : ''}" style="
+        margin-bottom: 16px;
+        padding: 14px 18px;
+        background: rgba(245, 158, 59, 0.04);
+        ${hasBorder ? 'border: 1.5px solid var(--primary, #f59e3b);' : 'border-left: 3px solid var(--primary, #f59e3b);'}
+        border-radius: 8px;
+        page-break-inside: avoid;
+      ">
+        <div style="font-weight: 700; font-size: 14px; color: var(--primary, #f59e3b); margin-bottom: 8px;">💡 개념 정리</div>
+        <div style="font-size: 13px; line-height: 1.7; white-space: pre-wrap;">${escapeHtml(concept).replace(/\n/g, '<br>')}</div>
+      </div>`;
+    }
 
     // ==== 분할 모드 렌더링 ====
     if (splitConfig.use1Col) {
