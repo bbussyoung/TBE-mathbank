@@ -807,6 +807,19 @@
   .label::before{ content:"#"; opacity: 0.6; font-weight: 700;}
   .label.tag-diff-상::before, .label.tag-diff-중::before, .label.tag-diff-하::before{ content: ""; }
 
+  /* 유사문제 카드 호버 */
+  .similar-item:hover {
+    border-color: var(--primary) !important;
+    background: rgba(245, 158, 59, 0.04) !important;
+  }
+  .similar-item .similar-check:checked ~ * {
+    /* 체크된 카드는 살짝 강조 */
+  }
+  .similar-item:has(.similar-check:checked) {
+    border-color: var(--primary) !important;
+    background: rgba(245, 158, 59, 0.08) !important;
+  }
+
   .stem{ font-size: 15px; line-height: 1.8; margin-bottom: 14px;}
   .problem-graph{
     margin: 12px 0;
@@ -4498,16 +4511,49 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
         </span>
       </div>`;
 
+    // 유사문제 찾기 (같은 topic 또는 section의 다른 문제들)
+    const similarProblems = findSimilarProblems(p);
+    const similarHtml = similarProblems.length > 0 ? `
+      <div id="similarProblemsSection" style="margin-top: 24px; padding-top: 18px; border-top: 2px dashed var(--line);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+          <h4 style="margin:0; font-size: 14px;">📚 비슷한 문제 (${similarProblems.length}개)</h4>
+          <button class="tool-btn" id="btnToggleSimilar" style="font-size:12px;">▼ 펼쳐보기</button>
+        </div>
+        <div id="similarList" style="display:none;"></div>
+      </div>
+    ` : `
+      <div style="margin-top: 24px; padding: 14px; background: #f9f9f9; border-radius: 8px; text-align: center; color: #888; font-size: 13px;">
+        💡 같은 유형의 다른 문제가 없어요. <strong>🧠 AI 비슷한 문제</strong> 또는 <strong>✍️ AI 변형</strong> 버튼을 활용해보세요!
+      </div>
+    `;
+
     document.getElementById('previewBody').innerHTML = `
       ${metaHtml}
       <div class="stem" style="font-size:15px; line-height:1.8;"><p>${escapeHtml(p.stem).replace(/\n/g, '<br>')}</p></div>
       ${graphHtml}
       ${answerHtml}
       ${explanationHtml}
+      ${similarHtml}
     `;
 
     document.getElementById('previewModal').classList.add('show');
     setTimeout(() => renderMath(document.getElementById('previewBody')), 10);
+
+    // 유사문제 펼침/접기
+    const btnToggleSimilar = document.getElementById('btnToggleSimilar');
+    if (btnToggleSimilar) {
+      btnToggleSimilar.addEventListener('click', () => {
+        const list = document.getElementById('similarList');
+        if (list.style.display === 'none') {
+          list.style.display = '';
+          btnToggleSimilar.textContent = '▲ 접기';
+          renderSimilarList(similarProblems, list);
+        } else {
+          list.style.display = 'none';
+          btnToggleSimilar.textContent = '▼ 펼쳐보기';
+        }
+      });
+    }
 
     // 선택 버튼 상태 반영
     const selBtn = document.getElementById('btnSelectFromPreview');
@@ -4516,6 +4562,99 @@ ${p.explanation ? '\n풀이: ' + p.explanation : ''}
     } else {
       selBtn.textContent = '✔ 이 문제 선택';
     }
+  }
+
+  /* 유사문제 찾기 (같은 topic > section > subchapter 순으로 점수) */
+  function findSimilarProblems(currentP){
+    return problems
+      .filter(p => p.id !== currentP.id)  // 자기 자신 제외
+      .map(p => {
+        let score = 0;
+        // 같은 chapter는 기본
+        if (p.chapter !== currentP.chapter) return null;
+        score += 1;
+        // 같은 subchapter면 +2
+        if (p.subchapter && p.subchapter === currentP.subchapter) score += 2;
+        // 같은 section이면 +3
+        if (p.section && p.section === currentP.section) score += 3;
+        // 같은 topic이면 +5 (가장 강력)
+        if (p.topic && p.topic === currentP.topic) score += 5;
+        // 같은 difficulty면 +1 (보너스)
+        if (p.difficulty && p.difficulty === currentP.difficulty) score += 1;
+        return { problem: p, score };
+      })
+      .filter(x => x && x.score >= 4)  // 점수 4점 이상만 (같은 section 이상 매칭)
+      .sort((a, b) => b.score - a.score)  // 높은 점수 우선
+      .slice(0, 10)  // 최대 10개
+      .map(x => x.problem);
+  }
+
+  /* 유사문제 리스트 렌더링 */
+  function renderSimilarList(similarProbs, container){
+    const marks = ['①','②','③','④','⑤'];
+    container.innerHTML = similarProbs.map((p, idx) => {
+      const preview = (p.stem || '').slice(0, 80);
+      const isSelected = selectedIds.has(p.id);
+      const diffEmoji = p.difficulty === '상' ? '🔴' : p.difficulty === '하' ? '🟢' : '🟡';
+      
+      return `
+        <div class="similar-item" data-similar-id="${p.id}" style="
+          background: white;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          padding: 12px 14px;
+          margin-bottom: 8px;
+          cursor: pointer;
+          transition: all 0.15s;
+        ">
+          <div style="display:flex; gap:10px; align-items:flex-start;">
+            <input type="checkbox" class="similar-check" data-pid="${p.id}" ${isSelected ? 'checked' : ''} style="width:16px; height:16px; margin-top:3px; cursor:pointer;"/>
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:11px; color:#888; margin-bottom:4px;">
+                ${diffEmoji} ${escapeHtml(p.topic || p.subchapter || '')}
+                ${p.source ? ' · ' + escapeHtml(p.source) : ''}
+                ${p.type === 'multiple' ? ' · 객관식' : ' · 주관식'}
+              </div>
+              <div style="font-size:13px; line-height:1.5; color:#333;">${escapeHtml(preview)}${p.stem.length > 80 ? '...' : ''}</div>
+            </div>
+            <button class="tool-btn similar-preview" data-preview-id="${p.id}" style="font-size:11px; padding:4px 8px;" title="미리보기">👁</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // 체크박스 이벤트
+    container.querySelectorAll('.similar-check').forEach(cb => {
+      cb.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const pid = cb.dataset.pid;
+        if (cb.checked) selectedIds.add(pid);
+        else selectedIds.delete(pid);
+        updateSelectionBar();
+      });
+    });
+
+    // 카드 클릭 → 체크 토글
+    container.querySelectorAll('.similar-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        if (e.target.classList.contains('similar-check') || e.target.classList.contains('similar-preview')) return;
+        const cb = item.querySelector('.similar-check');
+        cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event('click', { bubbles: false }));
+      });
+    });
+
+    // 미리보기 버튼 → 다른 문제 미리보기로 전환
+    container.querySelectorAll('.similar-preview').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const pid = btn.dataset.previewId;
+        openPreviewModal(pid);
+      });
+    });
+
+    // KaTeX 렌더링
+    setTimeout(() => renderMath(container), 10);
   }
 
   document.getElementById('btnSelectFromPreview').addEventListener('click', () => {
